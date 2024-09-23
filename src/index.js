@@ -21,7 +21,7 @@ root.render(
       <Route path="/admin/*" element={<AdminLayout />} />
 
       {/* Redirect any unknown routes to /login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* <Route path="*" element={<Navigate to="/login" replace />} /> */}
     </Routes>
   </BrowserRouter>
 );

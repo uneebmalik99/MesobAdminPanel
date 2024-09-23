@@ -70,6 +70,11 @@ h2 {
   background-color: #0056b3;
 }
 
+.logo_img {
+  width: 100px; /* Adjust size as needed */
+  margin-bottom: 20px; /* Space below the logo */
+}
+
 /* Media Queries for Responsive Design */
 @media screen and (max-width: 768px) {
   .login-box {

@@ -204,7 +204,11 @@ function PromoCodes() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{ marginLeft: "10px", width: "250px" }}
                   />
-                  <Button color="info" onClick={() => toggleModal()}>
+                  <Button
+                    color="info"
+                    className="btn-round"
+                    onClick={() => toggleModal()}
+                  >
                     Add Promo Code
                   </Button>
                 </div>
@@ -480,10 +484,10 @@ function PromoCodes() {
           </Form>
         </ModalBody>
         <ModalFooter>
-          <Button color="info" onClick={handleSave}>
+          <Button color="info" className="btn-round" onClick={handleSave}>
             Save
           </Button>
-          <Button color="secondary" onClick={toggleModal}>
+          <Button color="secondary" className="btn-round" onClick={toggleModal}>
             Cancel
           </Button>
         </ModalFooter>

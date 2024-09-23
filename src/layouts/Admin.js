@@ -25,8 +25,8 @@ function Admin(props) {
 
   // Check user session on component mount
   React.useEffect(() => {
-    // Check if user_email exists in sessionStorage
-    const userEmail = sessionStorage.getItem("user_email");
+    // Check if user_email exists in localStorage
+    const userEmail = localStorage.getItem("user_email");
 
     if (!userEmail) {
       // If no user session, redirect to login page

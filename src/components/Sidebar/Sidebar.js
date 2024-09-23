@@ -50,18 +50,16 @@ function Sidebar(props) {
     <div className="sidebar" data-color={props.backgroundColor}>
       <div className="logo">
         <a
-          href="https://www.creative-tim.com?ref=nudr-sidebar"
+          href="#"
           className="simple-text logo-mini"
-          target="_blank"
         >
           <div className="logo-img">
             <img src={logo} alt="react-logo" />
           </div>
         </a>
         <a
-          href="https://www.creative-tim.com?ref=nudr-sidebar"
+          href="#"
           className="simple-text logo-normal"
-          target="_blank"
         >
           Mesob Store
         </a>
@@ -69,7 +67,7 @@ function Sidebar(props) {
       <div className="sidebar-wrapper" ref={sidebar}>
         <Nav>
           {props.routes.map((prop, key) => {
-            if (prop.redirect) return null;
+            if (prop.redirect || prop.invisible) return null;
             return (
               <li
                 className={

@@ -4,16 +4,19 @@ import "../assets/css/Login.css";
 import NotificationAlert from "react-notification-alert";
 import "react-notification-alert/dist/animate.css";
 import { Helmet } from "react-helmet";
+import logo from "logo.jpeg";
+import { Spinner } from "reactstrap";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
   const notificationAlertRef = useRef(null);
 
   // Protect the login page: redirect if user is already logged in
   useEffect(() => {
-    const userEmail = sessionStorage.getItem("user_email");
+    const userEmail = localStorage.getItem("user_email");
     if (userEmail) {
       navigate("/admin/dashboard");
     }
@@ -36,6 +39,7 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     try {
       const response = await fetch(
@@ -55,15 +59,18 @@ const Login = () => {
       const result = await response.json();
 
       if (result === "success") {
-        // Store data in sessionStorage
-        sessionStorage.setItem("user_email", email);
+        // Store data in localStorage
+        localStorage.setItem("user_email", email);
 
         // Show success notification
         showNotification("success", "Login successful!");
 
         // Redirect to the admin dashboard
         setTimeout(() => navigate("/admin/dashboard"), 1000);
+
+        setLoading(false);
       } else {
+        setLoading(true);
         // Show error notification
         showNotification(
           "danger",
@@ -84,7 +91,10 @@ const Login = () => {
       <div className="login-container">
         <NotificationAlert ref={notificationAlertRef} />
         <div className="login-box">
+          <img src={logo} alt="Logo" className="logo_img" />
           <h2>Login</h2>
+          <p>Welcome! Login to access the Mesob Store</p>
+          <p>Did you Forget Password?</p>
           <form onSubmit={handleSubmit}>
             <div className="input-group">
               <label>Email</label>
@@ -104,8 +114,14 @@ const Login = () => {
                 required
               />
             </div>
-            <button type="submit" className="login-btn">
-              Login
+            <button type="submit" className="login-btn" disabled={loading}>
+              {loading ? (
+                <>
+                  <Spinner color="primary" size="sm" /> Please wait
+                </>
+              ) : (
+                "Login"
+              )}
             </button>
           </form>
         </div>

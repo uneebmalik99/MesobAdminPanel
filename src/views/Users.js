@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "react-data-table-component";
 import {
   Card,
@@ -22,6 +22,8 @@ import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import axios from "axios";
 import formatDate from "utils/formatDate";
 import { Helmet } from "react-helmet";
+import NotificationAlert from "react-notification-alert";
+import "react-notification-alert/dist/animate.css";
 
 const columns = [
   {
@@ -71,6 +73,24 @@ function Users() {
 
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const [sendMultipleBtnLoading, setSendMultipleBtnLoading] = useState(false);
+
+  const notificationAlertRef = useRef(null);
+
+  const notify = (place, message, type) => {
+    const options = {
+      place: place,
+      message: (
+        <div>
+          <div>{message}</div>
+        </div>
+      ),
+      type: type,
+      icon: "now-ui-icons ui-1_bell-53",
+      autoDismiss: 7,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  };
 
   useEffect(() => {
     axios
@@ -98,11 +118,53 @@ function Users() {
     setSelectedRows(state.selectedRows);
   };
 
-  const handleEmailSend = () => {
-    // Handle the email sending logic here
-    console.log("Sending email with subject:", subject, "and body:", body);
-    // Close modal after sending email
-    setModalOpen(false);
+  const handleEmailSend = async (e) => {
+    e.preventDefault();
+
+    const emails = selectedRows.map((user) => user.email).join(", ");
+    const subjectMultipleUsers = subject;
+    const messageMultipleUsers = body;
+
+    console.log("Sending email to:", emails, "\n");
+    console.log("subject: ", subjectMultipleUsers, "\n");
+    console.log("message : ", messageMultipleUsers, "\n");
+
+    const payload = {
+      email: emails,
+      message: messageMultipleUsers,
+      subject: subjectMultipleUsers,
+    };
+
+    try {
+      setSendMultipleBtnLoading(true);
+      const response = await axios.post(
+        "https://q0v1vrhy5g.execute-api.us-east-1.amazonaws.com/staging",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Email API Response:", response.data);
+
+      if (response.data.statusCode) {
+        // Close modal after sending email
+        setModalOpen(false);
+        setSubject("");
+        setBody("");
+        setSendMultipleBtnLoading(false);
+
+        notify("tr", "Emails sent successfully!", "success");
+      } else {
+        setSendMultipleBtnLoading(false);
+
+        notify("tr", response.data.message, "danger");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw new Error(error.response?.data?.message || "Error sending email");
+    }
   };
 
   return (
@@ -118,6 +180,7 @@ function Users() {
           </div>
         }
       />
+      <NotificationAlert ref={notificationAlertRef} />
       <div className="content">
         <Row>
           <Col xs={12}>
@@ -197,7 +260,7 @@ function Users() {
               columns={[{ name: "Emails", selector: (row) => row.email }]}
               data={selectedRows}
               pagination
-              paginationPerPage={3} // Set how many emails to show per page
+              paginationPerPage={3}
               paginationRowsPerPageOptions={[3, 10, 20, 50]}
             />
           ) : (
@@ -224,8 +287,20 @@ function Users() {
                 onChange={(e) => setBody(e.target.value)}
               />
             </FormGroup>
-            <Button color="info" className="btn-round" onClick={handleEmailSend}>
-              Send Email
+            <Button
+              color="info"
+              className="btn-round"
+              onClick={handleEmailSend}
+              disabled={sendMultipleBtnLoading}
+            >
+              {sendMultipleBtnLoading ? (
+                <>
+                  Sending...
+                  <Spinner color="primary" size="sm" className="ml-1" />
+                </>
+              ) : (
+                "Send Email"
+              )}
             </Button>
           </Form>
         </ModalBody>

@@ -194,7 +194,7 @@ function Users() {
         <ModalBody>
           {selectedRows.length > 0 ? (
             <DataTable
-              columns={[{ name: "Email", selector: (row) => row.email }]}
+              columns={[{ name: "Emails", selector: (row) => row.email }]}
               data={selectedRows}
               pagination
               paginationPerPage={3} // Set how many emails to show per page
@@ -204,7 +204,7 @@ function Users() {
             <p>No users selected.</p>
           )}
           <hr />
-          <h4>Send Email</h4>
+          <h6 className="mb-3">Send Email</h6>
           <Form>
             <FormGroup>
               <Label for="subject">Subject</Label>
@@ -224,7 +224,7 @@ function Users() {
                 onChange={(e) => setBody(e.target.value)}
               />
             </FormGroup>
-            <Button color="primary" onClick={handleEmailSend}>
+            <Button color="info" className="btn-round" onClick={handleEmailSend}>
               Send Email
             </Button>
           </Form>

@@ -6,6 +6,7 @@ import PromoCodes from "views/PromoCodes.js";
 import Orders from "views/Orders.js";
 import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";
+import EditOrder from "views/EditOrder";
 // import EditOrder from "views/EditOrder";
 
 var dashRoutes = [
@@ -65,12 +66,12 @@ var dashRoutes = [
     layout: "/admin",
     invisible: true,
   },
-  // {
-  //   path: "/order/edit/:id", // Dynamic route for editing a specific order
-  //   name: "Edit Order",
-  //   component: <EditOrder />, // The EditOrder component
-  //   layout: "/admin",
-  //   invisible: true, // Hide it from the sidebar menu
-  // },
+  {
+    path: "/order/edit/:id", 
+    name: "Edit Order",
+    component: <EditOrder />,
+    layout: "/admin",
+    invisible: true,
+  },
 ];
 export default dashRoutes;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import {
@@ -25,9 +25,11 @@ import {
 } from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import { Helmet } from "react-helmet";
+import NotificationAlert from "react-notification-alert";
+import "react-notification-alert/dist/animate.css";
 
 // Dropdown action cell component
-const ActionDropdown = ({ row, onEdit }) => {
+const ActionDropdown = ({ row, onEdit, onDelete }) => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const toggle = () => setDropdownOpen((prevState) => !prevState);
@@ -37,15 +39,13 @@ const ActionDropdown = ({ row, onEdit }) => {
       <DropdownToggle caret>Actions</DropdownToggle>
       <DropdownMenu>
         <DropdownItem onClick={() => onEdit(row)}>Edit</DropdownItem>
-        <DropdownItem onClick={() => handleAction("delete", row.id)}>
-          Delete
-        </DropdownItem>
+        <DropdownItem onClick={() => onDelete(row.id)}>Delete</DropdownItem>
       </DropdownMenu>
     </Dropdown>
   );
 };
 
-const columns = (onEdit) => [
+const columns = (onEdit, onDelete) => [
   {
     name: "ID",
     selector: (row) => row.id,
@@ -102,7 +102,9 @@ const columns = (onEdit) => [
   },
   {
     name: "Action",
-    cell: (row) => <ActionDropdown row={row} onEdit={onEdit} />,
+    cell: (row) => (
+      <ActionDropdown row={row} onEdit={onEdit} onDelete={onDelete} />
+    ),
     ignoreRowClick: true,
     allowOverflow: true,
     button: true,
@@ -117,51 +119,200 @@ function PromoCodes() {
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedPromo, setSelectedPromo] = useState(null);
+  const [btnLoading, setBtnLoading] = useState(false);
 
-  const toggleModal = (isEdit = false, promo = null) => {
+  const toggleModal = (isEditMode = false, promo = null) => {
     setModalOpen(!modalOpen);
     if (modalOpen) {
-      // If closing the modal, reset the promo
+      // If closing the modal, reset the promo code
       setSelectedPromo(null);
       setIsEditMode(false);
-    } else if (isEdit && promo) {
-      // If opening for edit, set selected promo data
+    } else if (isEditMode && promo) {
+      // If opening for edit, set selected promo code
       setSelectedPromo(promo);
       setIsEditMode(true);
     }
   };
 
-  useEffect(() => {
+  const notificationAlertRef = useRef(null);
+
+  const notify = (place, message, type) => {
+    const options = {
+      place: place,
+      message: (
+        <div>
+          <div>{message}</div>
+        </div>
+      ),
+      type: type,
+      icon: "now-ui-icons ui-1_bell-53",
+      autoDismiss: 7,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  };
+
+  // Refactor the fetchPromoCodes function for reusability
+  const fetchPromoCodes = () => {
+    setLoading(true);
     axios
       .get(
         "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode"
       )
       .then((response) => {
-        setData(response.data.Items || []);
+        // Sort the data by ID in ascending order
+        const sortedData = (response.data.Items || []).sort(
+          (a, b) => a.id - b.id
+        );
+        setData(sortedData);
         setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching promo codes:", error);
         setLoading(false);
       });
+  };
+
+  useEffect(() => {
+    fetchPromoCodes();
   }, []);
 
-  const handleSave = () => {
-    if (isEditMode) {
-      // Logic to update existing promo code
-      setData((prevData) =>
-        prevData.map((promo) =>
-          promo.id === selectedPromo.id ? selectedPromo : promo
-        )
-      );
-    } else {
-      // Logic to add new promo code
-      setData((prevData) => [
-        ...prevData,
-        { ...selectedPromo, id: Date.now() }, // Example ID assignment
-      ]);
+  const handleSave = async () => {
+    if (
+      !selectedPromo?.Code ||
+      !selectedPromo?.Discount_Type ||
+      !selectedPromo?.Discount ||
+      !selectedPromo?.Order_Limit
+    ) {
+      notify("tr", "Please fill in all fields.", "danger");
+      return;
     }
-    toggleModal(); // Close the modal after saving
+
+    if (isEditMode) {
+      // Update existing promo code
+      // Log the promo code details in update
+      console.log("Updating promo code:", selectedPromo);
+
+      const id = selectedPromo?.id;
+      const code = selectedPromo?.Code;
+      const discount_percentage = selectedPromo?.Discount;
+      const discount_type = selectedPromo?.Discount_Type;
+      const order_limit = selectedPromo?.Order_Limit;
+      const is_active = selectedPromo?.Status;
+      const is_display = selectedPromo?.Display;
+      const is_auto = selectedPromo?.Auto;
+      const is_manual = selectedPromo?.Manual;
+
+      const url = `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
+        id
+      )}?code3=${encodeURIComponent(code)}&discount3=${encodeURIComponent(
+        discount_percentage
+      )}&discount_typevalue3=${encodeURIComponent(
+        discount_type
+      )}&order_limit3=${encodeURIComponent(
+        order_limit
+      )}&status3=${encodeURIComponent(is_active)}&display3=${encodeURIComponent(
+        is_display
+      )}&auto3=${encodeURIComponent(is_auto)}&manual3=${encodeURIComponent(
+        is_manual
+      )}`;
+
+      try {
+        setBtnLoading(true);
+        const response = await axios.patch(url, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        console.log("API Response:", response.data);
+        if (response.status === 200) {
+          notify("tr", "Promo code updated successfully!", "success");
+          toggleModal();
+          setBtnLoading(false);
+
+          // Refresh the data after updating
+          fetchPromoCodes();
+        } else {
+          setBtnLoading(false);
+          notify("tr", "Failed to add promo code.", "danger");
+        }
+      } catch (error) {
+        console.error("Error sending promo code data:", error);
+      }
+    } else {
+      // Log the promo code details in add
+      console.log("Adding new promo code:", selectedPromo);
+
+      const code = selectedPromo?.Code;
+      const discount_percentage = selectedPromo?.Discount;
+      const discount_type = selectedPromo?.Discount_Type;
+      const order_limit = selectedPromo?.Order_Limit;
+      const is_active = selectedPromo?.Status;
+      const is_display = selectedPromo?.Display;
+      const is_auto = selectedPromo?.Auto;
+      const is_manual = selectedPromo?.Manual;
+
+      const url = `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode?code=${encodeURIComponent(
+        code
+      )}&discount=${encodeURIComponent(
+        discount_percentage
+      )}&discount_typevalue=${encodeURIComponent(
+        discount_type
+      )}&limit=${encodeURIComponent(
+        order_limit
+      )}&statusvalue=${encodeURIComponent(
+        is_active
+      )}&displayvalue=${encodeURIComponent(
+        is_display
+      )}&autovalue=${encodeURIComponent(
+        is_auto
+      )}&manualvalue=${encodeURIComponent(is_manual)}`;
+
+      try {
+        setBtnLoading(true);
+        const response = await axios.post(url, {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        });
+        console.log("API Response:", response.data);
+        if (response.status === 200) {
+          notify("tr", "Promo code added Successfully!.", "success");
+          toggleModal();
+          setBtnLoading(false);
+          // Refresh the data after adding
+          fetchPromoCodes();
+        } else {
+          setBtnLoading(false);
+          notify("tr", "Failed to add promo code.", "danger");
+        }
+      } catch (error) {
+        console.error("Error sending promo code data:", error);
+      }
+    }
+  };
+
+  const deletePromoCode = async (id) => {
+    if (window.confirm("Are you sure you want to delete this promo code?")) {
+      try {
+        const url = `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
+          id
+        )}`;
+        const response = await axios.delete(url);
+
+        if (response.status === 200) {
+          notify("tr", "Promo code deleted successfully.", "success");
+          fetchPromoCodes();
+        } else {
+          notify(
+            "tr",
+            `Error deleting promo code. Status: ${response.status}`,
+            "danger"
+          );
+        }
+      } catch (error) {
+        notify("tr", `Network error: ${error}`, "danger");
+      }
+    }
   };
 
   const filteredData = data.filter((item) => {
@@ -176,7 +327,6 @@ function PromoCodes() {
       <Helmet>
         <title>Promo Codes - Mesob Store</title>
       </Helmet>
-
       <PanelHeader
         content={
           <div className="header text-center">
@@ -184,6 +334,7 @@ function PromoCodes() {
           </div>
         }
       />
+      <NotificationAlert ref={notificationAlertRef} />
       <div className="content">
         <Row>
           <Col xs={12}>
@@ -221,11 +372,15 @@ function PromoCodes() {
                   </div>
                 ) : (
                   <DataTable
-                    columns={columns((promo) => toggleModal(true, promo))}
+                    columns={columns(
+                      (promo) => toggleModal(true, promo),
+                      deletePromoCode
+                    )}
                     data={filteredData}
                     selectableRows
                     pagination
                     responsive
+                    fixedHeader={true}
                   />
                 )}
               </CardBody>
@@ -249,7 +404,7 @@ function PromoCodes() {
             <Row form>
               <Col md={6}>
                 <FormGroup>
-                  <Label for="promoCode">Promo Code</Label>
+                  <Label for="Code">Code</Label>
                   <Input
                     type="text"
                     id="promoCode"
@@ -331,11 +486,11 @@ function PromoCodes() {
                         type="radio"
                         name="display"
                         value="1"
-                        checked={selectedPromo?.Display === 1}
+                        checked={selectedPromo?.Display === "1"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Display: 1,
+                            Display: "1",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -347,11 +502,11 @@ function PromoCodes() {
                         type="radio"
                         name="display"
                         value="0"
-                        checked={selectedPromo?.Display === 0}
+                        checked={selectedPromo?.Display === "0"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Display: 0,
+                            Display: "0",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -386,11 +541,11 @@ function PromoCodes() {
                         type="radio"
                         name="isActive"
                         value="0"
-                        checked={selectedPromo?.Status === 0}
+                        checked={selectedPromo?.Status === "0"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Status: 0,
+                            Status: "0",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -411,11 +566,11 @@ function PromoCodes() {
                         type="radio"
                         name="auto"
                         value="1"
-                        checked={selectedPromo?.Auto === 1}
+                        checked={selectedPromo?.Auto === "1"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Auto: 1,
+                            Auto: "1",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -427,11 +582,11 @@ function PromoCodes() {
                         type="radio"
                         name="auto"
                         value="0"
-                        checked={selectedPromo?.Auto === 0}
+                        checked={selectedPromo?.Auto === "0"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Auto: 0,
+                            Auto: "0",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -450,11 +605,11 @@ function PromoCodes() {
                         type="radio"
                         name="manual"
                         value="1"
-                        checked={selectedPromo?.Manual === 1}
+                        checked={selectedPromo?.Manual === "1"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Manual: 1,
+                            Manual: "1",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -466,11 +621,11 @@ function PromoCodes() {
                         type="radio"
                         name="manual"
                         value="0"
-                        checked={selectedPromo?.Manual === 0}
+                        checked={selectedPromo?.Manual === "0"}
                         onChange={() =>
                           setSelectedPromo((prev) => ({
                             ...prev,
-                            Manual: 0,
+                            Manual: "0",
                           }))
                         }
                         style={{ marginRight: "8px" }}
@@ -484,8 +639,22 @@ function PromoCodes() {
           </Form>
         </ModalBody>
         <ModalFooter>
-          <Button color="info" className="btn-round" onClick={handleSave}>
-            Save
+          <Button
+            color="info"
+            className="btn-round"
+            onClick={handleSave}
+            disabled={btnLoading}
+          >
+            {btnLoading ? (
+              <>
+                Saving...
+                <Spinner color="primary" size="sm" className="ml-1" />
+              </>
+            ) : isEditMode ? (
+              "Update"
+            ) : (
+              "Save"
+            )}
           </Button>
           <Button color="secondary" className="btn-round" onClick={toggleModal}>
             Cancel

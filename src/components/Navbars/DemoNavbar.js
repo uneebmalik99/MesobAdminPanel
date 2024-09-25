@@ -150,14 +150,14 @@ function DemoNavbar(props) {
             </InputGroup>
           </form>
           <Nav navbar>
-            <NavItem>
+            {/* <NavItem>
               <Link to="#pablo" className="nav-link">
                 <i className="now-ui-icons media-2_sound-wave" />
                 <p>
                   <span className="d-lg-none d-md-block">Stats</span>
                 </p>
               </Link>
-            </NavItem>
+            </NavItem> 
             <Dropdown
               nav
               isOpen={dropdownOpen}
@@ -174,11 +174,11 @@ function DemoNavbar(props) {
                 <DropdownItem tag="a">Another Action</DropdownItem>
                 <DropdownItem tag="a">Something else here</DropdownItem>
               </DropdownMenu>
-            </Dropdown>
+            </Dropdown> */}
             <Dropdown
               nav
               isOpen={accountDropdownOpen}
-              toggle={(e) => accountDropdownToggle(e)} // Separate toggle function for Account
+              toggle={(e) => accountDropdownToggle(e)}
             >
               <DropdownToggle caret nav>
                 <i className="now-ui-icons users_single-02" />

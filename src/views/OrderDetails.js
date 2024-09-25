@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -8,16 +8,24 @@ import {
   Col,
   Table,
   Spinner,
+  Button,
 } from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import axios from "axios";
 import { Helmet } from "react-helmet";
-import "../assets/css/OrderDetails.css"; // Assuming you add the CSS above to a file
+import "../assets/css/OrderDetails.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 
 const OrderDetails = () => {
-  const { id } = useParams(); // Get the ID from the URL
+  const { id } = useParams();
+  const navigate = useNavigate();
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [totalPrice, setTotalPrice] = useState(0);
+  const [totalCost, setTotalCost] = useState(0);
+  const [discountedPrice, setDiscountedPrice] = useState(0);
+  const [discountedCost, setDiscountedCost] = useState(0);
 
   useEffect(() => {
     // Fetch order details by ID
@@ -26,8 +34,9 @@ const OrderDetails = () => {
         const response = await axios.get(
           `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
         );
-        setOrderDetails(response.data.Item); // Access the "Item" in the response
-        console.log("Order details:", response.data.Item);
+        const itemData = response.data.Item;
+        setOrderDetails(itemData);
+        calculateTotals(itemData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -38,13 +47,36 @@ const OrderDetails = () => {
     fetchOrderDetails();
   }, [id]);
 
-  const parseSenderAddress = (addressString) => {
-    try {
-      return JSON.parse(addressString);
-    } catch (e) {
-      console.error("Error parsing sender address:", e);
-      return {};
-    }
+  let promo_discount = "";
+
+  const calculateTotals = (item) => {
+    let total_price = 0;
+    let total_cost = 0;
+    promo_discount = item.promodiscount;
+
+    item.Products.forEach((product) => {
+      // Remove $ and comma from price and cost
+      const price = parseFloat(product.price.replace(/[\$,]/g, ""));
+      const cost = parseFloat(product.cost.replace(/[\$,]/g, ""));
+      const quantity = product.qty ?? product.quantity;
+
+      // Calculate totals
+      total_price += quantity * price;
+      total_cost += quantity * cost;
+    });
+
+    // Apply promo discount if available
+    const discounted_price = promo_discount
+      ? total_price - promo_discount
+      : total_price;
+    const discounted_cost = promo_discount
+      ? total_cost - promo_discount
+      : total_cost;
+
+    setTotalPrice(total_price);
+    setTotalCost(total_cost);
+    setDiscountedPrice(discounted_price);
+    setDiscountedCost(discounted_cost);
   };
 
   if (loading) {
@@ -56,7 +88,7 @@ const OrderDetails = () => {
     );
   }
 
-  const senderInfo = parseSenderAddress(orderDetails.senderAddress);
+  const senderInfo = JSON.parse(orderDetails.senderAddress || "{}");
   const receiverInfo = {
     name: orderDetails.name,
     email: orderDetails.useremail,
@@ -85,7 +117,18 @@ const OrderDetails = () => {
           <Col xs={12}>
             <Card className="order-card">
               <CardHeader className="order-header">
-                <h4 className="card-title">Order ID: {orderDetails.id}</h4>
+                <div className="d-flex align-items-center">
+                  <Button
+                    className="btn btn-link"
+                    onClick={() => navigate('/admin/orders')}
+                    style={{ fontSize: "20px", marginRight: "10px"}}
+                  >
+                    <FontAwesomeIcon icon={faArrowLeft} />
+                  </Button>
+                  <h4 className="card-title">
+                    <b>Order ID:</b> {orderDetails.id}
+                  </h4>
+                </div>
               </CardHeader>
               <CardBody>
                 <Row>
@@ -148,16 +191,17 @@ const OrderDetails = () => {
 
                 {/* Products Table */}
                 <h5 className="section-heading mt-4">Products</h5>
-                <Table responsive bordered className="order-table">
+                <Table responsive className="order-table">
                   <thead>
                     <tr>
                       <th>Image</th>
                       <th>Title</th>
+                      <th>Category</th>
                       <th>Description</th>
+                      <th>Country</th>
                       <th>Quantity</th>
-                      <th>Cost</th>
                       <th>Price</th>
-                      <th>Discount</th>
+                      <th>Cost</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -171,15 +215,34 @@ const OrderDetails = () => {
                           />
                         </td>
                         <td>{product.title}</td>
+                        <td>{product.category}</td>
                         <td>{product.description}</td>
+                        <td>{product.country}</td>
                         <td>{product.qty}</td>
-                        <td>{product.cost}</td>
                         <td>{product.price}</td>
-                        <td>{product.off_percentage}</td>
+                        <td>{product.cost}</td>
                       </tr>
                     ))}
                   </tbody>
                 </Table>
+
+                {/* Summary Section */}
+                <div className="summary-section mt-4">
+                  <div>
+                    <div>
+                      Discount:
+                      <span>{promo_discount ? promo_discount : " - "}</span>
+                    </div>
+                  </div>
+                  <div className="d-flex justify-content-between">
+                    <div>
+                      Selling Price: <span>$ {discountedPrice.toFixed(2)}</span>
+                    </div>
+                    <div>
+                      Cost Price: <span>$ {discountedCost.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
               </CardBody>
             </Card>
           </Col>

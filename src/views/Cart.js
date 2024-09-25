@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import DataTable from "react-data-table-component";
 import {
   Card,
@@ -22,6 +22,8 @@ import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import axios from "axios";
 import formatDate from "utils/formatDate";
 import { Helmet } from "react-helmet";
+import NotificationAlert from "react-notification-alert";
+import "react-notification-alert/dist/animate.css";
 
 function Cart() {
   const [items, setItems] = useState([]);
@@ -39,6 +41,25 @@ function Cart() {
   const [modalMultiUsers, setModalMultiUsers] = useState(false); // Modal state
   const [subjectMultiUsers, setSubjectMultiUsers] = useState("");
   const [bodyMultiUsers, setBodyMultiUsers] = useState("");
+
+  const [sendBtnLoading, setSendBtnLoading] = useState(false);
+  const [sendMultipleBtnLoading, setSendMultipleBtnLoading] = useState(false);
+  const notificationAlertRef = useRef(null);
+
+  const notify = (place, message, type) => {
+    const options = {
+      place: place,
+      message: (
+        <div>
+          <div>{message}</div>
+        </div>
+      ),
+      type: type,
+      icon: "now-ui-icons ui-1_bell-53",
+      autoDismiss: 7,
+    };
+    notificationAlertRef.current.notificationAlert(options);
+  };
 
   useEffect(() => {
     axios
@@ -59,11 +80,54 @@ function Cart() {
     setModalCartItems(true);
   };
 
-  const handleEmailSend = () => {
-    // Handle the email sending logic here
-    console.log("Sending email with subject:", subject, "and body:", body);
-    // Close modal after sending email
-    setModalCartItems(false);
+  const handleEmailSend = async (e) => {
+    e.preventDefault();
+
+    const subject = subjectCartItem;
+    const message = bodyCartItem;
+    const email = selectedUser?.email;
+
+    const payload = {
+      email,
+      message,
+      subject,
+    };
+
+    try {
+      setSendBtnLoading(true);
+      // Make POST request to the API URL
+      const response = await axios.post(
+        "https://q0v1vrhy5g.execute-api.us-east-1.amazonaws.com/staging",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Email API Response:", response.data);
+
+      if (response.data.statusCode) {
+        // Log response
+        // Close modal after sending email
+        setModalCartItems(false);
+        // Stop button loading
+        setSendBtnLoading(false);
+
+        setSubjectCartItem("");
+        setBodyCartItem("");
+
+        notify("tr", "Email sent successfully!", "success");
+      } else {
+        // Stop button loading
+        setSendBtnLoading(false);
+
+        notify("tr", response.data.message, "danger");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw new Error(error.response?.data?.message || "Error sending email");
+    }
   };
 
   const handleRowSelected = (state) => {
@@ -74,24 +138,60 @@ function Cart() {
     setModalMultiUsers(true);
   };
 
-  const handleMultipleEmailSend = () => {
+  const handleMultipleEmailSend = async (e) => {
+    e.preventDefault();
+
     const emails = selectedUsers.map((user) => user.email).join(", ");
-    console.log("Sending email to:", emails);
-    console.log("Subject:", subject);
-    console.log("Body:", body);
-    // Add your email sending logic here
-    setModalMultiUsers(false);
-    // Clear subject and body after sending
-    setSubjectMultiUsers("");
-    setBodyMultiUsers("");
+    const subjectMultipleUsers = subjectMultiUsers;
+    const messageMultipleUsers = bodyMultiUsers;
+
+    console.log("Sending email to:", emails, "\n");
+    console.log("subject: ", subjectMultipleUsers, "\n");
+    console.log("message : ", messageMultipleUsers, "\n");
+
+    const payload = {
+      email: emails,
+      message: messageMultipleUsers,
+      subject: subjectMultipleUsers,
+    };
+
+    try {
+      setSendMultipleBtnLoading(true);
+      const response = await axios.post(
+        "https://q0v1vrhy5g.execute-api.us-east-1.amazonaws.com/staging",
+        payload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Email API Response:", response.data);
+
+      if (response.data.statusCode) {
+        setModalMultiUsers(false);
+        setSubjectMultiUsers("");
+        setBodyMultiUsers("");
+        setSendMultipleBtnLoading(false);
+
+        notify("tr", "Emails sent successfully!", "success");
+      } else {
+        setSendMultipleBtnLoading(false);
+
+        notify("tr", response.data.message, "danger");
+      }
+    } catch (error) {
+      console.error("Error sending email:", error);
+      throw new Error(error.response?.data?.message || "Error sending email");
+    }
   };
 
   const filteredData = items
-    .filter((item) => item.CartItem && item.CartItem.length >= 1) // Only show users with Cart_Count > 1
+    .filter((item) => item.CartItem && item.CartItem.length >= 1)
     .filter((item) =>
       item.email.toLowerCase().includes(searchTerm.toLowerCase())
-    ) // Apply search filter
-    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)); // Sort by updatedAt in descending order
+    )
+    .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
   const columns = [
     {
@@ -154,6 +254,7 @@ function Cart() {
           </div>
         }
       />
+      <NotificationAlert ref={notificationAlertRef} />
       <div className="content">
         <Row>
           <Col xs={12}>
@@ -180,7 +281,7 @@ function Cart() {
                     onClick={handleViewEmails}
                     disabled={selectedUsers.length === 0}
                   >
-                    Send Email to Selected
+                    Send Email to Selected Emails
                   </Button>
                 </div>
               </CardHeader>
@@ -254,7 +355,7 @@ function Cart() {
                 <p>No items in the cart.</p>
               )}
               <hr />
-              <h4>Send Email</h4>
+              <h6 className="mb-3">Send Email</h6>
               <Form>
                 <FormGroup>
                   <Label for="subject">Subject</Label>
@@ -274,8 +375,26 @@ function Cart() {
                     onChange={(e) => setBodyCartItem(e.target.value)}
                   />
                 </FormGroup>
-                <Button color="primary" onClick={handleEmailSend}>
-                  Send Email
+                <Input
+                  type="hidden"
+                  id="userEmail"
+                  name="userEmail"
+                  value={selectedUser?.email}
+                />
+                <Button
+                  color="info"
+                  className="btn-round"
+                  onClick={handleEmailSend}
+                  disabled={sendBtnLoading}
+                >
+                  {sendBtnLoading ? (
+                    <>
+                      Sending...
+                      <Spinner color="primary" size="sm" className="ml-1" />
+                    </>
+                  ) : (
+                    "Send Email"
+                  )}
                 </Button>
               </Form>
             </>
@@ -285,7 +404,7 @@ function Cart() {
         </ModalBody>
       </Modal>
 
-      {/* Modal for sending emails */}
+      {/* Modal for sending email to multiple users */}
       <Modal
         isOpen={modalMultiUsers}
         toggle={() => setModalMultiUsers(false)}
@@ -295,25 +414,23 @@ function Cart() {
           Send Email to Selected Users
         </ModalHeader>
         <ModalBody>
-          <Table bordered responsive>
-            <thead>
-              <tr>
-                <td className="font-weight-bold">Selected Emails</td>
-              </tr>
-            </thead>
-            {selectedUsers.map((user) => (
-              <tbody>
-                <tr key={user.id}>
-                  <td>{user.email}</td>
-                </tr>
-              </tbody>
-            ))}
-          </Table>
+          {selectedUsers.length > 0 ? (
+            <DataTable
+              size={"sm"}
+              columns={[{ name: "Emails", selector: (row) => row.email }]}
+              data={selectedUsers}
+              pagination
+              paginationPerPage={3}
+              paginationRowsPerPageOptions={[3, 10, 20, 50]}
+            />
+          ) : (
+            <p>No users selected.</p>
+          )}
           <hr />
-          <h4>Send Email</h4>
+          <h6 className="mb-3">Send Email</h6>
           <Form>
             <FormGroup>
-              <Label for="subject">Subject</Label>
+              <Label size="small">Subject</Label>
               <Input
                 type="text"
                 id="subject"
@@ -322,7 +439,7 @@ function Cart() {
               />
             </FormGroup>
             <FormGroup>
-              <Label for="body">Body</Label>
+              <Label size="small">Body</Label>
               <Input
                 type="textarea"
                 id="body"
@@ -330,8 +447,20 @@ function Cart() {
                 onChange={(e) => setBodyMultiUsers(e.target.value)}
               />
             </FormGroup>
-            <Button color="primary" onClick={handleMultipleEmailSend}>
-              Send Email
+            <Button
+              color="info"
+              className="btn-round"
+              onClick={handleMultipleEmailSend}
+              disabled={sendMultipleBtnLoading}
+            >
+              {sendMultipleBtnLoading ? (
+                <>
+                  Sending...
+                  <Spinner color="primary" size="sm" className="ml-1" />
+                </>
+              ) : (
+                "Send Email"
+              )}
             </Button>
           </Form>
         </ModalBody>

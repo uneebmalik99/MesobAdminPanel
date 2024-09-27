@@ -234,7 +234,29 @@ const Orders = () => {
       });
   }, []);
 
-  const filteredData = items.filter((item) =>
+  // const filteredData = items.filter((item) =>
+  //   item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+
+  // Separate filters based on adminStatus
+  const succeededOrders = items.filter(
+    (item) => item.adminStatus === "Succeeded"
+  );
+  const attemptsOrders = items.filter(
+    (item) => item.adminStatus === "Attempts" || item.adminStatus == null
+  );
+  const closedOrders = items.filter((item) => item.adminStatus === "Closed");
+
+  // Apply search filtering based on searchTerm for each table
+  const filteredSucceededOrders = succeededOrders.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredAttemptsOrders = attemptsOrders.filter((item) =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const filteredClosedOrders = closedOrders.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -394,7 +416,7 @@ const Orders = () => {
                     ) : (
                       <DataTable
                         columns={columns}
-                        data={filteredData}
+                        data={filteredSucceededOrders}
                         selectableRows
                         pagination
                         responsive
@@ -429,7 +451,7 @@ const Orders = () => {
                     ) : (
                       <DataTable
                         columns={columns}
-                        data={filteredData}
+                        data={filteredAttemptsOrders}
                         selectableRows
                         pagination
                         responsive
@@ -464,7 +486,7 @@ const Orders = () => {
                     ) : (
                       <DataTable
                         columns={columns}
-                        data={filteredData}
+                        data={filteredClosedOrders}
                         selectableRows
                         pagination
                         responsive

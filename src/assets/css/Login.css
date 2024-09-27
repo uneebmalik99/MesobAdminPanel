@@ -1,9 +1,9 @@
 /* General Styles */
-* {
+/* * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-}
+} */
 
 body {
   background-color: #f0f2f5;
@@ -33,19 +33,21 @@ h2 {
 }
 
 /* Input Group */
-.input-group {
+.login-input-group {
   margin-bottom: 15px;
   text-align: left;
+  display: inline;
 }
 
-.input-group label {
+.login-input-group label {
   display: block;
   margin-bottom: 5px;
   font-weight: bold;
   color: #555555;
+  margin-top: 15px;
 }
 
-.input-group input {
+.login-input-group input {
   width: 100%;
   padding: 10px;
   border-radius: 4px;
@@ -71,9 +73,29 @@ h2 {
 }
 
 .logo_img {
-  width: 100px; /* Adjust size as needed */
-  margin-bottom: 20px; /* Space below the logo */
+  width: 100px;
+  margin-bottom: 20px;
 }
+
+.password-container {
+  position: relative;
+}
+
+.password-container input {
+  width: 100%;
+  padding-right: 40px;
+}
+
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
 
 /* Media Queries for Responsive Design */
 @media screen and (max-width: 768px) {

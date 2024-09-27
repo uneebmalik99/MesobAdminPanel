@@ -26,250 +26,109 @@ const EditOrder = () => {
 
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [orderStatus, setOrderStatus] = useState("");
   const [senderEmail, setSenderEmail] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
 
   const notificationAlertRef = useRef(null);
   const navigate = useNavigate();
-
   const [updateBtnLoading, setUpdateBtnLoading] = useState(false);
 
-  const [totalSellingPrice, setTotalSellingPrice] = useState(0);
-  const [totalCost, setTotalCost] = useState(0);
-
+  const [orderStatus, setOrderStatus] = useState(""); // Initial status
+  // const [previousOrderStatus, setPreviousOrderStatus] = useState(orderStatus);
   const [markStatus, setMarkStatus] = useState("");
   const [notes, setNotes] = useState("");
 
-  useEffect(() => {
-    const fetchOrderDetails = async () => {
-      try {
-        const response = await axios.get(
-          `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
-        );
-        const itemData = response.data.Item;
-        // console.log("itemData", itemData);
+  const [productRows, setProductRows] = useState([]);
+  const [totalSellingPrice, setTotalSellingPrice] = useState(0);
+  const [totalCost, setTotalCost] = useState(0);
 
-        // Parse senderAddress JSON string
-        const senderAddressParsed = JSON.parse(itemData?.senderAddress || "{}");
+  const fetchOrderDetails = async () => {
+    try {
+      const response = await axios.get(
+        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
+      );
+      const itemData = response?.data?.Item;
 
-        setOrderDetails(itemData);
-        setOrderStatus(itemData.Status);
-        setSenderEmail(senderAddressParsed.email);
-        setRecipientEmail(itemData.useremail);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching order details:", error);
-        setLoading(false);
+      // Parse senderAddress JSON string
+      const senderAddressParsed = JSON.parse(itemData?.senderAddress || "{}");
+
+      setOrderDetails(itemData);
+      setOrderStatus(itemData?.Status);
+      setSenderEmail(senderAddressParsed?.email);
+      setRecipientEmail(itemData?.useremail);
+      setLoading(false);
+
+      if (itemData?.Products) {
+        let sellingPrice = 0;
+        let costPrice = 0;
+        let rows = [];
+
+        // Iterate through products to calculate totals
+        itemData.Products.forEach((product, index) => {
+          const price = parseFloat(product.price.replace(/[$,]/g, ""));
+          const cost = parseFloat(product.cost.replace(/[$,]/g, ""));
+
+          console.log("price", price);
+          console.log("cost", cost);
+
+          const quantity = parseFloat(product.quantity || product.qty);
+
+          sellingPrice += price * quantity;
+          costPrice += cost * quantity;
+
+          // Create the row and push to it
+          let row = ` 
+          <tr key=${index + 1}>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+              ${index + 1}
+            </td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+              ${product.name ?? product.title}
+            </td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+              ${product.country}
+            </td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+              ${product.quantity ?? product.qty}
+            </td>
+            <td style="border: 1px solid #ccc; padding: 8px; text-align: center;">
+              ${product.price}
+            </td>
+          </tr>`;
+
+          rows.push(row);
+        });
+
+        setProductRows(rows);
+        setTotalSellingPrice(sellingPrice);
+        setTotalCost(costPrice);
       }
-    };
-
-    if (orderDetails?.Products) {
-      let totalSelling = 0;
-      let totalCostAmount = 0;
-
-      // Iterate through products to calculate totals
-      orderDetails?.Products.forEach((product) => {
-        const price = parseFloat(product.price.replace(/[$,]/g, ""));
-        const cost = parseFloat(product.cost.replace(/[$,]/g, ""));
-        const quantity = parseFloat(product.quantity);
-
-        totalSelling += price * quantity;
-        totalCostAmount += cost * quantity;
-      });
-
-      // Set the totals in the state
-      setTotalSellingPrice(totalSelling);
-      setTotalCost(totalCostAmount);
-    }
-
-    fetchOrderDetails();
-  }, [id, orderDetails?.Products]);
-
-  //   // Initialize variables for row rendering
-  //   let productRows = [];
-  //   const contentObj = orderDetails?.Products || [];
-  //
-  //   // Iterate through products to create rows
-  //   contentObj.forEach((product, index) => {
-  //     productRows.push(
-  //       <tr key={index}>
-  //         <td
-  //           style={{
-  //             border: "1px solid #ccc",
-  //             padding: "8px",
-  //             textAlign: "center",
-  //           }}
-  //         >
-  //           {index + 1}
-  //         </td>
-  //         <td
-  //           style={{
-  //             border: "1px solid #ccc",
-  //             padding: "8px",
-  //             textAlign: "center",
-  //           }}
-  //         >
-  //           {product.name}
-  //         </td>
-  //         <td
-  //           style={{
-  //             border: "1px solid #ccc",
-  //             padding: "8px",
-  //             textAlign: "center",
-  //           }}
-  //         >
-  //           {product.country}
-  //         </td>
-  //         <td
-  //           style={{
-  //             border: "1px solid #ccc",
-  //             padding: "8px",
-  //             textAlign: "center",
-  //           }}
-  //         >
-  //           {product.quantity}
-  //         </td>
-  //         <td
-  //           style={{
-  //             border: "1px solid #ccc",
-  //             padding: "8px",
-  //             textAlign: "center",
-  //           }}
-  //         >
-  //           {product.cost}
-  //         </td>
-  //         <td
-  //           style={{
-  //             border: "1px solid #ccc",
-  //             padding: "8px",
-  //             textAlign: "center",
-  //           }}
-  //         >
-  //           {product.price}
-  //         </td>
-  //       </tr>
-  //     );
-  //   });
-  //
-  //   // JSX for rendering the table and totals
-  //   return (
-  //     <div>
-  //       <h2>Product Details:</h2>
-  //       <table style={{ borderCollapse: "collapse", width: "100%" }}>
-  //         <thead>
-  //           <tr>
-  //             <th style={{ border: "1px solid #ccc", padding: "8px" }}>Sr No.</th>
-  //             <th style={{ border: "1px solid #ccc", padding: "8px" }}>Name</th>
-  //             <th style={{ border: "1px solid #ccc", padding: "8px" }}>
-  //               Country
-  //             </th>
-  //             <th style={{ border: "1px solid #ccc", padding: "8px" }}>
-  //               Quantity
-  //             </th>
-  //             <th style={{ border: "1px solid #ccc", padding: "8px" }}>Cost</th>
-  //             <th style={{ border: "1px solid #ccc", padding: "8px" }}>
-  //               Selling Price
-  //             </th>
-  //           </tr>
-  //         </thead>
-  //         <tbody>{productRows}</tbody>
-  //       </table>
-  //
-  //       <p>Total Promo Discount: ${orderDetails.promoDiscount}</p>
-  //       <p>Total Selling Price: ${totalSellingPrice.toFixed(2)}</p>
-  //       <p>Total Cost Price: ${totalCost.toFixed(2)}</p>
-  //       <p>Thank you for your order!</p>
-  //     </div>
-  //   );
-
-  const getEmailContentByStatus = (status) => {
-    switch (status) {
-      case "Shipped":
-        return `
-        <div style="display: flex; align-items: center;">
-          <h2 style="font-style: italic; color: black; margin-right: 10px;">
-            <span style="color: red;">M</span>esob 
-            <span style="color: red;">S</span>tore
-          </h2>
-          <div style="display: flex; justify-content: center; align-items: center;">
-            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/app-icon.png" alt="Your Logo">
-          </div>
-        </div>
-        <p style="color:black;">Dear customer,<br />
-        We are excited to let you know that your order has been shipped!<br />
-        If you have any questions or need further assistance, please don’t hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521.
-        <br />
-        <br />
-        Thank you for shopping with Mesob Store! We hope you enjoy your purchase and look forward to serving you again.</p>
-      `;
-      case "Delivered":
-        return `
-        <div style="display: flex; align-items: center;">
-          <h2 style="font-style: italic; color: black; margin-right: 10px;">
-            <span style="color: red;">M</span>esob 
-            <span style="color: red;">S</span>tore
-          </h2>
-          <div style="display: flex; justify-content: center; align-items: center;">
-            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/app-icon.png" alt="Your Logo">
-          </div>
-        </div>
-        <p style="color:black;">Dear customer,<br />
-        We are pleased to inform you that your order has been successfully delivered!<br />
-        If you have any questions or need further assistance, please don’t hesitate to contact our customer service team.
-        <br />
-        <br />
-        Thank you for shopping with Mesob Store!</p>
-      `;
-      case "Ordered":
-        return `
-        <h3>1. Sender Info: </h3>
-        <ul>
-          <li>Name: ${orderDetails.sender.name}</li>
-          <li>Email: ${orderDetails.sender.email}</li>
-          <li>Address: ${orderDetails.sender.address}</li>
-          <li>Phone: ${orderDetails.sender.phone}</li>
-          <li>City: ${orderDetails.sender.city}</li>
-          <li>State: ${orderDetails.sender.state}</li>
-          <li>Zip Code: ${orderDetails.sender.pincode}</li>
-        </ul>
-        <h3>2. Receiver Info: </h3>
-        <ul>
-          <li>Name: ${orderDetails.receiver.name}</li>
-          <li>Street Address: ${orderDetails.receiver.address}</li>
-          <li>Phone: ${orderDetails.receiver.phone}</li>
-          <li>City: ${orderDetails.receiver.city}</li>
-        </ul>
-        <h2>Product Details:</h2>
-        <table style="border-collapse: collapse; width: 100%;">
-          <thead>
-            <tr>
-              <th style="border: 1px solid #ccc; padding: 8px;">Sr No.</th>
-              <th style="border: 1px solid #ccc; padding: 8px;">Name</th>
-              <th style="border: 1px solid #ccc; padding: 8px;">Country</th>
-              <th style="border: 1px solid #ccc; padding: 8px;">Quantity</th>
-              <th style="border: 1px solid #ccc; padding: 8px;">Cost</th>
-              <th style="border: 1px solid #ccc; padding: 8px;">Selling Price</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${tableHTML}
-          </tbody>
-        </table>
-        <p>Total Promo Discount: $${orderDetails.promoDiscount}</p>
-        <p>Total Selling Price: $${totalSellingPrice.toFixed(2)}</p>
-        <p>Total Cost Price: $${totalCost.toFixed(2)}</p>
-        <p>Thank you for your order!</p>
-      `;
+    } catch (error) {
+      console.error("Error fetching order details:", error);
+      setLoading(false);
     }
   };
 
+  useEffect(() => {
+    fetchOrderDetails();
+  }, []);
+
+  const tableHTML = productRows;
+
+  console.log("tableHTML", tableHTML);
+
   const handleStatusChange = (e) => {
-    setOrderStatus(e.target.value);
+    const newStatus = e.target.value;
+    console.log("newStatus", newStatus);
+    setOrderStatus(newStatus);
   };
 
   const handleMarkStatusChange = (e) => {
     setMarkStatus(e.target.value);
+  };
+
+  const handleNotesChange = (e) => {
+    setNotes(e.target.value);
   };
 
   const notify = (place, message, type) => {
@@ -287,51 +146,54 @@ const EditOrder = () => {
     notificationAlertRef.current.notificationAlert(options);
   };
 
-  const handleSave = async () => {
+  const handleUpdate = async () => {
+    if (orderDetails?.Status !== orderStatus) {
+      console.log("yes " + orderStatus);
+    } else {
+      console.log("no " + orderStatus);
+    }
+
     try {
+      setUpdateBtnLoading(true);
+      const updatedBy = localStorage.getItem("user_email");
+      console.log("updatedBy===>", updatedBy);
+
       const response = await axios.patch(
-        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}`
+        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(
+          notes
+        )}&updatedBy=${updatedBy}`
       );
 
-      // Check if the response status code is 200
       if (response.status === 200) {
-        notify("tr", "Order status updated successfully!", "success");
-
-        // Check if sender and recipient emails are provided before sending
-        if (senderEmail || recipientEmail) {
-          // Get email subject and message based on order status
+        notify("tr", "Order updated successfully!", "success");
+        setUpdateBtnLoading(false);
+        if (orderDetails?.Status !== orderStatus) {
+          // Get email content and send email
           const emailMessage = getEmailContentByStatus(orderStatus);
-
-          // Send emails to both sender and recipient
-          const senderEmailResponse = await sendEmail(
-            senderEmail,
-            emailMessage,
-            `Order Status: ${orderStatus}`
-          );
-          const recipientEmailResponse = await sendEmail(
-            recipientEmail,
-            emailMessage,
-            `Order Status: ${orderStatus}`
-          );
-
-          // Notify user based on email sending result
-          if (
-            senderEmailResponse.statusCode === 200 ||
-            recipientEmailResponse.statusCode === 200
-          ) {
-            notify("tr", "Emails sent successfully!", "success");
-          } else {
-            notify("tr", "Failed to send emails.", "danger");
-          }
+          await Promise.all([
+            sendEmail(
+              senderEmail,
+              emailMessage,
+              `Order Status: ${orderStatus}`
+            ),
+            sendEmail(
+              recipientEmail,
+              emailMessage,
+              `Order Status: ${orderStatus}`
+            ),
+          ]);
+        } else {
+          notify("tr", "No changes made to order status.", "info");
         }
       } else {
-        let errorMessage = "Failed to update order status.";
-        notify("tr", errorMessage, "danger");
+        notify("tr", "Failed to update order status.", "danger");
       }
-      setUpdateBtnLoading(false);
     } catch (error) {
-      console.error("Error updating order status or sending emails:", error);
-      notify("tr", "Failed to update order status", "danger");
+      console.error("Error updating order:", error);
+      notify("tr", "Failed to update order", "danger");
+      setUpdateBtnLoading(false);
+    } finally {
+      setOrderStatus(orderStatus);
     }
   };
 
@@ -358,6 +220,10 @@ const EditOrder = () => {
 
       // Log response (similar to PHP's error_log)
       console.log("Email API Response:", response.data);
+      console.log("Email API statusCode:", response.data.statusCode);
+      if (response.status === 200) {
+        setUpdateBtnLoading(false);
+      }
 
       return response.data;
     } catch (error) {
@@ -375,7 +241,7 @@ const EditOrder = () => {
     );
   }
 
-  const senderInfo = JSON.parse(orderDetails.senderAddress || "{}");
+  const senderInfo = JSON.parse(orderDetails.senderAddress);
   const receiverInfo = {
     name: orderDetails.name,
     email: orderDetails.useremail,
@@ -384,6 +250,86 @@ const EditOrder = () => {
     city: orderDetails.city,
     state: orderDetails.state,
     country: orderDetails.country,
+  };
+
+  const getEmailContentByStatus = (status) => {
+    switch (status) {
+      case "Shipped":
+        return `
+        <div style="display: flex; align-items: center;">
+          <h2 style="font-style: italic; color: black; margin-right: 20px;">
+            <span style="color: red;">M</span>esob 
+            <span style="color: red;">S</span>tore
+          </h2>
+          <div style="display: flex; justify-content: center; align-items: center; margin-left: 10px;">
+            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/app-icon.png" alt="Your Logo">
+          </div>
+        </div>
+        <p style="color:black;">Dear customer,<br />
+        We are excited to let you know that your order has been shipped!<br />
+        If you have any questions or need further assistance, please don’t hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521.
+        <br />
+        <br />
+        Thank you for shopping with Mesob Store! We hope you enjoy your purchase and look forward to serving you again.</p>
+      `;
+      case "Delivered":
+        return `
+        <div style="display: flex; align-items: center;">
+          <h2 style="font-style: italic; color: black; margin-right: 10px;">
+            <span style="color: red;">M</span>esob 
+            <span style="color: red;">S</span>tore
+          </h2>
+          <div style="display: flex; justify-content: center; align-items: center; margin-left: 20px;">
+            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/app-icon.png" alt="Your Logo">
+          </div>
+        </div>
+        <p style="color:black;">Dear customer,<br />
+        We are pleased to inform you that your order has been successfully delivered!<br />
+        If you have any questions or need further assistance, please don’t hesitate to contact our customer service team.
+        <br />
+        <br />
+        Thank you for shopping with Mesob Store!</p>
+      `;
+      case "Orderd":
+        return `
+        <h3>1. Sender Info: </h3>
+        <ul>
+          <li>Name: ${senderInfo.name}</li>
+          <li>Email: ${senderInfo.email}</li>
+          <li>Address: ${senderInfo.address}</li>
+          <li>Phone: ${senderInfo.phone}</li>
+          <li>City: ${senderInfo.city}</li>
+          <li>State: ${senderInfo.state}</li>
+          <li>Zip Code: ${senderInfo.pincode}</li>
+        </ul>
+        <h3>2. Receiver Info: </h3>
+        <ul>
+          <li>Name: ${receiverInfo.name}</li>
+          <li>Street Address: ${receiverInfo.address}</li>
+          <li>Phone: ${receiverInfo.phone}</li>
+          <li>City: ${receiverInfo.city}</li>
+        </ul>
+        <h2>Order Details:</h2>
+        <table style="border-collapse: collapse; width: 100%;">
+          <thead>
+            <tr>
+              <th style="border: 1px solid #ccc; padding: 8px;">Sr No.</th>
+              <th style="border: 1px solid #ccc; padding: 8px;">Name</th>
+              <th style="border: 1px solid #ccc; padding: 8px;">Country</th>
+              <th style="border: 1px solid #ccc; padding: 8px;">Quantity</th>
+              <th style="border: 1px solid #ccc; padding: 8px;">Selling Price</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${tableHTML}
+          </tbody>
+        </table>
+        <p>Total Promo Discount :$ ${orderDetails.promodiscount}</p>
+        <p>Total Selling Price: ${totalSellingPrice}</p>
+        <p>Total Cost Price: ${totalCost}</p>
+        <p>Thank you for your order!</p>
+      `;
+    }
   };
 
   return (
@@ -500,7 +446,7 @@ const EditOrder = () => {
                     value={orderStatus}
                     onChange={handleStatusChange}
                   >
-                    <option value="Ordered">Ordered</option>
+                    <option value="Orderd">Orderd</option>
                     <option value="Shipped">Shipped</option>
                     <option value="Delivered">Delivered</option>
                   </Input>
@@ -518,6 +464,9 @@ const EditOrder = () => {
                     onChange={handleMarkStatusChange}
                     type="select"
                   >
+                    <option value="" selected>
+                      Please Select
+                    </option>
                     <option value="Succeeded">Succeeded</option>
                     <option value="Attempts">Attempts</option>
                     <option value="Closed">Closed</option>
@@ -530,16 +479,16 @@ const EditOrder = () => {
                   <Input
                     id="notes"
                     value={notes}
-                    onChange={handleStatusChange}
+                    onChange={handleNotesChange}
                     type="textarea"
                   />
                 </FormGroup>
 
-                {/* Save Button */}
+                {/* Update Button */}
                 <Button
                   color="info"
                   className="btn-round"
-                  onClick={handleSave}
+                  onClick={handleUpdate}
                   disabled={updateBtnLoading}
                 >
                   {updateBtnLoading ? (

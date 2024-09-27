@@ -6,10 +6,13 @@ import "react-notification-alert/dist/animate.css";
 import { Helmet } from "react-helmet";
 import logo from "logo.jpeg";
 import { Spinner } from "reactstrap";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons"; // Import Font Awesome icons
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const notificationAlertRef = useRef(null);
@@ -96,23 +99,36 @@ const Login = () => {
           <p>Welcome! Login to access the Mesob Store</p>
           <p>Did you Forget Password?</p>
           <form onSubmit={handleSubmit}>
-            <div className="input-group">
+            <div className="login-input-group">
               <label>Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                autocomplete={true}
               />
             </div>
-            <div className="input-group">
+            <div className="login-input-group">
               <label>Password</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="password-container">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <button
+                  type="button"
+                  className="toggle-password"
+                  onClick={() => setShowPassword((prevState) => !prevState)}
+                >
+                  <FontAwesomeIcon
+                    icon={showPassword ? faEyeSlash : faEye}
+                    size="lg"
+                  />
+                </button>
+              </div>
             </div>
             <button type="submit" className="login-btn" disabled={loading}>
               {loading ? (

@@ -1,6 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 // react plugin used to create charts
-import { Line, Bar } from "react-chartjs-2";
+// import { Line, Bar } from "react-chartjs-2";
 
 // reactstrap components
 import {
@@ -11,46 +11,119 @@ import {
   CardTitle,
   Row,
   Col,
-  UncontrolledDropdown,
-  DropdownToggle,
-  DropdownMenu,
-  DropdownItem,
   Table,
   Button,
   Label,
   FormGroup,
   Input,
   UncontrolledTooltip,
+  Spinner
 } from "reactstrap";
 
 // core components
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 
-import {
-  dashboardPanelChart,
-  dashboardShippedProductsChart,
-  dashboardAllProductsChart,
-  dashboard24HoursPerformanceChart,
-} from "variables/charts.js";
+import axios from "axios";
+import formatDate from "utils/formatDate";
+
+// import {
+//   dashboardPanelChart,
+//   dashboardShippedProductsChart,
+//   dashboardAllProductsChart,
+//   dashboard24HoursPerformanceChart,
+// } from "variables/charts.js";
+
 import { Helmet } from "react-helmet";
+import DataTable from "react-data-table-component";
 
 function Dashboard() {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const columns = [
+    {
+      name: "ID",
+      selector: (row, index) => index + 1,
+      width: "80px",
+      sortable: false,
+    },
+    {
+      name: "User ID",
+      selector: (row) => row.id,
+      sortable: true,
+      width: "320px",
+    },
+    {
+      name: "Name",
+      selector: (row) => row.name,
+      sortable: true,
+      width: "200px",
+    },
+    {
+      name: "Phone",
+      selector: (row) => row.phone ?? "-",
+      sortable: true,
+      width: "150px",
+    },
+    {
+      name: "City",
+      selector: (row) => row.city ?? "-",
+      sortable: true,
+      width: "150px",
+    },
+    {
+      name: "Is Sender",
+      selector: (row) => (row.isSender === true ? "Yes" : "No"),
+      sortable: true,
+      width: "120px",
+    },
+    {
+      name: "Created At",
+      selector: (row) => formatDate(row.createdAt),
+      sortable: true,
+      width: "250px",
+    },
+  ];
+
+  useEffect(() => {
+    axios
+      .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items")
+      .then((response) => {
+        if (response.data) {
+          setItems(response.data);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the items!", error);
+      });
+  }, []);
+
+  const latestSucceededOrders = items
+    .filter((item) => item.adminStatus === "Succeeded")
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by createdAt in descending order
+    .slice(0, 10);
+
   return (
     <>
       <Helmet>
         <title>Dashboard - Mesob Store</title>
       </Helmet>
       <PanelHeader
-        size="lg"
+        size="md"
         content={
-          <Line
-            data={dashboardPanelChart.data}
-            options={dashboardPanelChart.options}
-          />
+          // <Line
+          //   data={dashboardPanelChart.data}
+          //   options={dashboardPanelChart.options}
+          // />
+          <div className="header text-center">
+            <h2 className="title">Dashboard</h2>
+          </div>
         }
       />
       <div className="content">
-        <Row>
+        {/* <Row>
           <Col xs={12} md={4}>
             <Card className="card-chart">
               <CardHeader>
@@ -148,9 +221,31 @@ function Dashboard() {
               </CardFooter>
             </Card>
           </Col>
-        </Row>
+        </Row> */}
         <Row>
-          <Col xs={12} md={6}>
+          <Col xs={12} md={8}>
+            <Card>
+              <CardHeader>
+                <h5 className="card-category">Orders</h5>
+                <CardTitle tag="h4">Latest Succeeded Orders</CardTitle>
+              </CardHeader>
+              <CardBody>
+                {loading ? (
+                  <div style={{ textAlign: "center", padding: "20px" }}>
+                    <Spinner color="primary" />
+                    <p>Loading orders...</p>
+                  </div>
+                ) : (
+                  <DataTable
+                    columns={columns}
+                    data={latestSucceededOrders}
+                    responsive
+                  />
+                )}
+              </CardBody>
+            </Card>
+          </Col>
+          <Col xs={12} md={4}>
             <Card className="card-tasks">
               <CardHeader>
                 <h5 className="card-category">Backend Development</h5>
@@ -304,58 +399,6 @@ function Dashboard() {
                   minutes ago
                 </div>
               </CardFooter>
-            </Card>
-          </Col>
-          <Col xs={12} md={6}>
-            <Card>
-              <CardHeader>
-                <h5 className="card-category">All Persons List</h5>
-                <CardTitle tag="h4">Employees Stats</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <Table responsive>
-                  <thead className="text-primary">
-                    <tr>
-                      <th>Name</th>
-                      <th>Country</th>
-                      <th>City</th>
-                      <th className="text-right">Salary</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td>Dakota Rice</td>
-                      <td>Niger</td>
-                      <td>Oud-Turnhout</td>
-                      <td className="text-right">$36,738</td>
-                    </tr>
-                    <tr>
-                      <td>Minerva Hooper</td>
-                      <td>Curaçao</td>
-                      <td>Sinaai-Waas</td>
-                      <td className="text-right">$23,789</td>
-                    </tr>
-                    <tr>
-                      <td>Sage Rodriguez</td>
-                      <td>Netherlands</td>
-                      <td>Baileux</td>
-                      <td className="text-right">$56,142</td>
-                    </tr>
-                    <tr>
-                      <td>Doris Greene</td>
-                      <td>Malawi</td>
-                      <td>Feldkirchen in Kärnten</td>
-                      <td className="text-right">$63,542</td>
-                    </tr>
-                    <tr>
-                      <td>Mason Porter</td>
-                      <td>Chile</td>
-                      <td>Gloucester</td>
-                      <td className="text-right">$78,615</td>
-                    </tr>
-                  </tbody>
-                </Table>
-              </CardBody>
             </Card>
           </Col>
         </Row>

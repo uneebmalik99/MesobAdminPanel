@@ -149,7 +149,7 @@ function Notifications() {
                         <label>Description</label>
                         {/* <Input placeholder="Body" type="textarea" /> */}
                         <Editor
-                          apiKey="9vbq54k2jchreu8yq8hkg8fjujbzmav2arbz5kim4yv9omo8"
+                          apiKey={process.env.REACT_APP_TINYMCE_API_KEY}
                           onInit={(evt, editor) => (editorRef.current = editor)}
                           initialValue="<p>Write your message here...</p>"
                           init={{

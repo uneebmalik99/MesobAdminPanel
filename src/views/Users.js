@@ -17,6 +17,8 @@ import {
   Form,
   FormGroup,
   Label,
+  Popover,
+  PopoverBody,
 } from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import axios from "axios";
@@ -24,19 +26,16 @@ import formatDate from "utils/formatDate";
 import { Helmet } from "react-helmet";
 import NotificationAlert from "react-notification-alert";
 import "react-notification-alert/dist/animate.css";
+import formatUserId from "utils/formatUID";
+import { Editor } from "@tinymce/tinymce-react";
 
 const columns = [
-  {
-    name: "ID",
-    selector: (row, index) => index + 1,
-    width: "80px",
-    sortable: false,
-  },
   {
     name: "User ID",
     selector: (row) => row.id,
     sortable: true,
-    width: "320px",
+    width: "120px",
+    cell: (row) => <UserIdCell userId={row.id} />,
   },
   {
     name: "Email",
@@ -48,7 +47,7 @@ const columns = [
     name: "Phone",
     selector: (row) => row.phoneNo ?? "-",
     sortable: true,
-    width: "150px",
+    width: "100px",
   },
   {
     name: "Created At",
@@ -64,15 +63,40 @@ const columns = [
   },
 ];
 
+function UserIdCell({ userId }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const targetRef = useRef(null);
+
+  const toggle = () => setIsOpen(!isOpen);
+
+  return (
+    <div>
+      <span ref={targetRef} onMouseEnter={toggle} onMouseLeave={toggle}>
+        {formatUserId(userId)}
+      </span>
+      <Popover
+        placement="right"
+        isOpen={isOpen}
+        target={targetRef}
+        toggle={toggle}
+        trigger="hover"
+      >
+        <PopoverBody>{userId}</PopoverBody>
+      </Popover>
+    </div>
+  );
+}
+
 function Users() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedRows, setSelectedRows] = useState([]); // Track selected rows
-  const [modalOpen, setModalOpen] = useState(false); // Modal state
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [modalOpen, setModalOpen] = useState(false);
 
   const [subject, setSubject] = useState("");
   const [body, setBody] = useState("");
+  const editorRef = useRef(null);
   const [sendMultipleBtnLoading, setSendMultipleBtnLoading] = useState(false);
 
   const notificationAlertRef = useRef(null);
@@ -107,7 +131,7 @@ function Users() {
   }, []);
 
   const filteredData = users.filter((item) => {
-    return item.email.toLowerCase().includes(searchTerm.toLowerCase());
+    return item.email?.toLowerCase().includes(searchTerm.toLowerCase());
   });
 
   const toggleModal = () => {
@@ -116,6 +140,10 @@ function Users() {
 
   const handleRowSelected = (state) => {
     setSelectedRows(state.selectedRows);
+  };
+
+  const handleEditorChange = (content, editor) => {
+    setBody(content);
   };
 
   const handleEmailSend = async (e) => {
@@ -238,9 +266,11 @@ function Users() {
                     data={filteredData}
                     selectableRows
                     onSelectedRowsChange={handleRowSelected}
-                    pagination
                     responsive
                     fixedHeader={true}
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
                   />
                 )}
               </CardBody>
@@ -280,11 +310,31 @@ function Users() {
             </FormGroup>
             <FormGroup>
               <Label for="body">Body</Label>
-              <Input
+              {/* <Input
                 type="textarea"
                 id="body"
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
+              /> */}
+              <Editor
+                apiKey="9vbq54k2jchreu8yq8hkg8fjujbzmav2arbz5kim4yv9omo8"
+                onInit={(evt, editor) => (editorRef.current = editor)}
+                initialValue="<p>Write your message here...</p>"
+                init={{
+                  height: 300,
+                  menubar: true,
+                  plugins: [
+                    "advlist autolink lists link image charmap print preview anchor",
+                    "searchreplace visualblocks code fullscreen",
+                    "insertdatetime media table paste code help wordcount",
+                  ],
+                  toolbar:
+                    "undo redo | formatselect | " +
+                    "bold italic backcolor | alignleft aligncenter " +
+                    "alignright alignjustify | bullist numlist outdent indent | " +
+                    "removeformat",
+                }}
+                onEditorChange={handleEditorChange}
               />
             </FormGroup>
             <Button
@@ -296,7 +346,7 @@ function Users() {
               {sendMultipleBtnLoading ? (
                 <>
                   Sending...
-                  <Spinner color="primary" size="sm" className="ml-1" />
+                  <Spinner color="secondary" size="sm" className="ml-1" />
                 </>
               ) : (
                 "Send Email"

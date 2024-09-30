@@ -17,6 +17,8 @@ import {
   Form,
   FormGroup,
   Label,
+  Popover,
+  PopoverBody,
 } from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import axios from "axios";
@@ -24,6 +26,8 @@ import formatDate from "utils/formatDate";
 import { Helmet } from "react-helmet";
 import NotificationAlert from "react-notification-alert";
 import "react-notification-alert/dist/animate.css";
+import formatUserId from "utils/formatUID";
+import { Editor } from "@tinymce/tinymce-react";
 
 function Cart() {
   const [items, setItems] = useState([]);
@@ -35,6 +39,7 @@ function Cart() {
   const [modalCartItem, setModalCartItems] = useState(false); // Modal state
   const [subjectCartItem, setSubjectCartItem] = useState("");
   const [bodyCartItem, setBodyCartItem] = useState("");
+  const editorRef = useRef(null);
 
   // for multiple users
   const [selectedUsers, setSelectedUsers] = useState([]); // Store selected users
@@ -78,6 +83,14 @@ function Cart() {
   const handleView = (user) => {
     setSelectedUser(user);
     setModalCartItems(true);
+  };
+
+  const handleCartEditorChange = (content, editor) => {
+    setBodyCartItem(content);
+  };
+
+  const handleMultiUsersEditorChange = (content, editor) => {
+    setBodyMultiUsers(content);
   };
 
   const handleEmailSend = async (e) => {
@@ -189,22 +202,17 @@ function Cart() {
   const filteredData = items
     .filter((item) => item.CartItem && item.CartItem.length >= 1)
     .filter((item) =>
-      item.email.toLowerCase().includes(searchTerm.toLowerCase())
+      item.email?.toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
 
   const columns = [
     {
-      name: "ID",
-      selector: (row, index) => index + 1,
-      width: "80px",
-      sortable: false,
-    },
-    {
       name: "User ID",
       selector: (row) => row.id,
       sortable: true,
-      width: "320px",
+      width: "120px",
+      cell: (row) => <UserIdCell userId={row.id} />,
     },
     {
       name: "Email",
@@ -240,6 +248,30 @@ function Cart() {
       button: true,
     },
   ];
+
+  function UserIdCell({ userId }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const targetRef = useRef(null);
+
+    const toggle = () => setIsOpen(!isOpen);
+
+    return (
+      <div>
+        <span ref={targetRef} onMouseEnter={toggle} onMouseLeave={toggle}>
+          {formatUserId(userId)}
+        </span>
+        <Popover
+          placement="right"
+          isOpen={isOpen}
+          target={targetRef}
+          toggle={toggle}
+          trigger="hover"
+        >
+          <PopoverBody>{userId}</PopoverBody>
+        </Popover>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -297,9 +329,11 @@ function Cart() {
                     data={filteredData}
                     selectableRows
                     onSelectedRowsChange={handleRowSelected}
-                    pagination
                     responsive
                     fixedHeader={true}
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
                   />
                 )}
               </CardBody>
@@ -368,11 +402,31 @@ function Cart() {
                 </FormGroup>
                 <FormGroup>
                   <Label for="body">Body</Label>
-                  <Input
+                  {/* <Input
                     type="textarea"
                     id="body"
                     value={bodyCartItem}
                     onChange={(e) => setBodyCartItem(e.target.value)}
+                  /> */}
+                  <Editor
+                    apiKey="9vbq54k2jchreu8yq8hkg8fjujbzmav2arbz5kim4yv9omo8"
+                    onInit={(evt, editor) => (editorRef.current = editor)}
+                    initialValue="<p>Write your message here...</p>"
+                    init={{
+                      height: 300,
+                      menubar: true,
+                      plugins: [
+                        "advlist autolink lists link image charmap print preview anchor",
+                        "searchreplace visualblocks code fullscreen",
+                        "insertdatetime media table paste code help wordcount",
+                      ],
+                      toolbar:
+                        "undo redo | formatselect | " +
+                        "bold italic backcolor | alignleft aligncenter " +
+                        "alignright alignjustify | bullist numlist outdent indent | " +
+                        "removeformat | help",
+                    }}
+                    onEditorChange={handleCartEditorChange}
                   />
                 </FormGroup>
                 <Input
@@ -390,7 +444,7 @@ function Cart() {
                   {sendBtnLoading ? (
                     <>
                       Sending...
-                      <Spinner color="primary" size="sm" className="ml-1" />
+                      <Spinner color="secondary" size="sm" className="ml-1" />
                     </>
                   ) : (
                     "Send Email"
@@ -440,11 +494,31 @@ function Cart() {
             </FormGroup>
             <FormGroup>
               <Label size="small">Body</Label>
-              <Input
+              {/* <Input
                 type="textarea"
                 id="body"
                 value={bodyMultiUsers}
                 onChange={(e) => setBodyMultiUsers(e.target.value)}
+              /> */}
+              <Editor
+                apiKey="9vbq54k2jchreu8yq8hkg8fjujbzmav2arbz5kim4yv9omo8"
+                onInit={(evt, editor) => (editorRef.current = editor)}
+                initialValue="<p>Write your message here...</p>"
+                init={{
+                  height: 300,
+                  menubar: true,
+                  plugins: [
+                    "advlist autolink lists link image charmap print preview anchor",
+                    "searchreplace visualblocks code fullscreen",
+                    "insertdatetime media table paste code help wordcount",
+                  ],
+                  toolbar:
+                    "undo redo | formatselect | " +
+                    "bold italic backcolor | alignleft aligncenter " +
+                    "alignright alignjustify | bullist numlist outdent indent | " +
+                    "removeformat | help",
+                }}
+                onEditorChange={handleMultiUsersEditorChange}
               />
             </FormGroup>
             <Button
@@ -456,7 +530,7 @@ function Cart() {
               {sendMultipleBtnLoading ? (
                 <>
                   Sending...
-                  <Spinner color="primary" size="sm" className="ml-1" />
+                  <Spinner color="secondary" size="sm" className="ml-1" />
                 </>
               ) : (
                 "Send Email"

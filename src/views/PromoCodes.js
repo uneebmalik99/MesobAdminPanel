@@ -317,8 +317,8 @@ function PromoCodes() {
 
   const filteredData = data.filter((item) => {
     return (
-      item.Code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.Discount_Type.toLowerCase().includes(searchTerm.toLowerCase())
+      item.Code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.Discount_Type?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   });
 
@@ -378,9 +378,11 @@ function PromoCodes() {
                     )}
                     data={filteredData}
                     selectableRows
-                    pagination
                     responsive
                     fixedHeader={true}
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
                   />
                 )}
               </CardBody>
@@ -648,7 +650,7 @@ function PromoCodes() {
             {btnLoading ? (
               <>
                 Saving...
-                <Spinner color="primary" size="sm" className="ml-1" />
+                <Spinner color="secondary" size="sm" className="ml-1" />
               </>
             ) : isEditMode ? (
               "Update"

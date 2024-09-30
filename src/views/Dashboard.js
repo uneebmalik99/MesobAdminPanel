@@ -1,6 +1,4 @@
-import React, { useEffect, useState } from "react";
-// react plugin used to create charts
-// import { Line, Bar } from "react-chartjs-2";
+import React, { useEffect, useState, useRef } from "react";
 
 // reactstrap components
 import {
@@ -17,7 +15,9 @@ import {
   FormGroup,
   Input,
   UncontrolledTooltip,
-  Spinner
+  Spinner,
+  Popover,
+  PopoverBody,
 } from "reactstrap";
 
 // core components
@@ -25,34 +25,28 @@ import PanelHeader from "components/PanelHeader/PanelHeader.js";
 
 import axios from "axios";
 import formatDate from "utils/formatDate";
-
-// import {
-//   dashboardPanelChart,
-//   dashboardShippedProductsChart,
-//   dashboardAllProductsChart,
-//   dashboard24HoursPerformanceChart,
-// } from "variables/charts.js";
-
 import { Helmet } from "react-helmet";
 import DataTable from "react-data-table-component";
+import formatUserId from "utils/formatUID";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
 
 function Dashboard() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
+  const navigate = useNavigate();
+  const handleEdit = (id) => {
+    navigate(`/admin/order/edit/${id}`);
+  };
 
   const columns = [
-    {
-      name: "ID",
-      selector: (row, index) => index + 1,
-      width: "80px",
-      sortable: false,
-    },
     {
       name: "User ID",
       selector: (row) => row.id,
       sortable: true,
-      width: "320px",
+      width: "150px",
+      cell: (row) => <UserIdCell userId={row.id} />,
     },
     {
       name: "Name",
@@ -84,7 +78,58 @@ function Dashboard() {
       sortable: true,
       width: "250px",
     },
+    {
+      name: "Assign",
+      cell: (row) => {
+        if (row.assignedEmail || row.assignedName) {
+          return (
+            <Button
+              className="btn btn-info btn-round btn-sm"
+              onClick={() => handleEdit(row.id)}
+            >
+              <FontAwesomeIcon icon={faEdit} className="mr-2" />
+              {row.assignedName || row.assignedEmail}
+            </Button>
+          );
+        } else {
+          return (
+            <Button
+              className="btn btn-info btn-round btn-sm"
+              onClick={() => handleEdit(row.id)}
+            >
+              <FontAwesomeIcon icon={faEdit} className="mr-2" />
+              Assign
+            </Button>
+          );
+        }
+      },
+      width: "150px",
+    },
   ];
+
+  function UserIdCell({ userId }) {
+    const [isOpen, setIsOpen] = useState(false);
+    const targetRef = useRef(null);
+
+    const toggle = () => setIsOpen(!isOpen);
+
+    return (
+      <div>
+        <span ref={targetRef} onMouseEnter={toggle} onMouseLeave={toggle}>
+          {formatUserId(userId)}
+        </span>
+        <Popover
+          placement="right"
+          isOpen={isOpen}
+          target={targetRef}
+          toggle={toggle}
+          trigger="hover"
+        >
+          <PopoverBody>{userId}</PopoverBody>
+        </Popover>
+      </div>
+    );
+  }
 
   useEffect(() => {
     axios
@@ -113,115 +158,12 @@ function Dashboard() {
       <PanelHeader
         size="md"
         content={
-          // <Line
-          //   data={dashboardPanelChart.data}
-          //   options={dashboardPanelChart.options}
-          // />
           <div className="header text-center">
             <h2 className="title">Dashboard</h2>
           </div>
         }
       />
       <div className="content">
-        {/* <Row>
-          <Col xs={12} md={4}>
-            <Card className="card-chart">
-              <CardHeader>
-                <h5 className="card-category">Global Sales</h5>
-                <CardTitle tag="h4">Shipped Products</CardTitle>
-                <UncontrolledDropdown>
-                  <DropdownToggle
-                    className="btn-round btn-outline-default btn-icon"
-                    color="default"
-                  >
-                    <i className="now-ui-icons loader_gear" />
-                  </DropdownToggle>
-                  <DropdownMenu right>
-                    <DropdownItem>Action</DropdownItem>
-                    <DropdownItem>Another Action</DropdownItem>
-                    <DropdownItem>Something else here</DropdownItem>
-                    <DropdownItem className="text-danger">
-                      Remove data
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Line
-                    data={dashboardShippedProductsChart.data}
-                    options={dashboardShippedProductsChart.options}
-                  />
-                </div>
-              </CardBody>
-              <CardFooter>
-                <div className="stats">
-                  <i className="now-ui-icons arrows-1_refresh-69" /> Just
-                  Updated
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-          <Col xs={12} md={4}>
-            <Card className="card-chart">
-              <CardHeader>
-                <h5 className="card-category">2021 Sales</h5>
-                <CardTitle tag="h4">All products</CardTitle>
-                <UncontrolledDropdown>
-                  <DropdownToggle
-                    className="btn-round btn-outline-default btn-icon"
-                    color="default"
-                  >
-                    <i className="now-ui-icons loader_gear" />
-                  </DropdownToggle>
-                  <DropdownMenu right>
-                    <DropdownItem>Action</DropdownItem>
-                    <DropdownItem>Another Action</DropdownItem>
-                    <DropdownItem>Something else here</DropdownItem>
-                    <DropdownItem className="text-danger">
-                      Remove data
-                    </DropdownItem>
-                  </DropdownMenu>
-                </UncontrolledDropdown>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Line
-                    data={dashboardAllProductsChart.data}
-                    options={dashboardAllProductsChart.options}
-                  />
-                </div>
-              </CardBody>
-              <CardFooter>
-                <div className="stats">
-                  <i className="now-ui-icons arrows-1_refresh-69" /> Just
-                  Updated
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-          <Col xs={12} md={4}>
-            <Card className="card-chart">
-              <CardHeader>
-                <h5 className="card-category">Email Statistics</h5>
-                <CardTitle tag="h4">24 Hours Performance</CardTitle>
-              </CardHeader>
-              <CardBody>
-                <div className="chart-area">
-                  <Bar
-                    data={dashboard24HoursPerformanceChart.data}
-                    options={dashboard24HoursPerformanceChart.options}
-                  />
-                </div>
-              </CardBody>
-              <CardFooter>
-                <div className="stats">
-                  <i className="now-ui-icons ui-2_time-alarm" /> Last 7 days
-                </div>
-              </CardFooter>
-            </Card>
-          </Col>
-        </Row> */}
         <Row>
           <Col xs={12} md={8}>
             <Card>
@@ -240,6 +182,9 @@ function Dashboard() {
                     columns={columns}
                     data={latestSucceededOrders}
                     responsive
+                    pagination
+                    paginationPerPage={100}
+                    paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
                   />
                 )}
               </CardBody>

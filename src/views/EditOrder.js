@@ -11,6 +11,7 @@ import {
   FormGroup,
   Input,
   Label,
+  Table,
 } from "reactstrap";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import axios from "axios";
@@ -41,6 +42,8 @@ const EditOrder = () => {
   const [productRows, setProductRows] = useState([]);
   const [totalSellingPrice, setTotalSellingPrice] = useState(0);
   const [totalCost, setTotalCost] = useState(0);
+  const [discountedPrice, setDiscountedPrice] = useState(0);
+  const [discountedCost, setDiscountedCost] = useState(0);
 
   const fetchOrderDetails = async () => {
     try {
@@ -57,6 +60,7 @@ const EditOrder = () => {
       setSenderEmail(senderAddressParsed?.email);
       setRecipientEmail(itemData?.useremail);
       setLoading(false);
+      calculateTotals(itemData);
 
       if (itemData?.Products) {
         let sellingPrice = 0;
@@ -112,6 +116,38 @@ const EditOrder = () => {
   useEffect(() => {
     fetchOrderDetails();
   }, []);
+
+  let promo_discount = "";
+
+  const calculateTotals = (item) => {
+    let total_price = 0;
+    let total_cost = 0;
+    promo_discount = item.promodiscount;
+
+    item.Products.forEach((product) => {
+      // Remove $ and comma from price and cost
+      const price = parseFloat(product.price.replace(/[\$,]/g, ""));
+      const cost = parseFloat(product.cost.replace(/[\$,]/g, ""));
+      const quantity = product.qty ?? product.quantity;
+
+      // Calculate totals
+      total_price += quantity * price;
+      total_cost += quantity * cost;
+    });
+
+    // Apply promo discount if available
+    const discounted_price = promo_discount
+      ? total_price - promo_discount
+      : total_price;
+    const discounted_cost = promo_discount
+      ? total_cost - promo_discount
+      : total_cost;
+
+    setTotalSellingPrice(total_price);
+    setTotalCost(total_cost);
+    setDiscountedPrice(discounted_price);
+    setDiscountedCost(discounted_cost);
+  };
 
   const tableHTML = productRows;
 
@@ -421,6 +457,65 @@ const EditOrder = () => {
                       </li>
                     </ul>
                   </Col>
+
+                  <Col md={12} className="order-info-col">
+                    {/* Products Table */}
+                    <h5 className="section-heading mt-4">Products</h5>
+                    <Table responsive className="order-table">
+                      <thead>
+                        <tr>
+                          <th>Image</th>
+                          <th>Title</th>
+                          <th>Category</th>
+                          <th>Description</th>
+                          <th>Country</th>
+                          <th>Quantity</th>
+                          <th>Price</th>
+                          <th>Cost</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {orderDetails.Products.map((product) => (
+                          <tr key={product.id}>
+                            <td>
+                              <img
+                                src={product.image}
+                                alt={product.title}
+                                className="img-fluid"
+                              />
+                            </td>
+                            <td>{product.title}</td>
+                            <td>{product.category}</td>
+                            <td>{product.description}</td>
+                            <td>{product.country}</td>
+                            <td>{product.qty}</td>
+                            <td>{product.price}</td>
+                            <td>{product.cost}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </Table>
+                  </Col>
+                  <Col md={12} className="order-info-col">
+                    {/* Summary Section */}
+                    <div className="summary-section mt-4 mb-5">
+                      <div>
+                        <div>
+                          Discount:
+                          <span>{promo_discount ? promo_discount : " - "}</span>
+                        </div>
+                      </div>
+                      <div className="d-flex justify-content-between">
+                        <div>
+                          Selling Price:{" "}
+                          <span>$ {discountedPrice.toFixed(2)}</span>
+                        </div>
+                        <div>
+                          Cost Price: <span>$ {discountedCost.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </Col>
                 </Row>
 
                 {/* Conditionally render Tracking Company and Tracking No */}
@@ -484,6 +579,18 @@ const EditOrder = () => {
                   />
                 </FormGroup>
 
+                {/* Updated By Info */}
+                {orderDetails.updatedBy && (
+                  <div className="d-flex justify-content-end mt-3">
+                    <div className="text-right">
+                      <p className="mb-1">
+                        <strong>Updated By:</strong>
+                      </p>
+                      <p className="mb-1">{orderDetails.updatedBy}</p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Update Button */}
                 <Button
                   color="info"
@@ -494,7 +601,7 @@ const EditOrder = () => {
                   {updateBtnLoading ? (
                     <>
                       Updating...
-                      <Spinner color="primary" size="sm" className="ml-1" />
+                      <Spinner color="secondary" size="sm" className="ml-1" />
                     </>
                   ) : (
                     "Update"

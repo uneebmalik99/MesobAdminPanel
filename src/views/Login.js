@@ -61,9 +61,12 @@ const Login = () => {
 
       const result = await response.json();
 
-      if (result === "success") {
+      if (result.message == "success") {
         // Store data in localStorage
-        localStorage.setItem("user_email", email);
+        console.log("user: ", result.user);
+
+        localStorage.setItem("user_email", result.user.email);
+        localStorage.setItem("user_name", result.user.name);
 
         // Show success notification
         showNotification("success", "Login successful!");
@@ -133,7 +136,7 @@ const Login = () => {
             <button type="submit" className="login-btn" disabled={loading}>
               {loading ? (
                 <>
-                  <Spinner color="primary" size="sm" /> Please wait
+                  <Spinner color="secondary" size="sm" /> Please wait
                 </>
               ) : (
                 "Login"

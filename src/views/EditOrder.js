@@ -608,7 +608,8 @@ const EditOrder = () => {
                   <Editor
                     apiKey={process.env.REACT_APP_TINYMCE_API_KEY}
                     onInit={(evt, editor) => (editorRef.current = editor)}
-                    initialValue={notes}
+                    value={notes}
+                    // initialValue="<p>Enter Notes</p>"
                     init={{
                       height: 300,
                       menubar: true,

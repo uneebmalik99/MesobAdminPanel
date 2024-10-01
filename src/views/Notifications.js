@@ -101,6 +101,7 @@ function Notifications() {
       </Helmet>
 
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Notifications</h2>

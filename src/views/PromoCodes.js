@@ -328,6 +328,7 @@ function PromoCodes() {
         <title>Promo Codes - Mesob Store</title>
       </Helmet>
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Promo Codes</h2>
@@ -383,6 +384,7 @@ function PromoCodes() {
                     pagination
                     paginationPerPage={100}
                     paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
+                    highlightOnHover
                   />
                 )}
               </CardBody>

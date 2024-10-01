@@ -187,9 +187,6 @@ function DemoNavbar(props) {
                 </p>
               </DropdownToggle>
               <DropdownMenu right>
-                <DropdownItem tag="a">Profile</DropdownItem>
-                <DropdownItem tag="a">Settings</DropdownItem>
-                <DropdownItem divider />
                 <DropdownItem onClick={handleLogout}>Logout</DropdownItem>
               </DropdownMenu>
             </Dropdown>

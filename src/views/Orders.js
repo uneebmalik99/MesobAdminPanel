@@ -209,6 +209,7 @@ const Orders = () => {
       </Helmet>
 
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Orders</h2>
@@ -286,6 +287,7 @@ const Orders = () => {
                         paginationRowsPerPageOptions={[
                           100, 200, 300, 500, 1000,
                         ]}
+                        highlightOnHover
                       />
                     )}
                   </TabPane>
@@ -325,6 +327,7 @@ const Orders = () => {
                         paginationRowsPerPageOptions={[
                           100, 200, 300, 500, 1000,
                         ]}
+                        highlightOnHover
                       />
                     )}
                   </TabPane>
@@ -364,6 +367,7 @@ const Orders = () => {
                         paginationRowsPerPageOptions={[
                           100, 200, 300, 500, 1000,
                         ]}
+                        highlightOnHover
                       />
                     )}
                   </TabPane>

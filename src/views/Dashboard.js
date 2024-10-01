@@ -156,7 +156,7 @@ function Dashboard() {
         <title>Dashboard - Mesob Store</title>
       </Helmet>
       <PanelHeader
-        size="md"
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Dashboard</h2>
@@ -165,7 +165,7 @@ function Dashboard() {
       />
       <div className="content">
         <Row>
-          <Col xs={12} md={8}>
+          <Col md={12}>
             <Card>
               <CardHeader>
                 <h5 className="card-category">Orders</h5>
@@ -185,12 +185,13 @@ function Dashboard() {
                     pagination
                     paginationPerPage={100}
                     paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
+                    highlightOnHover
                   />
                 )}
               </CardBody>
             </Card>
           </Col>
-          <Col xs={12} md={4}>
+          <Col md={12}>
             <Card className="card-tasks">
               <CardHeader>
                 <h5 className="card-category">Backend Development</h5>

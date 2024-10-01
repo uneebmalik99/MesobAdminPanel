@@ -2955,7 +2955,7 @@ Created using IcoMoon - icomoon.io
 
 .panel-header {
   height: 260px;
-  padding-top: 80px;
+  padding-top: 40px;
   padding-bottom: 45px;
   background: #141E30;
   /* fallback for old browsers */
@@ -4684,3 +4684,29 @@ Created using IcoMoon - icomoon.io
 
 #tables .table-responsive {
   margin-bottom: 30px; }
+
+
+  /* For WebKit browsers (Chrome, Safari, etc.) */
+.sc-eUlrpB .hZZlND {
+  width: 10px; /* Width of the scrollbar */
+  height: 10px; /* Height of the scrollbar */
+}
+
+.sc-eUlrpB .hZZlND {
+  background: #f1f1f1; /* Track color */
+}
+
+.sc-eUlrpB .hZZlND {
+  background-color: #888; /* Thumb color */
+  border-radius: 10px; /* Rounded corners */
+}
+
+.sc-eUlrpB .hZZlND {
+  background-color: #555; /* Thumb color on hover */
+}
+
+/* For Firefox */
+.sc-eUlrpB .hZZlND {
+  scrollbar-width: thin; /* "auto" or "thin" */
+  scrollbar-color: #888 #f1f1f1; /* Thumb and track color */
+}

@@ -202,6 +202,7 @@ function Users() {
       </Helmet>
 
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Users</h2>
@@ -271,6 +272,7 @@ function Users() {
                     pagination
                     paginationPerPage={100}
                     paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
+                    highlightOnHover
                   />
                 )}
               </CardBody>
@@ -292,6 +294,7 @@ function Users() {
               pagination
               paginationPerPage={3}
               paginationRowsPerPageOptions={[3, 10, 20, 50]}
+              highlightOnHover
             />
           ) : (
             <p>No users selected.</p>

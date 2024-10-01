@@ -106,6 +106,7 @@ const OrderDetails = () => {
       </Helmet>
 
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Order Details</h2>
@@ -120,8 +121,8 @@ const OrderDetails = () => {
                 <div className="d-flex align-items-center">
                   <Button
                     className="btn btn-link"
-                    onClick={() => navigate('/admin/orders')}
-                    style={{ fontSize: "20px", marginRight: "10px"}}
+                    onClick={() => navigate("/admin/orders")}
+                    style={{ fontSize: "20px", marginRight: "10px" }}
                   >
                     <FontAwesomeIcon icon={faArrowLeft} />
                   </Button>

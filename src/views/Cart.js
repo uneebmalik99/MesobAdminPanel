@@ -161,7 +161,7 @@ function Cart() {
     console.log("Sending email to:", emails, "\n");
     console.log("subject: ", subjectMultipleUsers, "\n");
     console.log("message : ", messageMultipleUsers, "\n");
-    
+
     const payload = {
       email: emails,
       message: messageMultipleUsers,
@@ -280,6 +280,7 @@ function Cart() {
       </Helmet>
 
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Cart</h2>
@@ -334,6 +335,7 @@ function Cart() {
                     pagination
                     paginationPerPage={100}
                     paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
+                    highlightOnHover
                   />
                 )}
               </CardBody>
@@ -476,6 +478,7 @@ function Cart() {
               pagination
               paginationPerPage={3}
               paginationRowsPerPageOptions={[3, 10, 20, 50]}
+              highlightOnHover
             />
           ) : (
             <p>No users selected.</p>

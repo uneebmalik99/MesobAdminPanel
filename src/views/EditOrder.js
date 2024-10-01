@@ -21,6 +21,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 import NotificationAlert from "react-notification-alert";
 import "react-notification-alert/dist/animate.css";
+import { Editor } from "@tinymce/tinymce-react";
 
 const EditOrder = () => {
   const { id } = useParams();
@@ -34,8 +35,7 @@ const EditOrder = () => {
   const navigate = useNavigate();
   const [updateBtnLoading, setUpdateBtnLoading] = useState(false);
 
-  const [orderStatus, setOrderStatus] = useState(""); // Initial status
-  // const [previousOrderStatus, setPreviousOrderStatus] = useState(orderStatus);
+  const [orderStatus, setOrderStatus] = useState("");
   const [markStatus, setMarkStatus] = useState("");
   const [notes, setNotes] = useState("");
 
@@ -44,6 +44,10 @@ const EditOrder = () => {
   const [totalCost, setTotalCost] = useState(0);
   const [discountedPrice, setDiscountedPrice] = useState(0);
   const [discountedCost, setDiscountedCost] = useState(0);
+
+  const editorRef = useRef(null);
+  const [adminUser, setAdminUser] = useState([]);
+  const [selectedAdminUser, setSelectedAdminUser] = useState("");
 
   const fetchOrderDetails = async () => {
     try {
@@ -59,8 +63,11 @@ const EditOrder = () => {
       setOrderStatus(itemData?.Status);
       setSenderEmail(senderAddressParsed?.email);
       setRecipientEmail(itemData?.useremail);
+      setMarkStatus(itemData?.adminStatus);
       setLoading(false);
       calculateTotals(itemData);
+      setSelectedAdminUser(itemData?.assignedName);
+      setNotes(itemData?.notes);
 
       if (itemData?.Products) {
         let sellingPrice = 0;
@@ -72,8 +79,8 @@ const EditOrder = () => {
           const price = parseFloat(product.price.replace(/[$,]/g, ""));
           const cost = parseFloat(product.cost.replace(/[$,]/g, ""));
 
-          console.log("price", price);
-          console.log("cost", cost);
+          // console.log("price", price);
+          // console.log("cost", cost);
 
           const quantity = parseFloat(product.quantity || product.qty);
 
@@ -113,8 +120,22 @@ const EditOrder = () => {
     }
   };
 
+  const fetchAdminUsers = async () => {
+    try {
+      const response = await axios.get(
+        "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/adminuser"
+      );
+      const users = response?.data;
+
+      setAdminUser(users);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+    }
+  };
+
   useEffect(() => {
     fetchOrderDetails();
+    fetchAdminUsers();
   }, []);
 
   let promo_discount = "";
@@ -151,11 +172,8 @@ const EditOrder = () => {
 
   const tableHTML = productRows;
 
-  console.log("tableHTML", tableHTML);
-
   const handleStatusChange = (e) => {
     const newStatus = e.target.value;
-    console.log("newStatus", newStatus);
     setOrderStatus(newStatus);
   };
 
@@ -163,8 +181,16 @@ const EditOrder = () => {
     setMarkStatus(e.target.value);
   };
 
-  const handleNotesChange = (e) => {
-    setNotes(e.target.value);
+  const handleAdminUserChange = (e) => {
+    setSelectedAdminUser(e.target.value);
+  };
+
+  // const handleNotesChange = (e) => {
+  //   setNotes(e.target.value);
+  // };
+
+  const handleNotesEditorChange = (content, editor) => {
+    setNotes(content);
   };
 
   const notify = (place, message, type) => {
@@ -183,21 +209,15 @@ const EditOrder = () => {
   };
 
   const handleUpdate = async () => {
-    if (orderDetails?.Status !== orderStatus) {
-      console.log("yes " + orderStatus);
-    } else {
-      console.log("no " + orderStatus);
-    }
+    console.log("selected admin user: ", selectedAdminUser);
+    console.log("Notes:", notes);
 
     try {
       setUpdateBtnLoading(true);
       const updatedBy = localStorage.getItem("user_email");
-      console.log("updatedBy===>", updatedBy);
 
       const response = await axios.patch(
-        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(
-          notes
-        )}&updatedBy=${updatedBy}`
+        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(notes)}&updatedBy=${updatedBy}&assignedName=${selectedAdminUser}`
       );
 
       if (response.status === 200) {
@@ -221,8 +241,8 @@ const EditOrder = () => {
         } else {
           notify("tr", "No changes made to order status.", "info");
         }
-      } else {
-        notify("tr", "Failed to update order status.", "danger");
+        // Reload the page
+        window.location.reload();
       }
     } catch (error) {
       console.error("Error updating order:", error);
@@ -233,7 +253,6 @@ const EditOrder = () => {
     }
   };
 
-  // Function to send email
   const sendEmail = async (email, message, subject) => {
     const payload = {
       email,
@@ -254,9 +273,6 @@ const EditOrder = () => {
         }
       );
 
-      // Log response (similar to PHP's error_log)
-      console.log("Email API Response:", response.data);
-      console.log("Email API statusCode:", response.data.statusCode);
       if (response.status === 200) {
         setUpdateBtnLoading(false);
       }
@@ -375,6 +391,7 @@ const EditOrder = () => {
       </Helmet>
 
       <PanelHeader
+        size="sm"
         content={
           <div className="header text-center">
             <h2 className="title">Edit Order</h2>
@@ -531,7 +548,6 @@ const EditOrder = () => {
                 )}
 
                 {/* Order Status */}
-                {/* <h5 className="section-heading mt-4">Order Status</h5> */}
                 <FormGroup>
                   <Label>Order Status</Label>
                   <Input
@@ -567,15 +583,47 @@ const EditOrder = () => {
                     <option value="Closed">Closed</option>
                   </Input>
                 </FormGroup>
+                <FormGroup>
+                  <Label>Admin Users</Label>
+                  <Input
+                    id="status"
+                    type="select"
+                    value={selectedAdminUser}
+                    onChange={handleAdminUserChange}
+                  >
+                    <option value="" disabled selected>
+                      Please Select
+                    </option>
+                    {adminUser.map((user) => (
+                      <option key={user.id} value={user.name}>
+                        {user.name}
+                      </option>
+                    ))}
+                  </Input>
+                </FormGroup>
 
                 {/* Admin Notes */}
                 <FormGroup>
                   <Label>Notes</Label>
-                  <Input
-                    id="notes"
-                    value={notes}
-                    onChange={handleNotesChange}
-                    type="textarea"
+                  <Editor
+                    apiKey={process.env.REACT_APP_TINYMCE_API_KEY}
+                    onInit={(evt, editor) => (editorRef.current = editor)}
+                    initialValue={notes}
+                    init={{
+                      height: 300,
+                      menubar: true,
+                      plugins: [
+                        "advlist autolink lists link image charmap print preview anchor",
+                        "searchreplace visualblocks code fullscreen",
+                        "insertdatetime media table paste code help wordcount",
+                      ],
+                      toolbar:
+                        "undo redo | formatselect | " +
+                        "bold italic backcolor | alignleft aligncenter " +
+                        "alignright alignjustify | bullist numlist outdent indent | " +
+                        "removeformat | help",
+                    }}
+                    onEditorChange={handleNotesEditorChange}
                   />
                 </FormGroup>
 

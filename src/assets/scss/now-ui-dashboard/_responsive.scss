@@ -196,12 +196,16 @@
 }
 
 @media screen and (max-width: 768px){
-    .nav-tabs{
-        display: inline-block;
-        width: 100%;
-        padding-left: 100px;
-        padding-right: 100px;
+    .nav {
+        flex-wrap: nowrap;
         text-align: center;
+    }
+    .nav-tabs{
+        // display: inline-block;
+        // width: 100%;
+        // padding-left: 100px;
+        // padding-right: 100px;
+        // text-align: center;
 
         .nav-item > .nav-link{
             margin-bottom: 5px;

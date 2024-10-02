@@ -378,10 +378,11 @@ const EditOrder = () => {
         </table>
         <p>Total Promo Discount :$ ${orderDetails.promodiscount}</p>
         <p>Total Selling Price: ${totalSellingPrice}</p>
-        <p>Total Cost Price: ${totalCost}</p>
+        
         <p>Thank you for your order!</p>
       `;
     }
+    // <p>Total Cost Price: ${totalCost}</p>;
   };
 
   return (

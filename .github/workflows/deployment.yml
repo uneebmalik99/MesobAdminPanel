@@ -1,4 +1,4 @@
-name: Deployment to AWS EC2 Instance on push
+name: Deploy to AWS EC2 on push
 
 # Trigger deployment only on push to main branch
 on:
@@ -8,47 +8,46 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2 on main branch push
+    name: Build and Deploy to EC2
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the files
+      # Step 1: Checkout the repository
+      - name: Checkout the repository
         uses: actions/checkout@v2
 
+      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: "18"
 
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Step 4: Build the project
       - name: Build the project
         run: npm run build
 
-      - name: Deploy only build folder contents to Server
+      # Step 5: Deploy the build folder to EC2
+      - name: Deploy the build folder to EC2
         uses: easingthemes/ssh-deploy@main
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
-          REMOTE_HOST: ${{ secrets.HOST_DNS }}
-          REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: /var/www/html
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}  # Your private SSH key stored in GitHub secrets
+          REMOTE_HOST: ${{ secrets.HOST_DNS }}         # Your EC2 public DNS
+          REMOTE_USER: ${{ secrets.USERNAME }}         # Username (e.g., ubuntu)
+          TARGET: /var/www/html                        # Target directory on EC2
         with:
-          SOURCE: build/
+          SOURCE: build/                               # Source directory in GitHub runner
           EXCLUDE: ".git .github node_modules"
-          ARGS: "--rsync-path='sudo rsync'"
 
-      - name: Execute remote SSH commands using SSH key
+      # Step 6: Restart Apache (optional)
+      - name: Restart Apache to reflect changes
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_DNS }}
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            sudo chown -R ${{ secrets.USERNAME }}: /var/www/html
-            sudo apt-get -y update
-            sudo apt-get install -y apache2
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            sudo rm -rf /var/www/html/*
-            sudo cp -r /home/ubuntu/build/* /var/www/html/
+            sudo systemctl restart apache2

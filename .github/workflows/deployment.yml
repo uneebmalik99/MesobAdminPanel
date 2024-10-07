@@ -44,6 +44,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            sudo chmod -R 755 /var/www/html
             sudo apt-get -y update
             sudo apt-get install -y apache2
             sudo systemctl start apache2

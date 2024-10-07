@@ -131,7 +131,11 @@ function Users() {
   }, []);
 
   const filteredData = users.filter((item) => {
-    return item.email?.toLowerCase().includes(searchTerm.toLowerCase());
+    const searchTermLower = searchTerm.toLowerCase();
+    return (
+      item.email?.toLowerCase().includes(searchTermLower) ||
+      item.id.toString().includes(searchTermLower)
+    );
   });
 
   const toggleModal = () => {
@@ -247,7 +251,7 @@ function Users() {
                     </Button>
                     <Input
                       type="text"
-                      placeholder="Search by email..."
+                      placeholder="Search by email or user id..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       style={{ marginLeft: "10px", width: "250px" }}

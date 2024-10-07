@@ -28,7 +28,7 @@ jobs:
         run: |
           npm run build
 
-      - name: Deploy to Server 1
+      - name: Deploy to AWS EC2 Instance
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
@@ -47,6 +47,5 @@ jobs:
             sudo apt-get install -y apache2
             sudo systemctl start apache2
             sudo systemctl enable apache2
-            cd /var/www/html
-            sudo rm -rf *
-            sudo cp -r * /var/www/html
+            cd home
+            sudo mv * /var/www/html

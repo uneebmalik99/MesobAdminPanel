@@ -36,6 +36,7 @@ jobs:
         with:
           SOURCE: build/
           EXCLUDE: ".git .github node_modules"
+          ARGS: "--rsync-path='sudo rsync'"
 
       - name: Execute remote SSH commands using SSH key
         uses: appleboy/ssh-action@master

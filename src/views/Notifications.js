@@ -152,7 +152,7 @@ function Notifications() {
                         <Editor
                           apiKey={process.env.REACT_APP_TINYMCE_API_KEY}
                           onInit={(evt, editor) => (editorRef.current = editor)}
-                          initialValue="<p>Write your message here...</p>"
+                          initialValue=""
                           init={{
                             height: 300,
                             menubar: true,
@@ -160,12 +160,14 @@ function Notifications() {
                               "advlist autolink lists link image charmap print preview anchor",
                               "searchreplace visualblocks code fullscreen",
                               "insertdatetime media table paste code help wordcount",
+                              "placeholder",
                             ],
                             toolbar:
                               "undo redo | formatselect | " +
                               "bold italic backcolor | alignleft aligncenter " +
                               "alignright alignjustify | bullist numlist outdent indent | " +
                               "removeformat",
+                            placeholder: "Write your message here...",
                           }}
                           onEditorChange={handleEditorChange}
                         />

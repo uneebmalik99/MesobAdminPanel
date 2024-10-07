@@ -1,4 +1,4 @@
-name: Push-to-EC2
+name: Deployment to AWS EC2 Instance on push
 
 # Trigger deployment only on push to main branch
 on:
@@ -15,28 +15,29 @@ jobs:
       - name: Checkout the files
         uses: actions/checkout@v2
 
-      - name: Set up Node.js (if applicable)
+      - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: "18"
 
       - name: Install dependencies
-        run: |
-          npm install
+        run: npm install
 
       - name: Build the project
-        run: |
-          npm run build
+        run: npm run build
 
-      - name: Deploy to AWS EC2 Instance
+      - name: Deploy only build folder contents to Server
         uses: easingthemes/ssh-deploy@main
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
-          TARGET: ${{ secrets.TARGET_DIR }}
+          TARGET: /var/www/html
+        with:
+          local-path: build/
+          remote-path: /var/www/html
 
-      - name: Executing remote ssh commands using ssh key
+      - name: Execute remote SSH commands using SSH key
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.HOST_DNS }}
@@ -47,5 +48,5 @@ jobs:
             sudo apt-get install -y apache2
             sudo systemctl start apache2
             sudo systemctl enable apache2
-            cd home
-            sudo mv * /var/www/html
+            sudo rm -rf /var/www/html/*
+            sudo cp -r /home/ubuntu/build/* /var/www/html/

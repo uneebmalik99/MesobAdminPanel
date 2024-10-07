@@ -34,8 +34,8 @@ jobs:
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: /var/www/html
         with:
-          local-path: build/
-          remote-path: /var/www/html
+          SOURCE: build/
+          EXCLUDE: ".git .github node_modules"
 
       - name: Execute remote SSH commands using SSH key
         uses: appleboy/ssh-action@master

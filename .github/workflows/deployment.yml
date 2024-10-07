@@ -26,8 +26,10 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Step 4: Build the project
+      # Step 4: Build the project (with environment variable)
       - name: Build the project
+        env:
+          REACT_APP_TINYMCE_API_KEY: ${{ secrets.REACT_APP_TINYMCE_API_KEY }}
         run: npm run build
 
       # Step 5: Deploy the build folder to EC2
@@ -42,7 +44,7 @@ jobs:
           SOURCE: build/                               # Source directory in GitHub runner
           EXCLUDE: ".git .github node_modules"
 
-      # Step 6: Restart Apache (optional)
+      # Step 6: Restart Apache to reflect changes
       - name: Restart Apache to reflect changes
         uses: appleboy/ssh-action@master
         with:

@@ -318,11 +318,24 @@ const EditOrder = () => {
           </div>
         </div>
         <p style="color:black;">Dear customer,<br />
-        We are excited to let you know that your order has been shipped!<br />
-        If you have any questions or need further assistance, please don’t hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521.
-        <br />
-        <br />
-        Thank you for shopping with Mesob Store! We hope you enjoy your purchase and look forward to serving you again.</p>
+          We are excited to let you know that your order has been shipped!
+          <br />
+          We hope you are delighted with your purchase! If you have any questions or need any assistance, please do not hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521
+          <br />
+          Your feedback is important to us. If you have a moment, please let us know about your shopping experience by leaving a review.
+          <br/>
+          Google play link
+          <br/>
+          https://play.google.com/store/apps/details?id=com.mesob.store.app&pcampaignid=web_share
+          <br/>
+          Apple store link
+          <br/>
+          https://apps.apple.com/us/app/mesob-store/id1617565954
+          <br/>
+          Thank you for choosing mesobstore.com. We look forward to serving you again soon!
+          <br/><br/>
+          Best regards,
+        </p>
       `;
       case "Delivered":
         return `
@@ -336,11 +349,24 @@ const EditOrder = () => {
           </div>
         </div>
         <p style="color:black;">Dear customer,<br />
-        We are pleased to inform you that your order has been successfully delivered!<br />
-        If you have any questions or need further assistance, please don’t hesitate to contact our customer service team.
-        <br />
-        <br />
-        Thank you for shopping with Mesob Store!</p>
+          We are pleased to inform you that your order has been successfully delivered!
+          <br />
+          We hope you are delighted with your purchase! If you have any questions or need any assistance, please do not hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521
+          <br />
+          Your feedback is important to us. If you have a moment, please let us know about your shopping experience by leaving a review.
+          <br/>
+          Google play link
+          <br/>
+          https://play.google.com/store/apps/details?id=com.mesob.store.app&pcampaignid=web_share
+          <br/>
+          Apple store link
+          <br/>
+          https://apps.apple.com/us/app/mesob-store/id1617565954
+          <br/>
+          Thank you for choosing mesobstore.com. We look forward to serving you again soon!
+          <br/><br/>
+          Best regards,
+        </p>
       `;
       case "Orderd":
         return `
@@ -379,7 +405,26 @@ const EditOrder = () => {
         <p>Total Promo Discount :$ ${orderDetails.promodiscount}</p>
         <p>Total Selling Price: ${totalSellingPrice}</p>
         
-        <p>Thank you for your order!</p>
+        <p>
+          Thank you for your order!
+          <br />
+          We hope you are delighted with your purchase! If you have any questions or need any assistance, please do not hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521
+          <br />
+          Your feedback is important to us. If you have a moment, please let us know about your shopping experience by leaving a review.
+          <br/>
+          Google play link
+          <br/>
+          https://play.google.com/store/apps/details?id=com.mesob.store.app&pcampaignid=web_share
+          <br/>
+          Apple store link
+          <br/>
+          https://apps.apple.com/us/app/mesob-store/id1617565954
+          <br/>
+          Thank you for choosing mesobstore.com. We look forward to serving you again soon!
+          <br/><br/>
+          Best regards,
+        </p>
+        
       `;
     }
     // <p>Total Cost Price: ${totalCost}</p>;

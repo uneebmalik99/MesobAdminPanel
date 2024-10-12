@@ -81,7 +81,12 @@ function Dashboard() {
     {
       name: "Assign",
       cell: (row) => {
-        if (row.assignedEmail || row.assignedName) {
+        if (
+          (row.assignedEmail && row.assignedEmail !== undefined) ||
+          row.assignedEmail !== "undefined" ||
+          (row.assignedName && row.assignedName !== undefined) ||
+          row.assignedName !== "undefined"
+        ) {
           return (
             <Button
               className="btn btn-info btn-round btn-sm"
@@ -89,6 +94,19 @@ function Dashboard() {
             >
               <FontAwesomeIcon icon={faEdit} className="mr-2" />
               {row.assignedName || row.assignedEmail}
+            </Button>
+          );
+        } else if (
+          row.assignedName === "undefined" ||
+          row.assignedName === undefined
+        ) {
+          return (
+            <Button
+              className="btn btn-info btn-round btn-sm"
+              onClick={() => handleEdit(row.id)}
+            >
+              <FontAwesomeIcon icon={faEdit} className="mr-2" />
+              Assign
             </Button>
           );
         } else {

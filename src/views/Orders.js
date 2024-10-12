@@ -152,7 +152,12 @@ const Orders = () => {
     {
       name: "Assign",
       cell: (row) => {
-        if (row.assignedEmail || row.assignedName) {
+        if (
+          (row.assignedEmail && row.assignedEmail !== undefined) ||
+          row.assignedEmail !== "undefined" ||
+          (row.assignedName && row.assignedName !== undefined) ||
+          row.assignedName !== "undefined"
+        ) {
           return (
             <Button
               className="btn btn-info btn-round btn-sm"

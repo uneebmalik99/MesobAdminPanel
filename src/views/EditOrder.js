@@ -241,8 +241,10 @@ const EditOrder = () => {
         } else {
           notify("tr", "No changes made to order status.", "info");
         }
-        // Reload the page
-        window.location.reload();
+        // // Reload the page
+        // window.location.reload();
+
+        navigate('/admin/orders')
       }
     } catch (error) {
       console.error("Error updating order:", error);
@@ -314,7 +316,7 @@ const EditOrder = () => {
             <span style="color: red;">S</span>tore
           </h2>
           <div style="display: flex; justify-content: center; align-items: center; margin-left: 10px;">
-            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/app-icon.png" alt="Your Logo">
+            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/logo.jpeg" alt="Your Logo">
           </div>
         </div>
         <p style="color:black;">Dear customer,<br />
@@ -345,7 +347,7 @@ const EditOrder = () => {
             <span style="color: red;">S</span>tore
           </h2>
           <div style="display: flex; justify-content: center; align-items: center; margin-left: 20px;">
-            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/app-icon.png" alt="Your Logo">
+            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/logo.jpeg" alt="Your Logo">
           </div>
         </div>
         <p style="color:black;">Dear customer,<br />

@@ -316,7 +316,7 @@ const EditOrder = () => {
             <span style="color: red;">S</span>tore
           </h2>
           <div style="display: flex; justify-content: center; align-items: center; margin-left: 10px;">
-            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/logo.jpeg" alt="Your Logo">
+            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/logo.png" alt="Your Logo">
           </div>
         </div>
         <p style="color:black;">Dear customer,<br />
@@ -347,7 +347,7 @@ const EditOrder = () => {
             <span style="color: red;">S</span>tore
           </h2>
           <div style="display: flex; justify-content: center; align-items: center; margin-left: 20px;">
-            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/logo.jpeg" alt="Your Logo">
+            <img style="margin-top:5px; max-width: 35px; height: 35px; vertical-align: middle;" src="http://admin.mesobstore.com/logo.png" alt="Your Logo">
           </div>
         </div>
         <p style="color:black;">Dear customer,<br />
@@ -566,8 +566,12 @@ const EditOrder = () => {
                     <div className="summary-section mt-4 mb-5">
                       <div>
                         <div>
-                          Discount:
-                          <span>{promo_discount ? promo_discount : " - "}</span>
+                          Discount: {" "}
+                          <span>
+                            {orderDetails.promodiscount
+                              ? orderDetails.promodiscount
+                              : " - "}
+                          </span>
                         </div>
                       </div>
                       <div className="d-flex justify-content-between">

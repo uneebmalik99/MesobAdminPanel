@@ -162,7 +162,7 @@ const Orders = () => {
               {row.assignedName || row.assignedEmail}
             </Button>
           );
-        } else {
+        } else if (row.assignedName == undefined) {
           return (
             <Button
               className="btn btn-info btn-round btn-sm"

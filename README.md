@@ -17,20 +17,20 @@ Before you begin, ensure you have the following installed on your system:
 
 1. Clone the repository to your local machine:
 
-git clone https://github.com/your-username/MesobAdminPanel.git
+  `git clone https://github.com/your-username/MesobAdminPanel.git`
 
 2. Navigate to the project directory:
 
-cd MesobAdminPanel
+    `cd MesobAdminPanel`
 
 3. Install the required dependencies:
 
-npm install
+    `npm install`
 
 ### Running the Application
 
 To start the development server and run the application, use the following command:
 
-npm start
+    `npm start`
 
 This will launch the application in development mode. Open http://localhost:3000 in your browser to view it.

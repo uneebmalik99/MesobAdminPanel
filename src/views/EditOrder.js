@@ -242,9 +242,9 @@ const EditOrder = () => {
           notify("tr", "No changes made to order status.", "info");
         }
         // // Reload the page
-        // window.location.reload();
+        window.location.reload();
 
-        navigate('/admin/orders')
+        // navigate('/admin/orders')
       }
     } catch (error) {
       console.error("Error updating order:", error);

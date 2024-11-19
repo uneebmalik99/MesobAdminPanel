@@ -7,6 +7,8 @@ import Orders from "views/Orders.js";
 import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";
 import EditOrder from "views/EditOrder";
+import MesobFinancial from "views/MesobFinancial";
+
 // import EditOrder from "views/EditOrder";
 
 var dashRoutes = [
@@ -29,6 +31,13 @@ var dashRoutes = [
     name: "Cart",
     icon: "shopping_cart-simple",
     component: <Cart />,
+    layout: "/admin",
+  },
+  {
+    path: "/MesobFinancial",
+    name: "Financial Report",
+    icon: "shopping_cart-simple",
+    component: <MesobFinancial />,
     layout: "/admin",
   },
   {

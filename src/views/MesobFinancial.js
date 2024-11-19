@@ -35,25 +35,12 @@ import IncomeStatement from "../components/IncomeStatement";
 import BalanceSheet from "components/BalanceSheet";
 
 function MesobFinancial() {
+
+ 
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
-
-  // For single user
-  const [selectedUser, setSelectedUser] = useState(null); // User data for modal
-  const [modalCartItem, setModalCartItems] = useState(false); // Modal state
-  const [subjectCartItem, setSubjectCartItem] = useState("");
-  const [bodyCartItem, setBodyCartItem] = useState("");
-  const editorRef = useRef(null);
-
-  // for multiple users
-  const [selectedUsers, setSelectedUsers] = useState([]); // Store selected users
   const [modalMultiUsers, setModalMultiUsers] = useState(false); // Modal state
-  const [subjectMultiUsers, setSubjectMultiUsers] = useState("");
-  const [bodyMultiUsers, setBodyMultiUsers] = useState("");
-
-  const [sendBtnLoading, setSendBtnLoading] = useState(false);
-  const [sendMultipleBtnLoading, setSendMultipleBtnLoading] = useState(false);
+  const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const notificationAlertRef = useRef(null);
 
   const notify = (place, message, type) => {
@@ -71,6 +58,22 @@ function MesobFinancial() {
     notificationAlertRef.current.notificationAlert(options);
   };
 
+  const filterItemsByTimeRange = (items, range) => {
+    if (range === 'all') return items;
+    
+    const now = new Date();
+    const rangeInDays = {
+      '1M': 30,
+      '3M': 90,
+      '6M': 180,
+      '1Y': 365
+    };
+    
+    const cutoffDate = new Date(now.setDate(now.getDate() - rangeInDays[range]));
+    
+    return items.filter(item => new Date(item.date) >= cutoffDate);
+  };
+
   useEffect(() => {
     axios
       .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial")
@@ -85,9 +88,11 @@ function MesobFinancial() {
       });
   }, []);
 
-  const handleViewEmails = () => {
-    setModalMultiUsers(true);
+  const handleSelectRange = (range) => {
+    setSelectedTimeRange(range);
   };
+
+  const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
 
   function calculateTotalCashOnHand(items) {
     return items.reduce((sum, transaction) => {
@@ -123,139 +128,33 @@ function MesobFinancial() {
     return Math.abs(totalCommission).toFixed(2);
   }
 
- 
-  const addexpense = () => {
-    let url = "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial/expense?debit=5&credit=5"
-  }
-
   const handleAddExpense = (expense) => {
     console.log('New expense:', expense);
     // Here you would typically update your state or send data to your backend
   };
+  const RunButtons = ({ onSelectRange }) => {
+    const ranges = ['1M', '3M', '6M', '1Y', 'All'];
+    
+    return (
+      <div style={{ marginBottom: '20px' }}>
+        {ranges.map(range => (
+          <Button
+            key={range}
+            color="primary"
+            onClick={() => onSelectRange(range === 'All' ? 'all' : range)}
+            style={{ marginRight: '10px' }}
+          >
+            {range}
+          </Button>
+        ))}
+      </div>
+    );
+  };
 
-//   const TransactionTable = ({  }) => {   
-//     return (
-//       <div className="table-container">
-//         <table className="transaction-table">
-//           <thead>
-//             <tr>
-//               <th>Date</th>
-//               <th>Sr. Number</th>
-//               <th>Transaction</th>
-//               <th>Debit</th>
-//               <th>Credit</th>
-//             </tr>
-//           </thead>
-//           <tbody>
-//            {items?.map((transaction, index) => (
-//   <tr key={index}>
-//     <td>{transaction.date}</td>
-//     <td>{transaction.id}</td>
-//     <td>
-//       <tr>Cash</tr>
-//       {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <tr>Payable to general provider</tr>}
-//       {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <tr>Payable to sheep provider</tr>}
-//       <tr>Commission Revenue</tr>
-//     </td>
-//     <td className="debit">
-//       <tr>{transaction.totalCost}$</tr>
-//       {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <tr>-</tr>}
-//       {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <tr>-</tr>}
-//       {'-'}
-//     </td>
-//     <td className="credit">
-//       <tr>-</tr>
-//       {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <tr>{transaction.generalProductsCost}$</tr>}
-//       {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <tr>{transaction.sheepGoatCost}$</tr>}
-//       <tr>
-//         {(() => {
-//           const sheepGoatCost = parseFloat(transaction?.sheepGoatCost || 0);
-//           const generalProductsCost = parseFloat(transaction?.generalProductsCost || 0);
-//           const totalCost = parseFloat(transaction?.totalCost || 0);
-//           const result = (sheepGoatCost + generalProductsCost - totalCost).toFixed(2);
-//           return `${Math.abs(parseFloat(result)).toFixed(2)}$`;
-//         })()}
-//       </tr>
-//     </td>
-//   </tr>
-// ))}
-//           </tbody>
-//           <thead>
-           
-//           </thead>
-//         </table>
-//         <div style={{width:'100%', padding:20, justifyContent:'center'}}>
-//           <AddExpenseButton  onAddExpense={handleAddExpense} />
-//             </div>
-//       </div>
-//     );
-//   };
-
-// const TransactionTable = ({ }) => {
-//   // Sort the transactions array
-//   const sortedTransactions = [...items].sort((a, b) => {
-//     return (a.type || 0) - (b.type || 0);
-//   });
-
-//   return (
-//     <div className="table-container">
-//       <table className="transaction-table">
-//         <thead>
-//           <tr>
-//             <th>Date</th>
-//             <th>Sr. Number</th>
-//             <th>Transaction</th>
-//             <th>Debit</th>
-//             <th>Credit</th>
-//             <th>Type</th>
-//           </tr>
-//         </thead>
-//         <tbody>
-//           {sortedTransactions.map((transaction, index) => (
-//             <tr key={index}>
-//               <td>{transaction.date}</td>
-//               <td>{transaction.id}</td>
-//               <td>
-//                 <tr>Cash</tr>
-//                 {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <tr>Payable to general provider</tr>}
-//                 {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <tr>Payable to sheep provider</tr>}
-//                 <tr>Commission Revenue</tr>
-//               </td>
-//               <td className="debit">
-//                 <tr>{transaction.totalCost}$</tr>
-//                 {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <tr>-</tr>}
-//                 {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <tr>-</tr>}
-//                 {'-'}
-//               </td>
-//               <td className="credit">
-//                 <tr>-</tr>
-//                 {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <tr>{transaction.generalProductsCost}$</tr>}
-//                 {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <tr>{transaction.sheepGoatCost}$</tr>}
-//                 <tr>
-//                   {(() => {
-//                     const sheepGoatCost = parseFloat(transaction?.sheepGoatCost || 0);
-//                     const generalProductsCost = parseFloat(transaction?.generalProductsCost || 0);
-//                     const totalCost = parseFloat(transaction?.totalCost || 0);
-//                     const result = (sheepGoatCost + generalProductsCost - totalCost).toFixed(2);
-//                     return `${Math.abs(parseFloat(result)).toFixed(2)}$`;
-//                   })()}
-//                 </tr>
-//               </td>
-//               <td>{transaction.type || 0}</td>
-//             </tr>
-//           ))}
-//         </tbody>
-//       </table>
-//       <div style={{width:'100%', padding:20, justifyContent:'center'}}>
-//         <AddExpenseButton onAddExpense={handleAddExpense} />
-//       </div>
-//     </div>
-//   );
-// };
-
-const TransactionTable = ({ }) => {
-  // Sort the transactions array
-  const sortedTransactions = [...items].sort((a, b) => {
+  const TransactionTable = ({ }) => {
+    // Sort the transactions array
+     const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
+  const sortedTransactions = [...filteredItems].sort((a, b) => {
     return (a.type || 0) - (b.type || 0);
   });
 
@@ -334,7 +233,6 @@ const TransactionTable = ({ }) => {
   );
 };
 
- 
   return (
     <>
       <Helmet>
@@ -350,7 +248,7 @@ const TransactionTable = ({ }) => {
         }
       />
       <NotificationAlert ref={notificationAlertRef} />
-      <div className="content">
+      {/* <div className="content">
         <Row>
           <Col xs={12}>
             <Card>
@@ -362,16 +260,8 @@ const TransactionTable = ({ }) => {
                     justifyContent: "space-between",
                   }}
                 >
-                  <CardTitle tag="h4">Mesob Financial Report</CardTitle>
+                  <CardTitle tag="h4">Journal Entry</CardTitle>
                   
-                  <Button
-                    color="secondary"
-                    className="btn-round"
-                    onClick={handleViewEmails}
-                    disabled={selectedUsers.length === 0}
-                  >
-                    Send Email to Selected Emails
-                  </Button>
                 </div>
               </CardHeader>
               <CardBody>
@@ -409,9 +299,49 @@ const TransactionTable = ({ }) => {
             </Card>
           </Col>
         </Row>
-      </div>
+      </div> */}
 
-      
+<div className="content">
+        <Row>
+          <Col xs={12}>
+            <Card>
+              <CardHeader>
+                <div style={{ display: "flex", flexDirection:'row',paddingInline:25, alignItems: "center", justifyContent: "space-between" }}>
+                  <CardTitle  tag="h4">Journal Entry</CardTitle>
+                  <RunButtons onSelectRange={handleSelectRange} />
+                </div>
+              </CardHeader>
+              <CardBody>
+                {loading ? (
+                  <div style={{ textAlign: "center", padding: "20px" }}>
+                    <Spinner color="primary" />
+                    <p>Loading ...</p>
+                  </div>
+                ) : (
+                  <>
+                    <TransactionTable />
+                    <div style={{margin:25}}>
+                      <p>Total Cash on hand = {calculateTotalCashOnHand(filteredItems)}$</p>
+                      <p>Total Payable (Unpaid) = {calculateTotalPayable(filteredItems)}$</p>
+                      <p>Commission Revenue = {calculateCommissionRevenue(filteredItems)}$</p>
+                    </div>
+                  </>
+                )}
+              </CardBody>
+            </Card>
+            <Card>
+              <CardHeader>
+                <IncomeStatement items={filteredItems} />
+              </CardHeader>
+            </Card>
+            <Card>
+              <CardHeader>
+                <BalanceSheet items={filteredItems}/>
+              </CardHeader>
+            </Card>
+          </Col>
+        </Row>
+      </div>
     </>
   );
 }

@@ -10,6 +10,15 @@
     border-collapse: collapse;
     font-family: Arial, sans-serif;
   }
+
+  .delete-btn {
+    cursor: pointer;
+    color: #e10d05;
+  }
+  
+  .delete-btn:hover {
+    opacity: 0.8;
+  }
   
   .transaction-table th,
   .transaction-table td {

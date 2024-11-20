@@ -15,6 +15,7 @@ import {
   ModalBody,
   Table,
   Form,
+  Dropdown, DropdownToggle, DropdownMenu, DropdownItem ,
   FormGroup,
   Label,
   Popover,
@@ -33,7 +34,7 @@ import './TransactionTable.css';
 import { AddExpenseButton } from "components/AddExpenseButton";
 import IncomeStatement from "../components/IncomeStatement";
 import BalanceSheet from "components/BalanceSheet";
-
+import { BsTrashFill } from 'react-icons/bs';
 function MesobFinancial() {
 
  
@@ -42,7 +43,7 @@ function MesobFinancial() {
   const [modalMultiUsers, setModalMultiUsers] = useState(false); // Modal state
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const notificationAlertRef = useRef(null);
-
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const notify = (place, message, type) => {
     const options = {
       place: place,
@@ -107,6 +108,7 @@ function MesobFinancial() {
     }, 0).toFixed(2);
   }
 
+
   function calculateTotalPayable(items) {
     return items.reduce((sum, transaction) => {
       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
@@ -132,30 +134,89 @@ function MesobFinancial() {
     console.log('New expense:', expense);
     // Here you would typically update your state or send data to your backend
   };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      setLoading(true);
+      axios.delete(`https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial/expense?id=`+id, )
+      .then(() => {
+        notify("tr", "Record deleted successfully", "success");
+        // Reload the page
+        window.location.reload();
+      })
+      .catch((error) => {
+        console.error("Error deleting record:", error);
+        notify("tr", "Failed to delete record", "danger");
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+    }
+  };
+
+  const handleDeleteAllRecords = () => {
+    setShowDeleteConfirmation(true);
+  };
+  
+  const confirmDelete = () => {
+    setLoading(true);
+    axios.delete("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial")
+      .then((response) => {
+        setItems([]);
+        setLoading(false);
+        notify("tr", "All records deleted successfully", "success");
+      })
+      .catch((error) => {
+        console.error("Error deleting records:", error);
+        setLoading(false);
+        notify("tr", "Failed to delete records", "danger");
+      });
+    setShowDeleteConfirmation(false);
+  };
+ 
   const RunButtons = ({ onSelectRange }) => {
-    const ranges = ['1M', '3M', '6M', '1Y', 'All'];
-    
+    const [dropdownOpen, setDropdownOpen] = useState(false);
+    const [selectedRange, setSelectedRange] = useState('All');
+  
+    const toggle = () => setDropdownOpen(prevState => !prevState);
+  
+    const handleSelect = (range) => {
+      setSelectedRange(range);
+      setDropdownOpen(false);
+    };
+  
+    const handleRun = () => {
+      onSelectRange(selectedRange === 'All' ? 'all' : selectedRange);
+    };
+  
     return (
-      <div style={{ marginBottom: '20px' }}>
-        {ranges.map(range => (
-          <Button
-            key={range}
-            color="primary"
-            onClick={() => onSelectRange(range === 'All' ? 'all' : range)}
-            style={{ marginRight: '10px' }}
-          >
-            {range}
-          </Button>
-        ))}
+      <div style={{ display: 'flex', alignItems: 'center' }}>
+         <Button color="primary" onClick={handleRun}>
+          Run
+        </Button>
+        <Dropdown isOpen={dropdownOpen} toggle={toggle} style={{ marginLeft: '10px' }}>
+          <DropdownToggle caret color="primary">
+            {selectedRange}
+          </DropdownToggle>
+          <DropdownMenu>
+            <DropdownItem onClick={() => handleSelect('1M')}>1M</DropdownItem>
+            <DropdownItem onClick={() => handleSelect('3M')}>3M</DropdownItem>
+            <DropdownItem onClick={() => handleSelect('6M')}>6M</DropdownItem>
+            <DropdownItem onClick={() => handleSelect('1Y')}>1Y</DropdownItem>
+            <DropdownItem onClick={() => handleSelect('All')}>All</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
+       
       </div>
     );
   };
 
-  const TransactionTable = ({ }) => {
-    // Sort the transactions array
-     const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
+
+const TransactionTable = ({ }) => {
+  // Sort the transactions array by date, latest first
+  const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
   const sortedTransactions = [...filteredItems].sort((a, b) => {
-    return (a.type || 0) - (b.type || 0);
+    return new Date(b.date) - new Date(a.date);
   });
 
   return (
@@ -174,11 +235,11 @@ function MesobFinancial() {
           {sortedTransactions.map((transaction, index) => (
             <tr key={index} className={transaction.type === 1 ? "expense-row" : ""}>
               <td>{transaction.date}</td>
-              <td>{transaction.id}</td>
+              <td>{index + 1}</td>
               {transaction.type === 1 ? (
                 <td>
                   <div>{transaction.expensename || "Expense"}</div>
-                  <div>Cash</div>
+                  <div>{transaction.transactiontype || "Cash"}</div>
                 </td>
               ) : (
                 <td>
@@ -202,9 +263,24 @@ function MesobFinancial() {
                 </td>
               )}
               {transaction.type === 1 ? (
-                <td className="credit">
+                <td >
+                  <tr style={{borderWidth:0}}>
+                <td className="credit" style={{borderWidth:0}}>
                   <div>-</div>
                   <div>{transaction.credit}$</div>
+                </td>
+                <td style={{borderWidth:0}}>
+              
+                {transaction.type === 1 && (
+                  <BsTrashFill 
+                    className="delete-btn" 
+                    onClick={() => handleDelete(transaction.id)}
+                    style={{ cursor: 'pointer', color: '#e10d05' }}
+                  />
+                )}
+            
+                </td>
+                </tr>
                 </td>
               ) : (
                 <td className="credit">
@@ -248,69 +324,22 @@ function MesobFinancial() {
         }
       />
       <NotificationAlert ref={notificationAlertRef} />
-      {/* <div className="content">
-        <Row>
-          <Col xs={12}>
-            <Card>
-              <CardHeader>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <CardTitle tag="h4">Journal Entry</CardTitle>
-                  
-                </div>
-              </CardHeader>
-              <CardBody>
-                {loading ? (
-                  <div style={{ textAlign: "center", padding: "20px" }}>
-                    <Spinner color="primary" />
-                    <p>Loading ...</p>
-                  </div>
-                ) : (
-                  <>
-           <TransactionTable transactions={items} />
-           <div style={{margin:25}}>
-           <p>Total Cash on hand = {calculateTotalCashOnHand(items)}$</p>
-          <p>Total Payable (Unpaid) = {calculateTotalPayable(items)}$</p>
-          <p>Commission Revenue = {calculateCommissionRevenue(items)}$</p>
-           </div>       
-                </>
-                )}
-              </CardBody>
-            </Card>
-
-            <Card>
-              <CardHeader>
-               
-                <IncomeStatement  items={items}  />
-
-              </CardHeader>
-          
-            </Card>
-
-            <Card>
-              <CardHeader>
-              <BalanceSheet items={items}/>
-              </CardHeader>
-            </Card>
-          </Col>
-        </Row>
-      </div> */}
 
 <div className="content">
         <Row>
           <Col xs={12}>
             <Card>
-              <CardHeader>
-                <div style={{ display: "flex", flexDirection:'row',paddingInline:25, alignItems: "center", justifyContent: "space-between" }}>
-                  <CardTitle  tag="h4">Journal Entry</CardTitle>
-                  <RunButtons onSelectRange={handleSelectRange} />
-                </div>
-              </CardHeader>
+            <CardHeader>
+  <div style={{ display: "flex", flexDirection:'row', paddingInline:25, alignItems: "center", justifyContent: "space-between" }}>
+    <CardTitle tag="h4">Journal Entry</CardTitle>
+    <div style={{display:'flex', justifyContent:'space-between'}} >
+      <RunButtons onSelectRange={handleSelectRange} />
+      <Button color="danger" onClick={handleDeleteAllRecords} style={{ marginLeft: '10px', height:37 }}>
+        Close
+      </Button>
+    </div>
+  </div>
+</CardHeader>
               <CardBody>
                 {loading ? (
                   <div style={{ textAlign: "center", padding: "20px" }}>
@@ -341,6 +370,17 @@ function MesobFinancial() {
             </Card>
           </Col>
         </Row>
+        {/* Confirmation Modal */}
+<Modal isOpen={showDeleteConfirmation} toggle={() => setShowDeleteConfirmation(false)}>
+  <ModalHeader toggle={() => setShowDeleteConfirmation(false)}>Confirm Delete</ModalHeader>
+  <ModalBody>
+    Are you sure you want to delete all records? This action cannot be undone.
+  </ModalBody>
+  <div className="modal-footer">
+    <Button color="secondary" onClick={() => setShowDeleteConfirmation(false)}>No</Button>
+    <Button color="danger" onClick={confirmDelete}>Yes, Delete All</Button>
+  </div>
+</Modal>
       </div>
     </>
   );

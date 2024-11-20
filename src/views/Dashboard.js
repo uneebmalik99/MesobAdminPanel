@@ -137,6 +137,7 @@ function Dashboard() {
       .then((response) => {
         if (response.data) {
           setItems(response.data);
+          console.log(response.data)
         }
         setLoading(false);
       })

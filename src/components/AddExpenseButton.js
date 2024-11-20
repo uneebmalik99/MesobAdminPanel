@@ -8,6 +8,7 @@ export const AddExpenseButton = ({ onAddExpense }) => {
   const [expenseName, setExpenseName] = useState('');
   const [debitValue, setDebitValue] = useState('');
   const [creditValue, setCreditValue] = useState('');
+  const [transactiontype, settransactiontype] = useState('cash');
   const notificationAlertRef = useRef(null);
 
   const toggle = () => setModal(!modal);
@@ -31,16 +32,17 @@ export const AddExpenseButton = ({ onAddExpense }) => {
     e.preventDefault();
 
     axios
-      .post(`https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial/expense?debit=${debitValue}&credit=${creditValue}&expensename=${expenseName}`)
+      .post(`https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial/expense?debit=${debitValue}&credit=${creditValue}&expensename=${expenseName}&transactiontype=${transactiontype}`)
       .then((response) => {
         if (response.status === 200) {
           notify("tr", "Expense added successfully!", "success");
-          onAddExpense({ expenseName, debitValue, creditValue });
+          onAddExpense({ expenseName, debitValue, creditValue, transactiontype });
           setModal(false);
           // Reset form fields
           setExpenseName('');
           setDebitValue('');
           setCreditValue('');
+          settransactiontype('cash');
           
           // Reload the page after a short delay
           setTimeout(() => {
@@ -101,6 +103,20 @@ export const AddExpenseButton = ({ onAddExpense }) => {
                 onChange={(e) => setCreditValue(e.target.value)}
                 required
               />
+            </FormGroup>
+            <FormGroup>
+              <Label for="transactiontype">Transaction Type</Label>
+              <Input
+                type="select"
+                name="transactiontype"
+                id="transactiontype"
+                value={transactiontype}
+                onChange={(e) => settransactiontype(e.target.value)}
+                required
+              >
+                <option value="cash">Cash</option>
+                <option value="payable">Payable</option>
+              </Input>
             </FormGroup>
             <Button color="primary" type="submit">Add Expense</Button>{' '}
             <Button color="secondary" onClick={toggle}>Cancel</Button>

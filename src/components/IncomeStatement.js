@@ -16,15 +16,25 @@ const IncomeStatement = ({ items }) => {
   }
   
   const [commissionRevenue, setCommissionRevenue] = useState(0);
-  const [feeExpense, setFeeExpense] = useState(5);
+  const [feeExpense, setFeeExpense] = useState(0);
 
   useEffect(() => {
-    setCommissionRevenue(parseFloat(calculateCommissionRevenue(items)));
+    if (items.length > 0) {
+      setCommissionRevenue(parseFloat(calculateCommissionRevenue(items)));
+      setFeeExpense(5); // Only set fee expense when there are items
+    } else {
+      setCommissionRevenue(0);
+      setFeeExpense(0);
+    }
   }, [items]);
 
   const calculateNetIncome = () => {
     return (commissionRevenue - feeExpense).toFixed(2);
   };
+
+  if (items.length === 0) {
+    return <div className="income-statement">No data available for Income Statement</div>;
+  }
 
   return (
     <div className="income-statement">
@@ -38,7 +48,7 @@ const IncomeStatement = ({ items }) => {
             </tr>
             <tr>
               <td>Commission Revenue</td>
-              <td>{commissionRevenue}</td>
+              <td>${commissionRevenue}</td>
             </tr>
             <tr>
               <td><strong>Expense</strong></td>
@@ -46,11 +56,11 @@ const IncomeStatement = ({ items }) => {
             </tr>
             <tr>
               <td>Fee Expense</td>
-              <td>{feeExpense}</td>
+              <td>${feeExpense}</td>
             </tr>
             <tr>
               <td><strong>Net Income</strong></td>
-              <td>{calculateNetIncome()}</td>
+              <td>${calculateNetIncome()}</td>
             </tr>
           </tbody>
         </table>

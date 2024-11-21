@@ -60,19 +60,15 @@ function MesobFinancial() {
   };
 
   const filterItemsByTimeRange = (items, range) => {
-    if (range === 'all') return items;
+    if (!range.from || !range.to) return items;
     
-    const now = new Date();
-    const rangeInDays = {
-      '1M': 30,
-      '3M': 90,
-      '6M': 180,
-      '1Y': 365
-    };
+    const fromDate = new Date(range.from);
+    const toDate = new Date(range.to);
     
-    const cutoffDate = new Date(now.setDate(now.getDate() - rangeInDays[range]));
-    
-    return items.filter(item => new Date(item.date) >= cutoffDate);
+    return items.filter(item => {
+      const itemDate = new Date(item.date);
+      return itemDate >= fromDate && itemDate <= toDate;
+    });
   };
 
   useEffect(() => {
@@ -95,25 +91,60 @@ function MesobFinancial() {
 
   const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
 
+  // function calculateTotalCashOnHand(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     const amount = parseFloat(transaction.totalCost) || 0;
+      
+  //     // If type is 1 (expense), subtract the amount
+  //     if (transaction.type === 1) {
+  //       return sum - amount;
+  //     }
+  //     // Otherwise add the amount
+  //     return sum + amount;
+  //   }, 0).toFixed(2);
+  // }
+
+
+  // function calculateTotalPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
+  //     const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
+  //     return sum + sheepGoatCost + generalProductsCost;
+  //   }, 0).toFixed(2);
+  // }
   function calculateTotalCashOnHand(items) {
     return items.reduce((sum, transaction) => {
       const amount = parseFloat(transaction.totalCost) || 0;
-      
-      // If type is 1 (expense), subtract the amount
       if (transaction.type === 1) {
-        return sum - amount;
+        if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash') {
+          return sum + amount; // Add to cash on hand if expense is cash
+        }
+        return sum - amount; // Subtract for other expenses
       }
-      // Otherwise add the amount
-      return sum + amount;
+      return sum + amount; // Add for income (type 0)
     }, 0).toFixed(2);
   }
-
-
+  
+  // function calculateTotalPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     if (transaction.type === 0) {
+  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
+  //       const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
+  //       return sum + sheepGoatCost + generalProductsCost;
+  //     }
+  //     return sum;
+  //   }, 0).toFixed(2);
+  // }
   function calculateTotalPayable(items) {
     return items.reduce((sum, transaction) => {
-      const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
-      const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
-      return sum + sheepGoatCost + generalProductsCost;
+      if (transaction.type === 0) {
+        const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
+        const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
+        return sum + sheepGoatCost + generalProductsCost;
+      } else if (transaction.type === 1 && transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
+        return sum + (parseFloat(transaction.totalCost) || 0);
+      }
+      return sum;
     }, 0).toFixed(2);
   }
 
@@ -175,38 +206,40 @@ function MesobFinancial() {
   };
  
   const RunButtons = ({ onSelectRange }) => {
-    const [dropdownOpen, setDropdownOpen] = useState(false);
-    const [selectedRange, setSelectedRange] = useState('All');
-  
-    const toggle = () => setDropdownOpen(prevState => !prevState);
-  
-    const handleSelect = (range) => {
-      setSelectedRange(range);
-      setDropdownOpen(false);
-    };
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
   
     const handleRun = () => {
-      onSelectRange(selectedRange === 'All' ? 'all' : selectedRange);
+      if (fromDate && toDate) {
+        onSelectRange({ from: fromDate, to: toDate });
+      } else {
+        // Handle case when dates are not selected
+        alert('Please select both From and To dates');
+      }
     };
-  
     return (
       <div style={{ display: 'flex', alignItems: 'center' }}>
-         <Button color="primary" onClick={handleRun}>
+        <FormGroup style={{ marginRight: '10px' }}>
+          <Label for="fromDate">From</Label>
+          <Input
+            type="date"
+            id="fromDate"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
+        </FormGroup>
+        <FormGroup style={{ marginRight: '10px' }}>
+          <Label for="toDate">To</Label>
+          <Input
+            type="date"
+            id="toDate"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
+        </FormGroup>
+        <Button color="primary" onClick={handleRun}>
           Run
         </Button>
-        <Dropdown isOpen={dropdownOpen} toggle={toggle} style={{ marginLeft: '10px' }}>
-          <DropdownToggle caret color="primary">
-            {selectedRange}
-          </DropdownToggle>
-          <DropdownMenu>
-            <DropdownItem onClick={() => handleSelect('1M')}>1M</DropdownItem>
-            <DropdownItem onClick={() => handleSelect('3M')}>3M</DropdownItem>
-            <DropdownItem onClick={() => handleSelect('6M')}>6M</DropdownItem>
-            <DropdownItem onClick={() => handleSelect('1Y')}>1Y</DropdownItem>
-            <DropdownItem onClick={() => handleSelect('All')}>All</DropdownItem>
-          </DropdownMenu>
-        </Dropdown>
-       
       </div>
     );
   };
@@ -334,7 +367,7 @@ const TransactionTable = ({ }) => {
     <CardTitle tag="h4">Journal Entry</CardTitle>
     <div style={{display:'flex', justifyContent:'space-between'}} >
       <RunButtons onSelectRange={handleSelectRange} />
-      <Button color="danger" onClick={handleDeleteAllRecords} style={{ marginLeft: '10px', height:37 }}>
+      <Button color="danger" onClick={handleDeleteAllRecords} style={{ marginLeft: '10px',marginTop:19,  height:37 }}>
         Close
       </Button>
     </div>

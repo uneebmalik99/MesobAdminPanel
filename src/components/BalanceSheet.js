@@ -23,6 +23,15 @@ const BalanceSheet = ({ items }) => {
   const payable = calculatePayableToSeller(items || []);
   const retainedEarnings = calculateRetainedEarnings(cash, payable);
 
+  if (!items || items.length === 0) {
+    return (
+      <div className="balance-sheet-container">
+        <h1>Balance Sheet</h1>
+        <p>No data available for Balance Sheet</p>
+      </div>
+    );
+  }
+
   return (
     <div className="balance-sheet-container">
       <h1>Balance Sheet</h1>
@@ -48,7 +57,7 @@ const BalanceSheet = ({ items }) => {
           <tr>
             <td>Payable to seller</td>
             <td></td>
-            <td className="amount negative">{payable}</td>
+            <td className="amount negative">{payable}$</td>
           </tr>
           <tr className="section-header">
             <td>Equity</td>
@@ -58,12 +67,12 @@ const BalanceSheet = ({ items }) => {
           <tr>
             <td>Retained earnings / Net income</td>
             <td></td>
-            <td className="amount">{retainedEarnings}</td>
+            <td className="amount">{retainedEarnings}$</td>
           </tr>
           <tr className="total-row">
             <td>Total</td>
-            <td>{cash}</td>
-            <td>{cash}</td>
+            <td>{cash}$</td>
+            <td>{cash}$</td>
           </tr>
         </tbody>
       </table>

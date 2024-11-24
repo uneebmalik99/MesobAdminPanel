@@ -217,7 +217,7 @@ const EditOrder = () => {
       const updatedBy = localStorage.getItem("user_email");
 
       const response = await axios.patch(
-        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(notes)}&updatedBy=${updatedBy}&assignedName=${selectedAdminUser}`
+        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(notes)}&updatedBy=${updatedBy}&assignedName=${selectedAdminUser}&finance=false`
       );
 
       if (response.status === 200) {

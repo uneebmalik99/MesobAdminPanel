@@ -112,18 +112,44 @@ function MesobFinancial() {
   //     return sum + sheepGoatCost + generalProductsCost;
   //   }, 0).toFixed(2);
   // }
-  function calculateTotalCashOnHand(items) {
-    return items.reduce((sum, transaction) => {
+  // function calculateTotalCashOnHand(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     const amount = parseFloat(transaction.totalCost) || 0;
+  //     if (transaction.type === 1) {
+  //       console.log('=>>>>',transaction.transactiontype);
+  //       if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash') {
+
+  //         return sum - parseInt(transaction.credit); // Add to cash on hand if expense is cash
+  //       }
+  //       // return sum - amount; // Subtract for other expenses
+  //     }
+  //     return sum + amount; // Add for income (type 0)
+  //   }, 0).toFixed(2);
+  // }
+
+  const calculateTotalCashOnHand = (items) => {
+    return items.reduce((total, transaction) => {
       const amount = parseFloat(transaction.totalCost) || 0;
-      if (transaction.type === 1) {
-        if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash') {
-          return sum + amount; // Add to cash on hand if expense is cash
+      
+      if (transaction.type === 0) {
+        // Income: add to total
+        return total + amount;
+      } else if (transaction.type === 1) {
+        // Expense
+        if (transaction.transactiontype.toLowerCase() === 'cash') {
+          // Cash expense: subtract credit value
+          const credit = parseFloat(transaction.credit) || 0;
+          return total - credit;
+        } else if (transaction.transactiontype.toLowerCase() === 'payable') {
+          // Payable: do nothing
+          return total;
         }
-        return sum - amount; // Subtract for other expenses
       }
-      return sum + amount; // Add for income (type 0)
+      
+      // Default case: return current total
+      return total;
     }, 0).toFixed(2);
-  }
+  };
   
   // function calculateTotalPayable(items) {
   //   return items.reduce((sum, transaction) => {
@@ -135,27 +161,60 @@ function MesobFinancial() {
   //     return sum;
   //   }, 0).toFixed(2);
   // }
+  // function calculateTotalPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     if (transaction.type === 0) {
+  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
+  //       const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
+  //       return sum + sheepGoatCost + generalProductsCost;
+  //     } else if (transaction.type === 1 && transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
+  //       return sum + (parseFloat(transaction.totalCost) || 0);
+  //     }
+  //     return sum;
+  //   }, 0).toFixed(2);
+  // }
+
   function calculateTotalPayable(items) {
     return items.reduce((sum, transaction) => {
       if (transaction.type === 0) {
         const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
         const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
         return sum + sheepGoatCost + generalProductsCost;
-      } else if (transaction.type === 1 && transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
-        return sum + (parseFloat(transaction.totalCost) || 0);
+      } else if (transaction.type === 1) {
+        if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
+          return sum + (parseFloat(transaction.totalCost) || 0);
+        } else if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash') {
+          return sum - (parseFloat(transaction.totalCost) || 0);
+        }
       }
       return sum;
     }, 0).toFixed(2);
   }
 
+  // function calculateCommissionRevenue(items) {
+  //   const totalCommission = items.reduce((sum, transaction) => {
+  //     const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
+  //     const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
+  //     const totalCost = parseFloat(transaction.totalCost || '0');
+      
+  //     const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
+  //     return sum + commissionRevenue;
+  //   }, 0);
+  
+  //   return Math.abs(totalCommission).toFixed(2);
+  // }
+
   function calculateCommissionRevenue(items) {
     const totalCommission = items.reduce((sum, transaction) => {
-      const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
-      const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
-      const totalCost = parseFloat(transaction.totalCost || '0');
-      
-      const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
-      return sum + commissionRevenue;
+      if (transaction.type === 0) {
+        const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
+        const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
+        const totalCost = parseFloat(transaction.totalCost || '0');
+        
+        const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
+        return sum + commissionRevenue;
+      }
+      return sum;
     }, 0);
   
     return Math.abs(totalCommission).toFixed(2);

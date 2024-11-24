@@ -2,26 +2,43 @@ import React, { useState, useEffect } from 'react';
 import '../assets/css/IncomeStatement.css';
 
 const IncomeStatement = ({ items }) => {
+  const [commissionRevenue, setCommissionRevenue] = useState(0);
+  const [feeExpense, setFeeExpense] = useState(0);
+  const [totalPayable, setTotalPayable] = useState(0);
   function calculateCommissionRevenue(items) {
     const totalCommission = items.reduce((sum, transaction) => {
-      const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
-      const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
-      const totalCost = parseFloat(transaction.totalCost || '0');
-      
-      const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
-      return sum + commissionRevenue;
+      if (transaction.type === 0) {
+        const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
+        const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
+        const totalCost = parseFloat(transaction.totalCost || '0');
+        
+        const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
+        return sum + commissionRevenue;
+      }
+      return sum;
     }, 0);
   
     return Math.abs(totalCommission).toFixed(2);
   }
-  
-  const [commissionRevenue, setCommissionRevenue] = useState(0);
-  const [feeExpense, setFeeExpense] = useState(0);
+  function calculateFeeExpense(items) {
+    return items.reduce((acc, transaction) => {
+      if (transaction.type === 1) {
+        if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
+          acc.totalFee += parseFloat(transaction.credit || '0'); // Add credit value for payable transactions
+        }
+      }
+      return acc;
+    }, { totalFee: 0 });
+  }
+ 
 
+
+ 
   useEffect(() => {
     if (items.length > 0) {
       setCommissionRevenue(parseFloat(calculateCommissionRevenue(items)));
-      setFeeExpense(5); // Only set fee expense when there are items
+      const { totalFee, totalPayable } = calculateFeeExpense(items);
+      setFeeExpense(totalFee);
     } else {
       setCommissionRevenue(0);
       setFeeExpense(0);

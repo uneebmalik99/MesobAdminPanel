@@ -61,9 +61,11 @@ function MesobFinancial() {
 
   const filterItemsByTimeRange = (items, range) => {
     if (!range.from || !range.to) return items;
-    
     const fromDate = new Date(range.from);
     const toDate = new Date(range.to);
+    
+    // Set the time of toDate to the end of the day
+    toDate.setHours(23, 59, 59, 999);
     
     return items.filter(item => {
       const itemDate = new Date(item.date);
@@ -91,41 +93,6 @@ function MesobFinancial() {
 
   const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
 
-  // function calculateTotalCashOnHand(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     const amount = parseFloat(transaction.totalCost) || 0;
-      
-  //     // If type is 1 (expense), subtract the amount
-  //     if (transaction.type === 1) {
-  //       return sum - amount;
-  //     }
-  //     // Otherwise add the amount
-  //     return sum + amount;
-  //   }, 0).toFixed(2);
-  // }
-
-
-  // function calculateTotalPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
-  //     const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
-  //     return sum + sheepGoatCost + generalProductsCost;
-  //   }, 0).toFixed(2);
-  // }
-  // function calculateTotalCashOnHand(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     const amount = parseFloat(transaction.totalCost) || 0;
-  //     if (transaction.type === 1) {
-  //       console.log('=>>>>',transaction.transactiontype);
-  //       if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash') {
-
-  //         return sum - parseInt(transaction.credit); // Add to cash on hand if expense is cash
-  //       }
-  //       // return sum - amount; // Subtract for other expenses
-  //     }
-  //     return sum + amount; // Add for income (type 0)
-  //   }, 0).toFixed(2);
-  // }
 
   const calculateTotalCashOnHand = (items) => {
     return items.reduce((total, transaction) => {
@@ -150,29 +117,7 @@ function MesobFinancial() {
       return total;
     }, 0).toFixed(2);
   };
-  
-  // function calculateTotalPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     if (transaction.type === 0) {
-  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
-  //       const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
-  //       return sum + sheepGoatCost + generalProductsCost;
-  //     }
-  //     return sum;
-  //   }, 0).toFixed(2);
-  // }
-  // function calculateTotalPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     if (transaction.type === 0) {
-  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
-  //       const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
-  //       return sum + sheepGoatCost + generalProductsCost;
-  //     } else if (transaction.type === 1 && transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
-  //       return sum + (parseFloat(transaction.totalCost) || 0);
-  //     }
-  //     return sum;
-  //   }, 0).toFixed(2);
-  // }
+
 
   function calculateTotalPayable(items) {
     return items.reduce((sum, transaction) => {
@@ -191,18 +136,40 @@ function MesobFinancial() {
     }, 0).toFixed(2);
   }
 
-  // function calculateCommissionRevenue(items) {
-  //   const totalCommission = items.reduce((sum, transaction) => {
-  //     const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
-  //     const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
-  //     const totalCost = parseFloat(transaction.totalCost || '0');
-      
-  //     const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
-  //     return sum + commissionRevenue;
-  //   }, 0);
+  function calculateSheepPayable(items) {
+    return items.reduce((sum, transaction) => {
+      if (transaction.type === 0) {
+        const sheepGoatCost = parseFloat(transaction.sheepGoatCost || '0');
+        return sum + sheepGoatCost;
+      }
+      return sum;
+    }, 0).toFixed(2);
+  }
   
-  //   return Math.abs(totalCommission).toFixed(2);
-  // }
+  function calculateGeneralPayable(items) {
+    return items.reduce((sum, transaction) => {
+      if (transaction.type === 0) {
+        const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
+        return sum + generalProductsCost;
+      }
+      return sum;
+    }, 0).toFixed(2);
+  }
+
+  function calculateMiscPayable(items) {
+    return items.reduce((sum, transaction) => {
+      if (transaction.type === 1) {
+        if (transaction.transactiontype?.toLowerCase() === 'payable') {
+          // Add payable transactions
+          return sum + (parseFloat(transaction.totalCost) || 0);
+        } else if (transaction.transactiontype?.toLowerCase() === 'cash') {
+          // Subtract cash transactions
+          return sum - (parseFloat(transaction.totalCost) || 0);
+        }
+      }
+      return sum;
+    }, 0).toFixed(2);
+  }
 
   function calculateCommissionRevenue(items) {
     const totalCommission = items.reduce((sum, transaction) => {
@@ -220,6 +187,14 @@ function MesobFinancial() {
     return Math.abs(totalCommission).toFixed(2);
   }
 
+  function calculateTotalExpense(items) {
+    return items.reduce((sum, transaction) => {
+      if (transaction.type === 1 && transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
+        return sum + (parseFloat(transaction.totalCost) || 0);
+      }
+      return sum;
+    }, 0).toFixed(2);
+  }
   const handleAddExpense = (expense) => {
     console.log('New expense:', expense);
     // Here you would typically update your state or send data to your backend
@@ -248,6 +223,9 @@ function MesobFinancial() {
     setShowDeleteConfirmation(true);
   };
   
+  const handleClearFilters = () => {
+    setSelectedTimeRange('all');
+  };
   const confirmDelete = () => {
     setLoading(true);
     axios.delete("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial")
@@ -263,8 +241,8 @@ function MesobFinancial() {
       });
     setShowDeleteConfirmation(false);
   };
- 
-  const RunButtons = ({ onSelectRange }) => {
+
+  const RunButtons = ({ onSelectRange, onClearFilters }) => {
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
   
@@ -272,32 +250,31 @@ function MesobFinancial() {
       if (fromDate && toDate) {
         onSelectRange({ from: fromDate, to: toDate });
       } else {
-        // Handle case when dates are not selected
         alert('Please select both From and To dates');
       }
     };
+  
+    const handleClear = () => {
+      setFromDate('');
+      setToDate('');
+      onClearFilters();
+    };
+  
     return (
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <FormGroup style={{ marginRight: '10px' }}>
           <Label for="fromDate">From</Label>
-          <Input
-            type="date"
-            id="fromDate"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-          />
+          <Input type="date" id="fromDate" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
         </FormGroup>
         <FormGroup style={{ marginRight: '10px' }}>
           <Label for="toDate">To</Label>
-          <Input
-            type="date"
-            id="toDate"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-          />
+          <Input type="date" id="toDate" value={toDate} onChange={(e) => setToDate(e.target.value)} />
         </FormGroup>
-        <Button color="primary" onClick={handleRun}>
+        <Button color="primary" onClick={handleRun} style={{ marginRight: '10px' }}>
           Run
+        </Button>
+        <Button color="secondary" onClick={handleClear}>
+          Clear Filters
         </Button>
       </div>
     );
@@ -343,25 +320,24 @@ const TransactionTable = ({ }) => {
               )}
               {transaction.type === 1 ? (
                 <td className="debit">
-                  <div>{transaction.totalCost}$</div>
+                  <div style={{backgroundColor:transaction.transactiontype.toLowerCase() == 'payable' ? '#ff998d' : '#ffc196'}}>{transaction.totalCost}$</div>
                   <div>-</div>
                 </td>
               ) : (
                 <td className="debit">
-                  <div>{transaction.totalCost}$</div>
+                  <div style={{backgroundColor:'#fffd9d'}}>{transaction.totalCost}$</div>
                   {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <div>-</div>}
                   {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <div>-</div>}
                   <div>-</div>
                 </td>
               )}
               {transaction.type === 1 ? (
-                <td >
-                  <tr style={{borderWidth:0}}>
-                <td className="credit" style={{borderWidth:0}}>
+                <td  >
+                <td className="credit" style={{borderWidth:0, width:'100%', }}>
                   <div>-</div>
-                  <div>{transaction.credit}$</div>
+                  <div style={{backgroundColor:transaction.transactiontype.toLowerCase() == 'payable' ? '#ffc196' :null }}>{transaction.credit}$</div>
                 </td>
-                <td style={{borderWidth:0}}>
+                <td style={{borderWidth:0, }}>
               
                 {transaction.type === 1 && (
                   <BsTrashFill 
@@ -372,14 +348,13 @@ const TransactionTable = ({ }) => {
                 )}
             
                 </td>
-                </tr>
                 </td>
               ) : (
                 <td className="credit">
                   <div>-</div>
-                  {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <div>{transaction.generalProductsCost}$</div>}
-                  {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <div>{transaction.sheepGoatCost}$</div>}
-                  <div>
+                  {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <div style={{backgroundColor:'#d1ebb3'}}>{transaction.generalProductsCost}$</div>}
+                  {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <div style={{backgroundColor:'#d3ebff'}}>{transaction.sheepGoatCost}$</div>}
+                  <div style={{backgroundColor:'#ffa6ff'}}>
                     {(() => {
                       const sheepGoatCost = parseFloat(transaction?.sheepGoatCost || 0);
                       const generalProductsCost = parseFloat(transaction?.generalProductsCost || 0);
@@ -425,8 +400,8 @@ const TransactionTable = ({ }) => {
   <div style={{ display: "flex", flexDirection:'row', paddingInline:25, alignItems: "center", justifyContent: "space-between" }}>
     <CardTitle tag="h4">Journal Entry</CardTitle>
     <div style={{display:'flex', justifyContent:'space-between'}} >
-      <RunButtons onSelectRange={handleSelectRange} />
-      <Button color="danger" onClick={handleDeleteAllRecords} style={{ marginLeft: '10px',marginTop:19,  height:37 }}>
+    <RunButtons onSelectRange={handleSelectRange} onClearFilters={handleClearFilters} />
+          <Button color="danger" onClick={handleDeleteAllRecords} style={{ marginLeft: '10px',marginTop:19,  height:37 }}>
         Close
       </Button>
     </div>
@@ -441,11 +416,47 @@ const TransactionTable = ({ }) => {
                 ) : (
                   <>
                     <TransactionTable />
-                    <div style={{margin:25}}>
-                      <p>Total Cash on hand = {calculateTotalCashOnHand(filteredItems)}$</p>
-                      <p>Total Payable (Unpaid) = {calculateTotalPayable(filteredItems)}$</p>
-                      <p>Commission Revenue = {calculateCommissionRevenue(filteredItems)}$</p>
+                    <div style={{margin:20}}>
+                    <div style={{ display: 'inline-block',display:'flex', flexDirection:'row' }}>
+                      <p style={{ borderWidth: 5, borderColor:'grey', padding:10}}>Total Cash on hand =</p>
+                      <p style={{ backgroundColor: '#fffd9d', borderWidth: 5, borderColor:'grey', padding:10}}>
+                         {calculateTotalCashOnHand(filteredItems)}$
+                      </p>
                     </div>
+
+
+
+                    <div style={{ display: 'inline-block',display:'flex', flexDirection:'row' }}>
+                      <p style={{ borderWidth: 5, borderColor:'grey', padding:10}}>Total Payable (Unpaid)=</p>
+                      <p style={{  borderWidth: 5, borderColor:'grey', padding:10}}>
+                      {calculateTotalPayable(filteredItems)}$
+                      </p>
+                    </div>
+                    <div style={{display:'flex',marginLeft:20, flexDirection:'row', gap: '20px'}}>
+                      <p style={{fontSize:12}}>Payable to sheep/goat = <span style={{backgroundColor: '#3498db',padding:10,color:'white', fontWeight: 'bold'}}>{calculateSheepPayable(filteredItems)}$</span></p>
+                      <p style={{fontSize:12}}>Payable to general = <span style={{backgroundColor: '#9b59b6', padding:10,color:'white', fontWeight: 'bold'}}>{calculateGeneralPayable(filteredItems)}$</span></p>
+                      <p style={{fontSize:12}}>Payable to miscellaneous = <span style={{backgroundColor: '#f1c40f', padding:10,color:'white', fontWeight: 'bold'}}>{calculateMiscPayable(filteredItems)}$</span></p>
+                    </div>
+
+
+                    <div style={{ display: 'inline-block',display:'flex', flexDirection:'row' }}>
+                      <p style={{ borderWidth: 5, borderColor:'grey', padding:10}}>Commission Revenue =</p>
+                      <p style={{ backgroundColor: '#ffa6ff', borderWidth: 5, borderColor:'grey', padding:10}}>
+                      {calculateCommissionRevenue(filteredItems)}$
+                      </p>
+                    </div>
+
+
+                    <div style={{ display: 'inline-block',display:'flex', flexDirection:'row' }}>
+                      <p style={{ borderWidth: 5, borderColor:'grey', padding:10}}>Total Expense  =</p>
+                      <p style={{ backgroundColor: '#ff998d', borderWidth: 5, borderColor:'grey', padding:10}}>
+                      {calculateTotalExpense(filteredItems)}$
+                      </p>
+                    </div>
+
+
+
+                      </div>
                   </>
                 )}
               </CardBody>

@@ -35,6 +35,7 @@ import { useNavigate } from "react-router-dom";
 function Dashboard() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [Users, setUsers] = useState([]);
   const [totalStats, setTotalStats] = useState({
     totalOrders: 0,
     totalSales: 0,
@@ -169,6 +170,18 @@ function Dashboard() {
         console.error("Error fetching data:", error);
         setLoading(false);
       });
+      axios
+      .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/users")
+      .then((response) => {
+        if (response.data.Items) {
+          setUsers(response.data.Count);
+          console.log(response.data.Count);
+        }
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("There was an error fetching the users!", error);
+      });
   }, []);
 
   const latestSucceededOrders = items
@@ -255,6 +268,29 @@ function Dashboard() {
                     minimumFractionDigits: 2,
                     maximumFractionDigits: 2
                   })}
+                </CardTitle>
+                  </div>
+                </Col>
+              </Row>
+            </CardBody>
+           
+          </Card>
+        </Col>
+
+        <Col lg="3" md="6">
+          <Card className="card-stats">
+            <CardBody>
+              <Row>
+                <Col xs="5">
+                  <div className="icon-big text-center">
+                  <i className="fas fa-users text-primary"/>
+                  </div>
+                </Col>
+                <Col xs="7">
+                  <div className="numbers">
+                    <p className="card-category">TOTAL USERS</p>
+                    <CardTitle tag="h3">
+                  ${Users}
                 </CardTitle>
                   </div>
                 </Col>

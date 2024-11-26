@@ -65,7 +65,7 @@ const IncomeStatement = ({ items }) => {
             </tr>
             <tr>
               <td>Commission Revenue</td>
-              <td>${commissionRevenue}</td>
+              <td style={{backgroundColor:'#ffa6ff'}}>{commissionRevenue}$</td>
             </tr>
             <tr>
               <td><strong>Expense</strong></td>
@@ -73,11 +73,11 @@ const IncomeStatement = ({ items }) => {
             </tr>
             <tr>
               <td>Fee Expense</td>
-              <td>${feeExpense}</td>
+              <td style={{backgroundColor:'#ff998d'}}>{feeExpense}$</td>
             </tr>
             <tr>
               <td><strong>Net Income</strong></td>
-              <td>${calculateNetIncome()}</td>
+              <td style={{backgroundColor:'#ffa6ff'}}>{calculateNetIncome()}$</td>
             </tr>
           </tbody>
         </table>

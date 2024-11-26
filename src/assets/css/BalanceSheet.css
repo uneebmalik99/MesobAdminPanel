@@ -31,12 +31,9 @@
 }
 
 .amount.positive {
-  background-color: #e6ffe6;
+  background-color: #fffd9d;
 }
 
-.amount.negative {
-  background-color: #ffe6e6;
-}
 
 .total-row {
   font-weight: bold;

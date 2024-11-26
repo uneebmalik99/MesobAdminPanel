@@ -61,11 +61,11 @@ export const AddExpenseButton = ({ onAddExpense }) => {
       <NotificationAlert ref={notificationAlertRef} />
 
       <div style={{width:'100%', backgroundColor:'#f0f0f0', padding: '10px', borderRadius: '4px', cursor: 'pointer'}} onClick={toggle}>
-        <p style={{textAlign: 'center', margin: 0}}>+ Add Expense</p>
+        <p style={{textAlign: 'center', margin: 0}}>+ Add Transaction</p>
       </div>
 
       <Modal isOpen={modal} toggle={toggle}>
-        <ModalHeader toggle={toggle}>Add Expense</ModalHeader>
+        <ModalHeader toggle={toggle}>Add Transaction</ModalHeader>
         <ModalBody>
           <Form onSubmit={handleSubmit}>
             <FormGroup>

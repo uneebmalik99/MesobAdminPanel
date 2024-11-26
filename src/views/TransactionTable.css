@@ -38,12 +38,10 @@
   
   .debit {
     color: black;
-    font-weight: bold;
   }
   
   .credit {
-    color: grey;
-    font-weight: bold;
+    color: black;
   }
   
   tr:hover {

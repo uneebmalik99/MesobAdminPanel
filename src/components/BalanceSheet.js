@@ -31,21 +31,59 @@ const BalanceSheet = ({ items }) => {
     }, 0).toFixed(2);
   };
 
+
   const calculatePayableToSeller = (items) => {
     return items.reduce((sum, transaction) => {
-      const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
-      const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
-      return sum + sheepGoatCost + generalProductsCost;
+      if (transaction.type === 0) {
+        const sheepGoatCost = parseFloat(transaction.sheepGoatCost || '0');
+        const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
+        return sum + sheepGoatCost + generalProductsCost;
+      } else if (transaction.type === 1) {
+        if (transaction.transactiontype?.toLowerCase() === 'payable') {
+          return sum + (parseFloat(transaction.totalCost) || 0);
+        } else if (transaction.transactiontype?.toLowerCase() === 'cash') {
+          return sum - (parseFloat(transaction.totalCost) || 0);
+        }
+      }
+      return sum;
     }, 0).toFixed(2);
   };
 
-  const calculateRetainedEarnings = (cash, payable) => {
-    return (parseFloat(cash) - parseFloat(payable)).toFixed(2);
+  const calculateRetainedEarnings = (items) => {
+    // Calculate Commission Revenue
+    let commissionRevenue = items.reduce((sum, transaction) => {
+      if (transaction.type === 0) {
+        const sheepProviderCost = parseFloat(transaction.sheepGoatCost || '0');
+        const generalProviderCost = parseFloat(transaction.generalProductsCost || '0');
+        const totalCost = parseFloat(transaction.totalCost || '0');
+        const commissionRevenue = (sheepProviderCost + generalProviderCost) - totalCost;
+        return sum + commissionRevenue;
+      }
+      return sum;
+    }, 0);
+
+    // Calculate Fee Expense
+    const feeExpense = items.reduce((sum, transaction) => {
+      if (transaction.type === 1 && 
+          transaction.transactiontype?.toLowerCase() === 'payable') {
+        return sum + (parseFloat(transaction.credit) || 0);
+      }
+      return sum;
+    }, 0);
+
+
+    commissionRevenue= Math.abs(commissionRevenue)
+
+    console.log('commissionRevenue=>>', commissionRevenue);
+
+
+    // Calculate Net Income
+    return Math.abs(commissionRevenue - feeExpense).toFixed(2);
   };
 
   const cash = calculateCash(items || []);
   const payable = calculatePayableToSeller(items || []);
-  const retainedEarnings = calculateRetainedEarnings(cash, payable);
+  const retainedEarnings = calculateRetainedEarnings(items);
 
   if (!items || items.length === 0) {
     return (
@@ -91,7 +129,7 @@ const BalanceSheet = ({ items }) => {
           <tr>
             <td>Retained earnings / Net income</td>
             <td></td>
-            <td className="amount">{retainedEarnings}$</td>
+            <td style={{backgroundColor:'#ffa6ff'}} className="amount">{retainedEarnings}$</td>
           </tr>
           <tr className="total-row">
             <td>Total</td>

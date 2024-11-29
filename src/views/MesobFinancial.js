@@ -120,25 +120,6 @@ function MesobFinancial() {
     }, 0).toFixed(2);
   };
 
-  // function calculateTotalPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     if (transaction.type === 0) {
-  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
-  //       const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
-  //       return sum + sheepGoatCost + generalProductsCost;
-  //     } else if (transaction.type === 1) {
-  //       if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
-  //         return sum + (parseFloat(transaction.totalCost) || 0);
-  //       } else if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash - Payable to Miscellaneous Expenses' 
-  //     ||transaction.transactiontype.toLowerCase() === 'cash - Payable to General'  || transaction.transactiontype.toLowerCase() === 'cash - Payable to Miscellaneous Expenses'  ) {
-  //         return sum - (parseFloat(transaction.totalCost) || 0);
-  //       }
-  //     }
-  //     return sum;
-  //   }, 0).toFixed(2);
-  // }
-
-
   function calculateTotalPayable(items) {
     return items.reduce((sum, transaction) => {
       if (transaction.type === 0) {
@@ -162,41 +143,6 @@ function MesobFinancial() {
       return sum;
     }, 0).toFixed(2);
   }
-
-  // function calculateSheepPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     if (transaction.type === 0) {
-  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost || '0');
-  //       return sum + sheepGoatCost;
-  //     }
-  //     return sum;
-  //   }, 0).toFixed(2);
-  // }
-  
-  // function calculateGeneralPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     if (transaction.type === 0) {
-  //       const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
-  //       return sum + generalProductsCost;
-  //     }
-  //     return sum;
-  //   }, 0).toFixed(2);
-  // }
-
-  // function calculateMiscPayable(items) {
-  //   return items.reduce((sum, transaction) => {
-  //     if (transaction.type === 1) {
-  //       if (transaction.transactiontype?.toLowerCase() === 'payable') {
-  //         // Add payable transactions
-  //         return sum + (parseFloat(transaction.totalCost) || 0);
-  //       } else if (transaction.transactiontype?.toLowerCase() === 'cash') {
-  //         // Subtract cash transactions
-  //         return sum - (parseFloat(transaction.totalCost) || 0);
-  //       }
-  //     }
-  //     return sum;
-  //   }, 0).toFixed(2);
-  // }
 
   function calculateSheepPayable(items) {
     return items.reduce((sum, transaction) => {
@@ -235,7 +181,6 @@ function MesobFinancial() {
     }, 0).toFixed(2);
   }
 
-
   function calculateCommissionRevenue(items) {
     const totalCommission = items.reduce((sum, transaction) => {
       if (transaction.type === 0) {
@@ -260,6 +205,7 @@ function MesobFinancial() {
       return sum;
     }, 0).toFixed(2);
   }
+  
   const handleAddExpense = (expense) => {
     console.log('New expense:', expense);
     // Here you would typically update your state or send data to your backend

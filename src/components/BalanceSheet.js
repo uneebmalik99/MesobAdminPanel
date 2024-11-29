@@ -2,10 +2,6 @@ import React from 'react';
 import '../assets/css/./BalanceSheet.css';
 
 const BalanceSheet = ({ items }) => {
-  // const calculateCash = (items) => {
-  //   return items.reduce((sum, transaction) => 
-  //     sum + (parseFloat(transaction.totalCost) || 0), 0).toFixed(2);
-  // };
 
   const calculateCash = (items) => {
     return items.reduce((total, transaction) => {
@@ -31,7 +27,6 @@ const BalanceSheet = ({ items }) => {
     }, 0).toFixed(2);
   };
 
-
   const calculatePayableToSeller = (items) => {
     return items.reduce((sum, transaction) => {
       if (transaction.type === 0) {
@@ -39,16 +34,22 @@ const BalanceSheet = ({ items }) => {
         const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
         return sum + sheepGoatCost + generalProductsCost;
       } else if (transaction.type === 1) {
-        if (transaction.transactiontype?.toLowerCase() === 'payable') {
-          return sum + (parseFloat(transaction.totalCost) || 0);
-        } else if (transaction.transactiontype?.toLowerCase() === 'cash') {
-          return sum - (parseFloat(transaction.totalCost) || 0);
+        const transactionType = transaction.transactiontype?.toLowerCase();
+        const totalCost = parseFloat(transaction.totalCost) || 0;
+  
+        if (transactionType === 'payable') {
+          return sum + totalCost;
+        } else if (
+          transactionType === 'cash - payable to sheep provider' ||
+          transactionType === 'cash - payable to general' ||
+          transactionType === 'cash - payable to miscellaneous expenses'
+        ) {
+          return sum - totalCost;
         }
       }
       return sum;
     }, 0).toFixed(2);
   };
-
   const calculateRetainedEarnings = (items) => {
     // Calculate Commission Revenue
     let commissionRevenue = items.reduce((sum, transaction) => {

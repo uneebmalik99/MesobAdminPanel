@@ -44,6 +44,8 @@ function MesobFinancial() {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const notificationAlertRef = useRef(null);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [searchedDates, setSearchedDates] = useState(null);
+
   const notify = (place, message, type) => {
     const options = {
       place: place,
@@ -118,6 +120,24 @@ function MesobFinancial() {
     }, 0).toFixed(2);
   };
 
+  // function calculateTotalPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     if (transaction.type === 0) {
+  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost) || 0;
+  //       const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
+  //       return sum + sheepGoatCost + generalProductsCost;
+  //     } else if (transaction.type === 1) {
+  //       if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
+  //         return sum + (parseFloat(transaction.totalCost) || 0);
+  //       } else if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash - Payable to Miscellaneous Expenses' 
+  //     ||transaction.transactiontype.toLowerCase() === 'cash - Payable to General'  || transaction.transactiontype.toLowerCase() === 'cash - Payable to Miscellaneous Expenses'  ) {
+  //         return sum - (parseFloat(transaction.totalCost) || 0);
+  //       }
+  //     }
+  //     return sum;
+  //   }, 0).toFixed(2);
+  // }
+
 
   function calculateTotalPayable(items) {
     return items.reduce((sum, transaction) => {
@@ -126,21 +146,65 @@ function MesobFinancial() {
         const generalProductsCost = parseFloat(transaction.generalProductsCost) || 0;
         return sum + sheepGoatCost + generalProductsCost;
       } else if (transaction.type === 1) {
-        if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'payable') {
-          return sum + (parseFloat(transaction.totalCost) || 0);
-        } else if (transaction.transactiontype && transaction.transactiontype.toLowerCase() === 'cash') {
-          return sum - (parseFloat(transaction.totalCost) || 0);
+        const transactionType = transaction.transactiontype.toLowerCase();
+        const totalCost = parseFloat(transaction.totalCost) || 0;
+  
+        if (transactionType === 'payable') {
+          return sum + totalCost;
+        } else if (
+          transactionType === 'cash - payable to sheep provider' ||
+          transactionType === 'cash - payable to general' ||
+          transactionType === 'cash - payable to miscellaneous expenses'
+        ) {
+          return sum - totalCost;
         }
       }
       return sum;
     }, 0).toFixed(2);
   }
 
+  // function calculateSheepPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     if (transaction.type === 0) {
+  //       const sheepGoatCost = parseFloat(transaction.sheepGoatCost || '0');
+  //       return sum + sheepGoatCost;
+  //     }
+  //     return sum;
+  //   }, 0).toFixed(2);
+  // }
+  
+  // function calculateGeneralPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     if (transaction.type === 0) {
+  //       const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
+  //       return sum + generalProductsCost;
+  //     }
+  //     return sum;
+  //   }, 0).toFixed(2);
+  // }
+
+  // function calculateMiscPayable(items) {
+  //   return items.reduce((sum, transaction) => {
+  //     if (transaction.type === 1) {
+  //       if (transaction.transactiontype?.toLowerCase() === 'payable') {
+  //         // Add payable transactions
+  //         return sum + (parseFloat(transaction.totalCost) || 0);
+  //       } else if (transaction.transactiontype?.toLowerCase() === 'cash') {
+  //         // Subtract cash transactions
+  //         return sum - (parseFloat(transaction.totalCost) || 0);
+  //       }
+  //     }
+  //     return sum;
+  //   }, 0).toFixed(2);
+  // }
+
   function calculateSheepPayable(items) {
     return items.reduce((sum, transaction) => {
       if (transaction.type === 0) {
         const sheepGoatCost = parseFloat(transaction.sheepGoatCost || '0');
         return sum + sheepGoatCost;
+      } else if (transaction.type === 1 && transaction.transactiontype === 'cash - Payable to Sheep Provider') {
+        return sum - parseFloat(transaction.totalCost || '0');
       }
       return sum;
     }, 0).toFixed(2);
@@ -151,25 +215,26 @@ function MesobFinancial() {
       if (transaction.type === 0) {
         const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
         return sum + generalProductsCost;
+      } else if (transaction.type === 1 && transaction.transactiontype === 'cash - Payable to General') {
+        return sum - parseFloat(transaction.totalCost || '0');
       }
       return sum;
     }, 0).toFixed(2);
   }
-
+  
   function calculateMiscPayable(items) {
     return items.reduce((sum, transaction) => {
       if (transaction.type === 1) {
-        if (transaction.transactiontype?.toLowerCase() === 'payable') {
-          // Add payable transactions
+        if (transaction.transactiontype === 'payable') {
           return sum + (parseFloat(transaction.totalCost) || 0);
-        } else if (transaction.transactiontype?.toLowerCase() === 'cash') {
-          // Subtract cash transactions
+        } else if (transaction.transactiontype === 'cash - Payable to Miscellaneous Expenses') {
           return sum - (parseFloat(transaction.totalCost) || 0);
         }
       }
       return sum;
     }, 0).toFixed(2);
   }
+
 
   function calculateCommissionRevenue(items) {
     const totalCommission = items.reduce((sum, transaction) => {
@@ -249,6 +314,8 @@ function MesobFinancial() {
     const handleRun = () => {
       if (fromDate && toDate) {
         onSelectRange({ from: fromDate, to: toDate });
+        setSearchedDates({ from: fromDate, to: toDate });
+
       } else {
         alert('Please select both From and To dates');
       }
@@ -264,11 +331,21 @@ function MesobFinancial() {
       <div style={{ display: 'flex', alignItems: 'center' }}>
         <FormGroup style={{ marginRight: '10px' }}>
           <Label for="fromDate">From</Label>
-          <Input type="date" id="fromDate" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+          <Input
+            type="date"
+            id="fromDate"
+            value={fromDate}
+            onChange={(e) => setFromDate(e.target.value)}
+          />
         </FormGroup>
         <FormGroup style={{ marginRight: '10px' }}>
           <Label for="toDate">To</Label>
-          <Input type="date" id="toDate" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+          <Input
+            type="date"
+            id="toDate"
+            value={toDate}
+            onChange={(e) => setToDate(e.target.value)}
+          />
         </FormGroup>
         <Button color="primary" onClick={handleRun} style={{ marginRight: '10px' }}>
           Run
@@ -335,7 +412,7 @@ const TransactionTable = ({ }) => {
                 <td  >
                 <td className="credit" style={{borderWidth:0, width:'100%', }}>
                   <div>-</div>
-                  <div style={{backgroundColor:transaction.transactiontype.toLowerCase() == 'payable' ? '#ffc196' :null }}>{transaction.credit}$</div>
+                  <div style={{backgroundColor:transaction.transactiontype.toLowerCase() == 'payable' ? '#ff998d' :'#ffc196' }}>{transaction.credit}$</div>
                 </td>
                 <td style={{borderWidth:0, }}>
               
@@ -415,6 +492,11 @@ const TransactionTable = ({ }) => {
                   </div>
                 ) : (
                   <>
+                  {selectedTimeRange && selectedTimeRange.from && selectedTimeRange.to && (
+                    <div style={{ marginBottom: '15px' }}>
+                      <strong>Searched dates:</strong> {selectedTimeRange.from} - {selectedTimeRange.to}
+                    </div>
+                  )}
                     <TransactionTable />
                     <div style={{margin:20}}>
                     <div style={{ display: 'inline-block',display:'flex', flexDirection:'row' }}>

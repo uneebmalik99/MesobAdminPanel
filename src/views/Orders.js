@@ -62,6 +62,7 @@ const Orders = () => {
   );
   const closedOrders = items.filter((item) => item.adminStatus === "Closed");
 
+
   // Apply search filtering based on searchTerm for each table
   const filteredSucceededOrders = succeededOrders.filter((item) =>
     item.name?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -356,6 +357,9 @@ const Orders = () => {
                         <p>Loading orders...</p>
                       </div>
                     ) : (
+                      <>
+                      
+                   
                       <DataTable
                         columns={columns}
                         data={filteredClosedOrders}
@@ -369,6 +373,7 @@ const Orders = () => {
                         ]}
                         highlightOnHover
                       />
+                         </>
                     )}
                   </TabPane>
                 </TabContent>

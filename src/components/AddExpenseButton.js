@@ -8,7 +8,7 @@ export const AddExpenseButton = ({ onAddExpense }) => {
   const [expenseName, setExpenseName] = useState('');
   const [debitValue, setDebitValue] = useState('');
   const [creditValue, setCreditValue] = useState('');
-  const [transactiontype, settransactiontype] = useState('cash');
+  const [transactiontype, setTransactiontype] = useState('cash - Payable to Sheep Provider');
   const notificationAlertRef = useRef(null);
 
   const toggle = () => setModal(!modal);
@@ -42,7 +42,7 @@ export const AddExpenseButton = ({ onAddExpense }) => {
           setExpenseName('');
           setDebitValue('');
           setCreditValue('');
-          settransactiontype('cash');
+          setTransactiontype('cash - Payable to Sheep Provider');
           
           // Reload the page after a short delay
           setTimeout(() => {
@@ -111,10 +111,12 @@ export const AddExpenseButton = ({ onAddExpense }) => {
                 name="transactiontype"
                 id="transactiontype"
                 value={transactiontype}
-                onChange={(e) => settransactiontype(e.target.value)}
+                onChange={(e) => setTransactiontype(e.target.value)}
                 required
               >
-                <option value="cash">Cash</option>
+                <option value="cash - Payable to Sheep Provider">Cash (Payable to Sheep Provider)</option>
+                <option value="cash - Payable to General">Cash (Payable to General)</option>
+                <option value="cash - Payable to Miscellaneous Expenses">Cash (Payable to Miscellaneous Expenses)</option>
                 <option value="payable">Payable</option>
               </Input>
             </FormGroup>

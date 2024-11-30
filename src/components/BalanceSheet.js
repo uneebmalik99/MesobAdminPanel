@@ -4,7 +4,7 @@ import '../assets/css/./BalanceSheet.css';
 const BalanceSheet = ({ items }) => {
 
   const calculateCash = (items) => {
-    return items.reduce((total, transaction) => {
+    const total = items.reduce((total, transaction) => {
       const amount = parseFloat(transaction.totalCost) || 0;
       
       if (transaction.type === 0) {
@@ -12,11 +12,16 @@ const BalanceSheet = ({ items }) => {
         return total + amount;
       } else if (transaction.type === 1) {
         // Expense
-        if (transaction.transactiontype.toLowerCase() === 'cash') {
+        const transactionType = transaction.transactiontype.toLowerCase();
+        if (
+          transactionType === 'cash - payable to sheep provider' ||
+          transactionType === 'cash - payable to general' ||
+          transactionType === 'cash - payable to miscellaneous expenses'
+        ) {
           // Cash expense: subtract credit value
           const credit = parseFloat(transaction.credit) || 0;
           return total - credit;
-        } else if (transaction.transactiontype.toLowerCase() === 'payable') {
+        } else if (transactionType === 'payable') {
           // Payable: do nothing
           return total;
         }
@@ -24,11 +29,13 @@ const BalanceSheet = ({ items }) => {
       
       // Default case: return current total
       return total;
-    }, 0).toFixed(2);
+    }, 0);
+  
+    return Math.abs(total).toFixed(2);
   };
 
   const calculatePayableToSeller = (items) => {
-    return items.reduce((sum, transaction) => {
+    const total = items.reduce((sum, transaction) => {
       if (transaction.type === 0) {
         const sheepGoatCost = parseFloat(transaction.sheepGoatCost || '0');
         const generalProductsCost = parseFloat(transaction.generalProductsCost || '0');
@@ -48,7 +55,9 @@ const BalanceSheet = ({ items }) => {
         }
       }
       return sum;
-    }, 0).toFixed(2);
+    }, 0);
+  
+    return Math.abs(total).toFixed(2);
   };
   const calculateRetainedEarnings = (items) => {
     // Calculate Commission Revenue

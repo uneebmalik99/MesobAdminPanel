@@ -316,8 +316,10 @@ function MesobFinancial() {
   const TransactionTable = ({ }) => {
     const filteredItems = filterItemsByTimeRange(items, selectedTimeRange);
     const sortedTransactions = [...filteredItems].sort((a, b) => {
-      return new Date(b.date) - new Date(a.date);
+      return new Date(b.createdAt) - new Date(a.createdAt);
     });
+    const totalTransactions = sortedTransactions.length;
+
 
     return (
       <div className="table-container">
@@ -332,10 +334,10 @@ function MesobFinancial() {
             </tr>
           </thead>
           <tbody>
-            {sortedTransactions.map((transaction, index) => (
+          {sortedTransactions.map((transaction, index) => (
               <tr key={index} className={transaction.type === 1 ? "expense-row" : ""}>
                 <td>{transaction.date}</td>
-                <td>{index + 1}</td>
+                <td>{totalTransactions - index}</td>
                 {transaction.type === 1 ? (
                   <td>
                     <div>{transaction.expensename || "Expense"}</div>

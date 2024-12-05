@@ -158,16 +158,15 @@ const EditOrder = () => {
 
     // Apply promo discount if available
     const discounted_price = promo_discount
-      ? total_price - promo_discount
-      : total_price;
-    const discounted_cost = promo_discount
-      ? total_cost - promo_discount
-      : total_cost;
-
-    setTotalSellingPrice(total_price);
-    setTotalCost(total_cost);
-    setDiscountedPrice(discounted_price);
-    setDiscountedCost(discounted_cost);
+    ? total_price - promo_discount
+    : total_price;
+  
+  const discounted_cost = total_cost; // Keep total cost unchanged
+  
+  setTotalSellingPrice(total_price);
+  setTotalCost(total_cost);
+  setDiscountedPrice(discounted_price);
+  setDiscountedCost(discounted_cost);
   };
 
   const tableHTML = productRows;

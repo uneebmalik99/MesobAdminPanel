@@ -34,13 +34,6 @@ var dashRoutes = [
     layout: "/admin",
   },
   {
-    path: "/MesobFinancial",
-    name: "Financial Report",
-    icon: "shopping_cart-simple",
-    component: <MesobFinancial />,
-    layout: "/admin",
-  },
-  {
     path: "/promo-codes",
     name: "Promo Codes",
     icon: "shopping_tag-content",
@@ -61,13 +54,6 @@ var dashRoutes = [
     component: <Notifications />,
     layout: "/admin",
   },
-  // {
-  //   path: "/user-page",
-  //   name: "User Profile",
-  //   icon: "users_single-02",
-  //   component: <UserPage />,
-  //   layout: "/admin",
-  // },
   {
     path: "/order/details/:id",
     name: "Order Details",
@@ -81,6 +67,13 @@ var dashRoutes = [
     component: <EditOrder />,
     layout: "/admin",
     invisible: true,
+  },
+  {
+    path: "/MesobFinancial",
+    name: "Financial Report",
+    icon: "business_money-coins",
+    component: <MesobFinancial />,
+    layout: "/admin",
   },
 ];
 export default dashRoutes;

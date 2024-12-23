@@ -7,7 +7,9 @@ import "assets/scss/now-ui-dashboard.scss?v1.5.0";
 import "assets/css/demo.css";
 
 import AdminLayout from "layouts/Admin.js";
+import FinancialLayout from "layouts/financial.js";
 import Login from "../src/views/Login";
+import MesobFinanceLogin from "views/MesobFinanceLogin";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -16,6 +18,10 @@ root.render(
     <Routes>
       {/* Route for the Login page */}
       <Route path="/login" element={<Login />} />
+      <Route path="/mesonfinancelogin" element={<MesobFinanceLogin />} />
+
+      {/* Admin routes */}
+      <Route path="/financial/*" element={<FinancialLayout />} />
 
       {/* Admin routes */}
       <Route path="/admin/*" element={<AdminLayout />} />

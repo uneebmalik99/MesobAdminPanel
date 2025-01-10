@@ -71,7 +71,7 @@ function Notifications() {
     try {
       setSendNotificationBtnLoading(true);
       const response = await axios.post(
-        "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/notification_topic?arn=arn:aws:sns:us-east-1:807954077262:EnpointTopic",
+        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/notification_topic?arn=arn:aws:sns:us-east-1:807954077262:EnpointTopic",
         payload,
         {
           headers: {

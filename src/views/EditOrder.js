@@ -52,7 +52,7 @@ const EditOrder = () => {
   const fetchOrderDetails = async () => {
     try {
       const response = await axios.get(
-        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
+        `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
       );
       const itemData = response?.data?.Item;
 
@@ -123,7 +123,7 @@ const EditOrder = () => {
   const fetchAdminUsers = async () => {
     try {
       const response = await axios.get(
-        "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/adminuser"
+        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/adminuser"
       );
       const users = response?.data;
 
@@ -158,15 +158,15 @@ const EditOrder = () => {
 
     // Apply promo discount if available
     const discounted_price = promo_discount
-    ? total_price - promo_discount
-    : total_price;
-  
-  const discounted_cost = total_cost; // Keep total cost unchanged
-  
-  setTotalSellingPrice(total_price);
-  setTotalCost(total_cost);
-  setDiscountedPrice(discounted_price);
-  setDiscountedCost(discounted_cost);
+      ? total_price - promo_discount
+      : total_price;
+
+    const discounted_cost = total_cost; // Keep total cost unchanged
+
+    setTotalSellingPrice(total_price);
+    setTotalCost(total_cost);
+    setDiscountedPrice(discounted_price);
+    setDiscountedCost(discounted_cost);
   };
 
   const tableHTML = productRows;
@@ -216,7 +216,7 @@ const EditOrder = () => {
       const updatedBy = localStorage.getItem("user_email");
 
       const response = await axios.patch(
-        `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(notes)}&updatedBy=${updatedBy}&assignedName=${selectedAdminUser}&finance=false`
+        `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(notes)}&updatedBy=${updatedBy}&assignedName=${selectedAdminUser}&finance=false`
       );
 
       if (response.status === 200) {

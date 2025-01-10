@@ -32,7 +32,7 @@ export const AddExpenseButton = ({ onAddExpense }) => {
     e.preventDefault();
 
     axios
-      .post(`https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial/expense?debit=${debitValue}&credit=${creditValue}&expensename=${expenseName}&transactiontype=${transactiontype}`)
+      .post(`https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/MesobFinancial/expense?debit=${debitValue}&credit=${creditValue}&expensename=${expenseName}&transactiontype=${transactiontype}`)
       .then((response) => {
         if (response.status === 200) {
           notify("tr", "Expense added successfully!", "success");
@@ -43,7 +43,7 @@ export const AddExpenseButton = ({ onAddExpense }) => {
           setDebitValue('');
           setCreditValue('');
           setTransactiontype('cash - Payable to Sheep Provider');
-          
+
           // Reload the page after a short delay
           setTimeout(() => {
             window.location.reload();
@@ -60,8 +60,8 @@ export const AddExpenseButton = ({ onAddExpense }) => {
     <div>
       <NotificationAlert ref={notificationAlertRef} />
 
-      <div style={{width:'100%', backgroundColor:'#f0f0f0', padding: '10px', borderRadius: '4px', cursor: 'pointer'}} onClick={toggle}>
-        <p style={{textAlign: 'center', margin: 0}}>+ Add Transaction</p>
+      <div style={{ width: '100%', backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '4px', cursor: 'pointer' }} onClick={toggle}>
+        <p style={{ textAlign: 'center', margin: 0 }}>+ Add Transaction</p>
       </div>
 
       <Modal isOpen={modal} toggle={toggle}>

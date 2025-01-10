@@ -46,7 +46,7 @@ const MesobFinanceAuth = () => {
 
     try {
       const response = await fetch(
-        "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancialSystem/Signin",
+        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/MesobFinancialSystem/Signin",
         {
           method: "POST",
           headers: {
@@ -79,7 +79,7 @@ const MesobFinanceAuth = () => {
     setLoading(true);
     try {
       const response = await fetch(
-        "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/MesobFinancialSystem/SignUp",
+        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/MesobFinancialSystem/SignUp",
         {
           method: "POST",
           headers: {
@@ -109,7 +109,7 @@ const MesobFinanceAuth = () => {
       setLoading(false);
     }
   };
-  
+
 
   return (
     <>
@@ -178,91 +178,91 @@ const MesobFinanceAuth = () => {
             </form>
           ) : (
             <form onSubmit={handleSignup}>
-            <h2>Sign Up</h2>
-            <p>Create an account to access Mesob Financial Services</p>
-            
-            <div className="explanation-box">
-              <p>To get started, we need to know where your business stands financially today. This includes how much cash you have, any money owed to you, any debt you owe, and any valuable items (like inventory) you own. This helps us build an accurate financial picture of your business (recommended).</p>
-              <button type="button" className="start-from-zero" onClick={() => setStartFromZero(true)}>
-                Start from zero
+              <h2>Sign Up</h2>
+              <p>Create an account to access Mesob Financial Services</p>
+
+              <div className="explanation-box">
+                <p>To get started, we need to know where your business stands financially today. This includes how much cash you have, any money owed to you, any debt you owe, and any valuable items (like inventory) you own. This helps us build an accurate financial picture of your business (recommended).</p>
+                <button type="button" className="start-from-zero" onClick={() => setStartFromZero(true)}>
+                  Start from zero
+                </button>
+              </div>
+
+              <div className="signup-grid">
+                <div className="column">
+                  <div className="auth-input-group">
+                    <label>Name</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
+                  </div>
+                  <div className="auth-input-group">
+                    <label>Email</label>
+                    <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
+                  </div>
+                </div>
+                <div className="column">
+                  <div className="auth-input-group">
+                    <label>Password</label>
+                    <div className="password-container">
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                      />
+                      <button
+                        type="button"
+                        className="toggle-password"
+                        onClick={() => setShowPassword((prev) => !prev)}
+                      >
+                        <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} size="lg" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="auth-input-group">
+                    <label>Company Name</label>
+                    <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
+                  </div>
+                </div>
+              </div>
+
+              <div className="signup-row">
+                <div className="auth-input-group">
+                  <label>Type of Business</label>
+                  <select value={businessType} onChange={(e) => setBusinessType(e.target.value)} required>
+                    <option value="">Select business type</option>
+                    <option value="trucking">Trucking</option>
+                    <option value="groceries">Groceries</option>
+                    <option value="service">Service</option>
+                  </select>
+                </div>
+                {!startFromZero && (
+                  <>
+                    <div className="auth-input-group">
+                      <label>Beginning Cash</label>
+                      <input type="number" value={beginningCash} onChange={(e) => setBeginningCash(e.target.value)} step="0.01" />
+                    </div>
+                    <div className="auth-input-group">
+                      <label>Outstanding Debt</label>
+                      <input type="number" value={outstandingDebt} onChange={(e) => setOutstandingDebt(e.target.value)} step="0.01" />
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <button type="submit" className="auth-btn" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Spinner color="secondary" size="sm" />
+                    Please wait
+                  </>
+                ) : (
+                  "Sign Up"
+                )}
               </button>
-            </div>
-          
-            <div className="signup-grid">
-              <div className="column">
-                <div className="auth-input-group">
-                  <label>Name</label>
-                  <input type="text" value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
-                </div>
-                <div className="auth-input-group">
-                  <label>Email</label>
-                  <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="email" />
-                </div>
-              </div>
-              <div className="column">
-                <div className="auth-input-group">
-                  <label>Password</label>
-                  <div className="password-container">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="toggle-password"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                      <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} size="lg" />
-                    </button>
-                  </div>
-                </div>
-                <div className="auth-input-group">
-                  <label>Company Name</label>
-                  <input type="text" value={companyName} onChange={(e) => setCompanyName(e.target.value)} required />
-                </div>
-              </div>
-            </div>
-          
-            <div className="signup-row">
-              <div className="auth-input-group">
-                <label>Type of Business</label>
-                <select value={businessType} onChange={(e) => setBusinessType(e.target.value)} required>
-                  <option value="">Select business type</option>
-                  <option value="trucking">Trucking</option>
-                  <option value="groceries">Groceries</option>
-                  <option value="service">Service</option>
-                </select>
-              </div>
-              {!startFromZero && (
-                <>
-                  <div className="auth-input-group">
-                    <label>Beginning Cash</label>
-                    <input type="number" value={beginningCash} onChange={(e) => setBeginningCash(e.target.value)} step="0.01" />
-                  </div>
-                  <div className="auth-input-group">
-                    <label>Outstanding Debt</label>
-                    <input type="number" value={outstandingDebt} onChange={(e) => setOutstandingDebt(e.target.value)} step="0.01" />
-                  </div>
-                </>
-              )}
-            </div>
-          
-            <button type="submit" className="auth-btn" disabled={loading}>
-              {loading ? (
-                <>
-                  <Spinner color="secondary" size="sm" />
-                  Please wait
-                </>
-              ) : (
-                "Sign Up"
-              )}
-            </button>
-          </form>
-          
-          
-          
+            </form>
+
+
+
           )}
         </div>
       </div>

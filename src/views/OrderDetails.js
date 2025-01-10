@@ -32,7 +32,7 @@ const OrderDetails = () => {
     const fetchOrderDetails = async () => {
       try {
         const response = await axios.get(
-          `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
+          `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items/${id}`
         );
         const itemData = response.data.Item;
         setOrderDetails(itemData);

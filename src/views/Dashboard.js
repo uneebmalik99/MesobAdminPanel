@@ -141,13 +141,13 @@ function Dashboard() {
     const succeededOrders = data.filter(item => item.adminStatus === "Succeeded");
     let totalSales = 0;
     let totalCost = 0;
-  
+
     succeededOrders.forEach(order => {
       // Round each value to 2 decimal places before adding
       totalSales += Number((order.totalSellingPrice || 0).toFixed(2));
       totalCost += Number((order.totalCostPrice || 0).toFixed(2));
     });
-  
+
     setTotalStats({
       totalOrders: succeededOrders.length,
       totalSales: Number(totalSales.toFixed(2)),
@@ -158,7 +158,7 @@ function Dashboard() {
 
   useEffect(() => {
     axios
-      .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items")
+      .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items")
       .then((response) => {
         if (response.data) {
           setItems(response.data);
@@ -170,8 +170,8 @@ function Dashboard() {
         console.error("Error fetching data:", error);
         setLoading(false);
       });
-      axios
-      .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/users")
+    axios
+      .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/users")
       .then((response) => {
         if (response.data.Items) {
           setUsers(response.data.Count);
@@ -202,104 +202,104 @@ function Dashboard() {
           </div>
         }
       />
-     <div className="content">
-      <Row>
-        <Col lg="3" md="6">
-          <Card className="card-stats">
-            <CardBody>
-              <Row>
-                <Col xs="5">
-                  <div className="icon-big text-center">
-                    <i className="fas fa-shopping-cart text-warning"/>
-                  </div>
-                </Col>
-                <Col xs="7">
-                  <div className="numbers">
-                    <p className="card-category">TOTAL ORDERS</p>
-                    <CardTitle tag="h3">{totalStats.totalOrders}</CardTitle>
-                  </div>
-                </Col>
-              </Row>
-            </CardBody>
-          
-          </Card>
-        </Col>
+      <div className="content">
+        <Row>
+          <Col lg="3" md="6">
+            <Card className="card-stats">
+              <CardBody>
+                <Row>
+                  <Col xs="5">
+                    <div className="icon-big text-center">
+                      <i className="fas fa-shopping-cart text-warning" />
+                    </div>
+                  </Col>
+                  <Col xs="7">
+                    <div className="numbers">
+                      <p className="card-category">TOTAL ORDERS</p>
+                      <CardTitle tag="h3">{totalStats.totalOrders}</CardTitle>
+                    </div>
+                  </Col>
+                </Row>
+              </CardBody>
 
-        <Col lg="3" md="6">
-          <Card className="card-stats">
-            <CardBody>
-              <Row>
-                <Col xs="5">
-                  <div className="icon-big text-center">
-                    <i className="fas fa-dollar-sign text-success"/>
-                  </div>
-                </Col>
-                <Col xs="7">
-                  <div className="numbers">
-                    <p className="card-category">TOTAL SALES</p>
-                    <CardTitle tag="h3">
-                    ${Number(totalStats.totalSales).toLocaleString(undefined, {
-                      minimumFractionDigits: 2,
-                      maximumFractionDigits: 2
-                    })}
-                  </CardTitle>
-                  </div>
-                </Col>
-              </Row>
-            </CardBody>
-           
-          </Card>
-        </Col>
+            </Card>
+          </Col>
 
-        <Col lg="3" md="6">
-          <Card className="card-stats">
-            <CardBody>
-              <Row>
-                <Col xs="5">
-                  <div className="icon-big text-center">
-                    <i className="fas fa-chart-line text-danger"/>
-                  </div>
-                </Col>
-                <Col xs="7">
-                  <div className="numbers">
-                    <p className="card-category">TOTAL COST</p>
-                    <CardTitle tag="h3">
-                  ${Number(totalStats.totalCost).toLocaleString(undefined, {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2
-                  })}
-                </CardTitle>
-                  </div>
-                </Col>
-              </Row>
-            </CardBody>
-           
-          </Card>
-        </Col>
+          <Col lg="3" md="6">
+            <Card className="card-stats">
+              <CardBody>
+                <Row>
+                  <Col xs="5">
+                    <div className="icon-big text-center">
+                      <i className="fas fa-dollar-sign text-success" />
+                    </div>
+                  </Col>
+                  <Col xs="7">
+                    <div className="numbers">
+                      <p className="card-category">TOTAL SALES</p>
+                      <CardTitle tag="h3">
+                        ${Number(totalStats.totalSales).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
+                      </CardTitle>
+                    </div>
+                  </Col>
+                </Row>
+              </CardBody>
 
-        <Col lg="3" md="6">
-          <Card className="card-stats">
-            <CardBody>
-              <Row>
-                <Col xs="5">
-                  <div className="icon-big text-center">
-                  <i className="fas fa-users text-primary"/>
-                  </div>
-                </Col>
-                <Col xs="7">
-                  <div className="numbers">
-                    <p className="card-category">TOTAL USERS</p>
-                    <CardTitle tag="h3">
-                  ${Users}
-                </CardTitle>
-                  </div>
-                </Col>
-              </Row>
-            </CardBody>
-           
-          </Card>
-        </Col>
-      </Row>
+            </Card>
+          </Col>
+
+          <Col lg="3" md="6">
+            <Card className="card-stats">
+              <CardBody>
+                <Row>
+                  <Col xs="5">
+                    <div className="icon-big text-center">
+                      <i className="fas fa-chart-line text-danger" />
+                    </div>
+                  </Col>
+                  <Col xs="7">
+                    <div className="numbers">
+                      <p className="card-category">TOTAL COST</p>
+                      <CardTitle tag="h3">
+                        ${Number(totalStats.totalCost).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
+                      </CardTitle>
+                    </div>
+                  </Col>
+                </Row>
+              </CardBody>
+
+            </Card>
+          </Col>
+
+          <Col lg="3" md="6">
+            <Card className="card-stats">
+              <CardBody>
+                <Row>
+                  <Col xs="5">
+                    <div className="icon-big text-center">
+                      <i className="fas fa-users text-primary" />
+                    </div>
+                  </Col>
+                  <Col xs="7">
+                    <div className="numbers">
+                      <p className="card-category">TOTAL USERS</p>
+                      <CardTitle tag="h3">
+                        ${Users}
+                      </CardTitle>
+                    </div>
+                  </Col>
+                </Row>
+              </CardBody>
+
+            </Card>
+          </Col>
+        </Row>
         <Row>
           <Col md={12}>
             <Card>

@@ -41,7 +41,7 @@ const Orders = () => {
 
   useEffect(() => {
     axios
-      .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/items")
+      .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items")
       .then((response) => {
         if (response.data) {
           setItems(response.data);
@@ -358,22 +358,22 @@ const Orders = () => {
                       </div>
                     ) : (
                       <>
-                      
-                   
-                      <DataTable
-                        columns={columns}
-                        data={filteredClosedOrders}
-                        selectableRows
-                        responsive
-                        fixedHeader={true}
-                        pagination
-                        paginationPerPage={100}
-                        paginationRowsPerPageOptions={[
-                          100, 200, 300, 500, 1000,
-                        ]}
-                        highlightOnHover
-                      />
-                         </>
+
+
+                        <DataTable
+                          columns={columns}
+                          data={filteredClosedOrders}
+                          selectableRows
+                          responsive
+                          fixedHeader={true}
+                          pagination
+                          paginationPerPage={100}
+                          paginationRowsPerPageOptions={[
+                            100, 200, 300, 500, 1000,
+                          ]}
+                          highlightOnHover
+                        />
+                      </>
                     )}
                   </TabPane>
                 </TabContent>

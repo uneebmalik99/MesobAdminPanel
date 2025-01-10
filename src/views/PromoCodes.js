@@ -156,7 +156,7 @@ function PromoCodes() {
     setLoading(true);
     axios
       .get(
-        "https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode"
+        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode"
       )
       .then((response) => {
         // Sort the data by ID in ascending order
@@ -202,7 +202,7 @@ function PromoCodes() {
       const is_auto = selectedPromo?.Auto;
       const is_manual = selectedPromo?.Manual;
 
-      const url = `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
+      const url = `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
         id
       )}?code3=${encodeURIComponent(code)}&discount3=${encodeURIComponent(
         discount_percentage
@@ -251,7 +251,7 @@ function PromoCodes() {
       const is_auto = selectedPromo?.Auto;
       const is_manual = selectedPromo?.Manual;
 
-      const url = `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode?code=${encodeURIComponent(
+      const url = `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode?code=${encodeURIComponent(
         code
       )}&discount=${encodeURIComponent(
         discount_percentage
@@ -294,7 +294,7 @@ function PromoCodes() {
   const deletePromoCode = async (id) => {
     if (window.confirm("Are you sure you want to delete this promo code?")) {
       try {
-        const url = `https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
+        const url = `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
           id
         )}`;
         const response = await axios.delete(url);

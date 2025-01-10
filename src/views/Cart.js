@@ -68,7 +68,7 @@ function Cart() {
 
   useEffect(() => {
     axios
-      .get("https://9k4d3mwmtg.execute-api.us-east-1.amazonaws.com/dev/users")
+      .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/users")
       .then((response) => {
         if (response.data) {
           setItems(response.data.Items);

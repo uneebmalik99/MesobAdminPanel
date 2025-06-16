@@ -44,6 +44,7 @@ const Orders = () => {
       .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items")
       .then((response) => {
         if (response.data) {
+          console.log('data =>>>', response.data);
           setItems(response.data);
         }
         setLoading(false);
@@ -117,6 +118,12 @@ const Orders = () => {
       selector: (row) => row.city ?? "-",
       sortable: true,
       width: "150px",
+    },
+    {
+      name: "Platform",
+      selector: (row) => row.Platform ?? "-",
+      sortable: true,
+      width: "120px",
     },
     {
       name: "Is Sender",

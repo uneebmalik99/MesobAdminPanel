@@ -88,6 +88,30 @@ const Orders = () => {
   const handleEdit = (id) => {
     navigate(`/admin/order/edit/${id}`);
   };
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this order and related finance record(s)?")) return;
+
+    try {
+      const response = await axios.delete(`https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items/${id}`);
+
+      console.log("Delete response:", response.data); // Log response from backend
+
+      // Optionally use returned data
+      if (response.status === 200) {
+        // Refresh data after deletion
+        setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+        alert("Order and related finance record(s) deleted successfully.");
+      } else {
+        alert("Unexpected response while deleting order.");
+      }
+
+    } catch (error) {
+      console.error("Delete failed:", error);
+      alert("Failed to delete order.");
+    }
+
+  };
+
 
   const toggleTab = (tab) => {
     if (activeTab !== tab) setActiveTab(tab);
@@ -183,6 +207,21 @@ const Orders = () => {
         }
       },
       width: "150px",
+    },
+    {
+      name: "Delete",
+      cell: (row) => (
+        <Button
+          className="btn btn-danger btn-sm"
+          onClick={() => handleDelete(row.id)}
+        >
+          Delete
+        </Button>
+      ),
+      ignoreRowClick: true,
+      allowOverflow: true,
+      button: true,
+      width: "100px",
     },
   ];
 

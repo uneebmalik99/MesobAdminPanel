@@ -176,7 +176,122 @@ function PromoCodes() {
     fetchPromoCodes();
   }, []);
 
+  // const handleSave = async () => {
+  //   if (
+  //     !selectedPromo?.Code ||
+  //     !selectedPromo?.Discount_Type ||
+  //     !selectedPromo?.Discount ||
+  //     !selectedPromo?.Order_Limit
+  //   ) {
+  //     notify("tr", "Please fill in all fields.", "danger");
+  //     return;
+  //   }
+
+  //   if (isEditMode) {
+  //     // Update existing promo code
+  //     // Log the promo code details in update
+  //     console.log("Updating promo code:", selectedPromo);
+
+  //     const id = selectedPromo?.id;
+  //     const code = selectedPromo?.Code;
+  //     const discount_percentage = selectedPromo?.Discount;
+  //     const discount_type = selectedPromo?.Discount_Type;
+  //     const order_limit = selectedPromo?.Order_Limit;
+  //     const is_active = selectedPromo?.Status;
+  //     const is_display = selectedPromo?.Display;
+  //     const is_auto = selectedPromo?.Auto;
+  //     const is_manual = selectedPromo?.Manual;
+
+  //     const url = `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
+  //       id
+  //     )}?code3=${encodeURIComponent(code)}&discount3=${encodeURIComponent(
+  //       discount_percentage
+  //     )}&discount_typevalue3=${encodeURIComponent(
+  //       discount_type
+  //     )}&order_limit3=${encodeURIComponent(
+  //       order_limit
+  //     )}&status3=${encodeURIComponent(is_active)}&display3=${encodeURIComponent(
+  //       is_display
+  //     )}&auto3=${encodeURIComponent(is_auto)}&manual3=${encodeURIComponent(
+  //       is_manual
+  //     )}`;
+
+  //     try {
+  //       setBtnLoading(true);
+  //       const response = await axios.patch(url, {
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //       });
+  //       console.log("API Response:", response.data);
+  //       if (response.status === 200) {
+  //         notify("tr", "Promo code updated successfully!", "success");
+  //         toggleModal();
+  //         setBtnLoading(false);
+
+  //         // Refresh the data after updating
+  //         fetchPromoCodes();
+  //       } else {
+  //         setBtnLoading(false);
+  //         notify("tr", "Failed to add promo code.", "danger");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error sending promo code data:", error);
+  //     }
+  //   } else {
+  //     // Log the promo code details in add
+  //     console.log("Adding new promo code:", selectedPromo);
+
+  //     const code = selectedPromo?.Code;
+  //     const discount_percentage = selectedPromo?.Discount;
+  //     const discount_type = selectedPromo?.Discount_Type;
+  //     const order_limit = selectedPromo?.Order_Limit;
+  //     const is_active = selectedPromo?.Status;
+  //     const is_display = selectedPromo?.Display;
+  //     const is_auto = selectedPromo?.Auto;
+  //     const is_manual = selectedPromo?.Manual;
+
+  //     const url = 'https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode';
+
+  //     try {
+  //       setBtnLoading(true);
+  //       const response = await axios.post(url, {
+  //         code,
+  //         discount: discount_percentage,
+  //         discount_type: discount_type,
+  //         limit: order_limit,
+  //         statusvalue: is_active,
+  //         displayvalue: is_display,
+  //         autovalue: is_auto,
+  //         manualvalue: is_manual
+  //       }, {
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //         },
+  //       });
+  //       console.log("API Response:", response.data);
+  //       if (response.status === 200) {
+  //         notify("tr", "Promo code added Successfully!", "success");
+  //         toggleModal();
+  //         setBtnLoading(false);
+  //         // Refresh the data after adding
+  //         fetchPromoCodes();
+  //       } else {
+  //         setBtnLoading(false);
+  //         notify("tr", "Failed to add promo code.", "danger");
+  //       }
+  //     } catch (error) {
+  //       console.error("Error sending promo code data:", error);
+  //       setBtnLoading(false);
+  //       notify("tr", "Failed to add promo code.", "danger");
+  //     } finally {
+  //       // Ensure button loading state is reset even if an error occurs
+  //       setBtnLoading(false);
+  //     }
+  //   }
+  // };
   const handleSave = async () => {
+    // Validate required fields
     if (
       !selectedPromo?.Code ||
       !selectedPromo?.Discount_Type ||
@@ -187,26 +302,26 @@ function PromoCodes() {
       return;
     }
 
+    // Extract all fields, ensure correct mapping and types
+    const code = selectedPromo?.Code;
+    const discount_percentage = selectedPromo?.Discount;
+    const discount_type = selectedPromo?.Discount_Type;
+    const order_limit = selectedPromo?.Order_Limit;
+    const is_active = selectedPromo?.Status;
+    const is_display = selectedPromo?.Display;
+    const is_auto = selectedPromo?.Auto;
+    const is_manual = selectedPromo?.Manual;
+
     if (isEditMode) {
-      // Update existing promo code
-      // Log the promo code details in update
+      // PATCH: Update existing promo code (uses query parameters)
       console.log("Updating promo code:", selectedPromo);
 
       const id = selectedPromo?.id;
-      const code = selectedPromo?.Code;
-      const discount_percentage = selectedPromo?.Discount;
-      const discount_type = selectedPromo?.Discount_Type;
-      const order_limit = selectedPromo?.Order_Limit;
-      const is_active = selectedPromo?.Status;
-      const is_display = selectedPromo?.Display;
-      const is_auto = selectedPromo?.Auto;
-      const is_manual = selectedPromo?.Manual;
-
       const url = `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode/${encodeURIComponent(
         id
       )}?code3=${encodeURIComponent(code)}&discount3=${encodeURIComponent(
         discount_percentage
-      )}&discount_typevalue3=${encodeURIComponent(
+      )}&discount_type3=${encodeURIComponent(
         discount_type
       )}&order_limit3=${encodeURIComponent(
         order_limit
@@ -218,7 +333,7 @@ function PromoCodes() {
 
       try {
         setBtnLoading(true);
-        const response = await axios.patch(url, {
+        const response = await axios.patch(url, {}, {
           headers: {
             "Content-Type": "application/json",
           },
@@ -227,66 +342,52 @@ function PromoCodes() {
         if (response.status === 200) {
           notify("tr", "Promo code updated successfully!", "success");
           toggleModal();
-          setBtnLoading(false);
-
-          // Refresh the data after updating
           fetchPromoCodes();
         } else {
-          setBtnLoading(false);
-          notify("tr", "Failed to add promo code.", "danger");
+          notify("tr", "Failed to update promo code.", "danger");
         }
       } catch (error) {
         console.error("Error sending promo code data:", error);
+        notify("tr", "Failed to update promo code.", "danger");
+      } finally {
+        setBtnLoading(false);
       }
     } else {
-      // Log the promo code details in add
-      console.log("Adding new promo code:", selectedPromo);
+      // POST: Add new promo code (send as JSON body)
+      const url = 'https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode';
+      const data = {
+        code,
+        discount: discount_percentage,
+        discount_type,
+        limit: order_limit,
+        statusvalue: is_active,
+        displayvalue: is_display,
+        autovalue: is_auto,
+        manualvalue: is_manual
+      };
 
-      const code = selectedPromo?.Code;
-      const discount_percentage = selectedPromo?.Discount;
-      const discount_type = selectedPromo?.Discount_Type;
-      const order_limit = selectedPromo?.Order_Limit;
-      const is_active = selectedPromo?.Status;
-      const is_display = selectedPromo?.Display;
-      const is_auto = selectedPromo?.Auto;
-      const is_manual = selectedPromo?.Manual;
-
-      const url = `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/promocode?code=${encodeURIComponent(
-        code
-      )}&discount=${encodeURIComponent(
-        discount_percentage
-      )}&discount_typevalue=${encodeURIComponent(
-        discount_type
-      )}&limit=${encodeURIComponent(
-        order_limit
-      )}&statusvalue=${encodeURIComponent(
-        is_active
-      )}&displayvalue=${encodeURIComponent(
-        is_display
-      )}&autovalue=${encodeURIComponent(
-        is_auto
-      )}&manualvalue=${encodeURIComponent(is_manual)}`;
+      console.log("Adding new promo code, sending data:", data);
 
       try {
         setBtnLoading(true);
-        const response = await axios.post(url, {
+        const response = await axios.post(url, data, {
           headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
           },
         });
         console.log("API Response:", response.data);
         if (response.status === 200) {
-          notify("tr", "Promo code added Successfully!.", "success");
+          notify("tr", "Promo code added Successfully!", "success");
           toggleModal();
-          setBtnLoading(false);
-          // Refresh the data after adding
           fetchPromoCodes();
         } else {
-          setBtnLoading(false);
           notify("tr", "Failed to add promo code.", "danger");
         }
       } catch (error) {
         console.error("Error sending promo code data:", error);
+        notify("tr", "Failed to add promo code.", "danger");
+      } finally {
+        setBtnLoading(false);
       }
     }
   };

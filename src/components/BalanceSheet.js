@@ -6,7 +6,7 @@ const BalanceSheet = ({ items }) => {
   const calculateCash = (items) => {
     const total = items.reduce((total, transaction) => {
       const amount = parseFloat(transaction.totalCost) || 0;
-      
+
       if (transaction.type === 0) {
         // Income: add to total
         return total + amount;
@@ -26,12 +26,13 @@ const BalanceSheet = ({ items }) => {
           return total;
         }
       }
-      
+
       // Default case: return current total
       return total;
+
     }, 0);
-  
-    return Math.abs(total).toFixed(2);
+
+    return total < 0 ? `-${Math.abs(total).toFixed(2)}` : total.toFixed(2);
   };
 
   const calculatePayableToSeller = (items) => {
@@ -43,7 +44,7 @@ const BalanceSheet = ({ items }) => {
       } else if (transaction.type === 1) {
         const transactionType = transaction.transactiontype?.toLowerCase();
         const totalCost = parseFloat(transaction.totalCost) || 0;
-  
+
         if (transactionType === 'payable') {
           return sum + totalCost;
         } else if (
@@ -56,8 +57,8 @@ const BalanceSheet = ({ items }) => {
       }
       return sum;
     }, 0);
-  
-    return Math.abs(total).toFixed(2);
+
+    return total < 0 ? `-${Math.abs(total).toFixed(2)}` : total.toFixed(2);
   };
   const calculateRetainedEarnings = (items) => {
     // Calculate Commission Revenue
@@ -74,15 +75,15 @@ const BalanceSheet = ({ items }) => {
 
     // Calculate Fee Expense
     const feeExpense = items.reduce((sum, transaction) => {
-      if (transaction.type === 1 && 
-          transaction.transactiontype?.toLowerCase() === 'payable') {
+      if (transaction.type === 1 &&
+        transaction.transactiontype?.toLowerCase() === 'payable') {
         return sum + (parseFloat(transaction.credit) || 0);
       }
       return sum;
     }, 0);
 
 
-    commissionRevenue= Math.abs(commissionRevenue)
+    commissionRevenue = Math.abs(commissionRevenue)
 
     console.log('commissionRevenue=>>', commissionRevenue);
 
@@ -139,7 +140,7 @@ const BalanceSheet = ({ items }) => {
           <tr>
             <td>Retained earnings / Net income</td>
             <td></td>
-            <td style={{backgroundColor:'#ffa6ff'}} className="amount">{retainedEarnings}$</td>
+            <td style={{ backgroundColor: '#ffa6ff' }} className="amount">{retainedEarnings}$</td>
           </tr>
           <tr className="total-row">
             <td>Total</td>

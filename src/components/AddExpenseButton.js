@@ -36,6 +36,7 @@ export const AddExpenseButton = ({ onAddExpense }) => {
       .then((response) => {
         if (response.status === 200) {
           notify("tr", "Expense added successfully!", "success");
+          console.log('transactiontype=<>>', transactiontype);
           onAddExpense({ expenseName, debitValue, creditValue, transactiontype });
           setModal(false);
           // Reset form fields

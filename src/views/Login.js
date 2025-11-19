@@ -136,7 +136,7 @@ const Login = () => {
             <button type="submit" className="login-btn" disabled={loading}>
               {loading ? (
                 <>
-                  <Spinner color="secondary" size="sm" /> Please wait
+                  <Spinner color="secondary" size="sm" /> Please wait.
                 </>
               ) : (
                 "Login"

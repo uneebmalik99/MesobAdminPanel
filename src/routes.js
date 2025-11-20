@@ -3,6 +3,7 @@ import Notifications from "views/Notifications.js";
 import UserPage from "views/UserPage.js";
 import Users from "views/Users.js";
 import PromoCodes from "views/PromoCodes.js";
+import Products from "views/Products.js";
 import Orders from "views/Orders.js";
 import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";
@@ -31,6 +32,13 @@ var dashRoutes = [
     name: "Cart",
     icon: "shopping_cart-simple",
     component: <Cart />,
+    layout: "/admin",
+  },
+  {
+    path: "/products",
+    name: "Products",
+    icon: "shopping_bag-16",
+    component: <Products />,
     layout: "/admin",
   },
   {

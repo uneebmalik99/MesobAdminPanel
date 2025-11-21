@@ -3,7 +3,7 @@ import Notifications from "views/Notifications.js";
 import UserPage from "views/UserPage.js";
 import Users from "views/Users.js";
 import PromoCodes from "views/PromoCodes.js";
-import Products from "views/Products.js";
+import Products from "components/Products/ProductsPage";
 import Orders from "views/Orders.js";
 import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";

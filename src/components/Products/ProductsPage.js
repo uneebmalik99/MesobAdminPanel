@@ -7,16 +7,26 @@ import React, {
 import axios from "axios";
 import DataTable from "react-data-table-component";
 import {
+  Badge,
   Button,
   Card,
   CardBody,
   CardHeader,
   CardTitle,
   Col,
+  FormGroup,
   Input,
+  Label,
+  Modal,
+  ModalBody,
+  ModalFooter,
+  ModalHeader,
   Row,
   Spinner,
+  Table,
 } from "reactstrap";
+import { FaPlus } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import { Helmet } from "react-helmet";
 import ProductFormModal from "components/Products/ProductFormModal";
@@ -36,6 +46,7 @@ function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const navigate = useNavigate();
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -47,16 +58,156 @@ function Products() {
   const [subCategories, setSubCategories] = useState([]);
   const [loadingCategories, setLoadingCategories] = useState(false);
   const [loadingSubCategories, setLoadingSubCategories] = useState(false);
+  // Filter states
+  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState(null);
+  const [selectedSubCategoryFilter, setSelectedSubCategoryFilter] = useState(null);
+  const [filterSubCategories, setFilterSubCategories] = useState([]);
+  const [loadingFilterSubCategories, setLoadingFilterSubCategories] = useState(false);
+  const [pendingApprovals, setPendingApprovals] = useState([]);
+  const [loadingApprovals, setLoadingApprovals] = useState(false);
+  const [approvalModalOpen, setApprovalModalOpen] = useState(false);
+  const [selectedPending, setSelectedPending] = useState(null);
+  const [approvalForm, setApprovalForm] = useState({
+    sellingPrice: "",
+    rejectionReason: "",
+    notes: "",
+  });
+  const [processingApproval, setProcessingApproval] = useState(false);
+  const [toast, setToast] = useState({ type: "", message: "" });
+
+  // Fetch subcategories for filter
+  const userRole = useMemo(() => {
+    const storedRole = Number(localStorage.getItem("user_role"));
+    return Number.isFinite(storedRole) ? storedRole : 0;
+  }, []);
+  const userEmail = localStorage.getItem("user_email") || "";
+  const isSeller = userRole === 2;
+
+  const formatMoney = useCallback((value) => {
+    if (value === undefined || value === null || value === "") return "-";
+    const numeric = Number(value);
+    if (Number.isFinite(numeric)) {
+      return `$${numeric.toFixed(2)}`;
+    }
+    const trimmed = String(value).trim();
+    if (trimmed.startsWith("$")) {
+      return trimmed;
+    }
+    return `$${trimmed}`;
+  }, []);
+
+  const fetchFilterSubCategories = useCallback(async (menuId) => {
+    if (!menuId) {
+      setFilterSubCategories([]);
+      return;
+    }
+    setLoadingFilterSubCategories(true);
+    try {
+      const response = await axios.get(
+        `${API_BASE}/categories/${menuId}/subcategories`
+      );
+      const items = response.data?.Items || response.data || [];
+      const filtered = items.filter((item) => item && item.id);
+      const sorted = filtered.sort((a, b) =>
+        (a.name || "").localeCompare(b.name || "")
+      );
+      setFilterSubCategories(sorted);
+    } catch (err) {
+      console.error("Failed to load sub categories for filter", err);
+      setFilterSubCategories([]);
+    } finally {
+      setLoadingFilterSubCategories(false);
+    }
+  }, []);
+
+  const fetchPendingApprovals = useCallback(async () => {
+    setLoadingApprovals(true);
+    try {
+      const response = await axios.get(`${API_BASE}/pending-products`);
+      const items = response.data?.Items || response.data || [];
+      const pendingOnly = items.filter(
+        (item) => (item.status || "pending") === "pending"
+      );
+      const sorted = pendingOnly.sort((a, b) =>
+        (b.createdAt || "").localeCompare(a.createdAt || "")
+      );
+      setPendingApprovals(sorted);
+    } catch (err) {
+      console.error("Failed to load pending approvals", err);
+      setToast({
+        type: "danger",
+        message: "Unable to load pending products for approval.",
+      });
+    } finally {
+      setLoadingApprovals(false);
+    }
+  }, []);
 
   const filteredProducts = useMemo(() => {
-    if (!search) return products;
-    return products.filter((product) => {
-      const haystack = `${product.title} ${product.category} ${
-        product.country
-      } ${(product.categories || []).join(" ")}`.toLowerCase();
-      return haystack.includes(search.toLowerCase());
-    });
-  }, [search, products]);
+    let filtered = products;
+
+    if (isSeller) {
+      const normalizedEmail = userEmail.toLowerCase();
+      filtered = filtered.filter((product) => {
+        const owner =
+          product.selleremail ||
+          product.sellerEmail ||
+          product.seller ||
+          "";
+        return owner?.toLowerCase() === normalizedEmail;
+      });
+    }
+
+    // Filter by category/subcategory
+    if (selectedSubCategoryFilter) {
+      filtered = filtered.filter((product) => {
+        const productSubCategoryId = String(
+          product.Sub_category_id !== undefined && product.Sub_category_id !== null
+            ? product.Sub_category_id
+            : product.subCategoryId !== undefined && product.subCategoryId !== null
+            ? product.subCategoryId
+            : product.sub_category_id !== undefined && product.sub_category_id !== null
+            ? product.sub_category_id
+            : ""
+        );
+        return productSubCategoryId === String(selectedSubCategoryFilter);
+      });
+    } else if (selectedCategoryFilter) {
+      filtered = filtered.filter((product) => {
+        // Check categories array first (first element is menuId)
+        const rawCategories = Array.isArray(product.categories) ? product.categories : [];
+        const derivedMenuId = rawCategories.length > 0
+          ? String(rawCategories[0])
+          : product.Menu_id !== undefined && product.Menu_id !== null
+          ? String(product.Menu_id)
+          : product.menuId !== undefined && product.menuId !== null
+          ? String(product.menuId)
+          : product.menu_id !== undefined && product.menu_id !== null
+          ? String(product.menu_id)
+          : "";
+        return derivedMenuId === String(selectedCategoryFilter);
+      });
+    }
+
+    // Filter by search
+    if (search) {
+      filtered = filtered.filter((product) => {
+        const haystack = `${product.title} ${product.category} ${
+          product.country
+        } ${(product.categories || []).join(" ")}`.toLowerCase();
+        return haystack.includes(search.toLowerCase());
+      });
+    }
+
+    return filtered;
+  }, [
+    search,
+    products,
+    selectedCategoryFilter,
+    selectedSubCategoryFilter,
+    isSeller,
+    userEmail,
+  ]);
 
   const fetchProducts = useCallback(async () => {
     setLoading(true);
@@ -148,6 +299,12 @@ function Products() {
     }
   }, [modalOpen, formState.menuId, categories, formState.category]);
 
+  useEffect(() => {
+    if (!isSeller) {
+      fetchPendingApprovals();
+    }
+  }, [isSeller, fetchPendingApprovals]);
+
   const handleEdit = useCallback(
     (product) => {
       setIsEditMode(true);
@@ -226,6 +383,58 @@ function Products() {
     setModalOpen(true);
   };
 
+  // Handle category filter click
+  const handleCategoryFilterClick = useCallback(async (categoryId) => {
+    if (selectedCategoryFilter === categoryId) {
+      // If clicking the same category, deselect it
+      setSelectedCategoryFilter(null);
+      setSelectedSubCategoryFilter(null);
+      setFilterSubCategories([]);
+    } else {
+      setSelectedCategoryFilter(categoryId);
+      setSelectedSubCategoryFilter(null);
+      await fetchFilterSubCategories(categoryId);
+    }
+  }, [selectedCategoryFilter, fetchFilterSubCategories]);
+
+  // Handle subcategory filter click
+  const handleSubCategoryFilterClick = useCallback((subCategoryId) => {
+    if (selectedSubCategoryFilter === subCategoryId) {
+      // If clicking the same subcategory, deselect it
+      setSelectedSubCategoryFilter(null);
+    } else {
+      setSelectedSubCategoryFilter(subCategoryId);
+    }
+  }, [selectedSubCategoryFilter]);
+
+  const openApprovalModal = (pending) => {
+    setSelectedPending(pending);
+    setApprovalForm({
+      sellingPrice: pending.sellingPrice || pending.proposedPrice || pending.sellerPrice || "",
+      rejectionReason: "",
+      notes: "",
+    });
+    setApprovalModalOpen(true);
+  };
+
+  const closeApprovalModal = () => {
+    setApprovalModalOpen(false);
+    setSelectedPending(null);
+    setApprovalForm({
+      sellingPrice: "",
+      rejectionReason: "",
+      notes: "",
+    });
+  };
+
+  const handleApprovalFieldChange = (event) => {
+    const { name, value } = event.target;
+    setApprovalForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
   const handleRowClick = (product) => {
     setSelectedProduct(product);
     setDetailsModalOpen(true);
@@ -262,6 +471,81 @@ function Products() {
     }
   };
 
+  const handleApprovePending = async () => {
+    if (!selectedPending) return;
+    if (!approvalForm.sellingPrice) {
+      setToast({
+        type: "warning",
+        message: "Selling price is required to approve a product.",
+      });
+      return;
+    }
+    setProcessingApproval(true);
+    try {
+      await axios.put(
+        `${API_BASE}/pending-products/${selectedPending.id}/approve`,
+        {
+          sellingPrice: Number(approvalForm.sellingPrice),
+          notes: approvalForm.notes,
+          approvedBy: localStorage.getItem("user_email") || "admin",
+        }
+      );
+      setToast({
+        type: "success",
+        message: `"${selectedPending.title}" approved and published.`,
+      });
+      closeApprovalModal();
+      fetchPendingApprovals();
+      fetchProducts();
+    } catch (err) {
+      console.error("Failed to approve product", err);
+      setToast({
+        type: "danger",
+        message:
+          err.response?.data?.message ||
+          "Could not approve product. Please try again.",
+      });
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
+  const handleRejectPending = async () => {
+    if (!selectedPending) return;
+    if (!approvalForm.rejectionReason.trim()) {
+      setToast({
+        type: "warning",
+        message: "Please provide a rejection reason.",
+      });
+      return;
+    }
+    setProcessingApproval(true);
+    try {
+      await axios.put(
+        `${API_BASE}/pending-products/${selectedPending.id}/reject`,
+        {
+          reason: approvalForm.rejectionReason.trim(),
+        }
+      );
+      setToast({
+        type: "warning",
+        message: `"${selectedPending.title}" was rejected.`,
+      });
+      closeApprovalModal();
+      fetchPendingApprovals();
+    } catch (err) {
+      console.error("Failed to reject product", err);
+      setToast({
+        type: "danger",
+        message:
+          err.response?.data?.message ||
+          "Could not reject product. Please try again.",
+      });
+    } finally {
+      setProcessingApproval(false);
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -286,12 +570,12 @@ function Products() {
                 className="d-flex flex-column flex-md-row align-items-md-center justify-content-between"
                 style={{ gap: "1rem" }}
               >
-                <div>
-                  <CardTitle tag="h4" className="mb-0">
+                <div style={{whiteSpace: "nowrap"}}>
+                  {/* <CardTitle tag="h4" className="mb-0">
                     Products 
-                  </CardTitle>
+                  </CardTitle> */}
                   <small className="text-muted">
-                    {products.length} total products
+                    {filteredProducts.length} of {products.length} Products
                   </small>
                 </div>
                 <div
@@ -309,22 +593,220 @@ function Products() {
                       fontSize: "0.95rem",
                     }}
                   />
-                  <Button
-                    color="primary"
-                    className="btn-round"
-                    onClick={handleAddNew}
-                    style={{
-                      height: "44px",
-                      padding: "0.35rem 1.2rem",
-                      fontSize: "0.9rem",
-                    whiteSpace: "nowrap",
-                    }}
-                  >
-                    + Add Product
-                  </Button>
+                  {isSeller ? (
+                    <Button
+                      color="info"
+                      className="btn-round"
+                      onClick={() => navigate("/admin/seller-products")}
+                      style={{
+                        height: "44px",
+                        padding: "0.35rem 1.2rem",
+                        fontSize: "0.9rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <FaPlus style={{ marginRight: "0.5rem" }} /> Manage
+                      Products
+                    </Button>
+                  ) : (
+                    <Button
+                      color="primary"
+                      className="btn-round"
+                      onClick={handleAddNew}
+                      style={{
+                        height: "44px",
+                        padding: "0.35rem 1.2rem",
+                        fontSize: "0.9rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <FaPlus style={{ marginRight: "0.5rem" }} /> Add Product
+                    </Button>
+                  )}
                 </div>
               </CardHeader>
+              {/* Category Filter Tabs */}
+              <div style={{ 
+                padding: "1rem", 
+                borderBottom: "1px solid #dee2e6",
+                backgroundColor: "#f8f9fa"
+              }}>
+                <div style={{ marginBottom: filterSubCategories.length > 0 ? "0.75rem" : "0" }}>
+                  <div style={{ 
+                    display: "flex", 
+                    flexWrap: "wrap", 
+                    gap: "0.5rem",
+                    alignItems: "center"
+                  }}>
+                    <small className="text-muted" style={{ marginRight: "0.5rem", fontWeight: "500" }}>
+                      Categories:
+                    </small>
+                    <Button
+                      size="sm"
+                      color={selectedCategoryFilter === null ? "primary" : "light"}
+                      onClick={() => {
+                        setSelectedCategoryFilter(null);
+                        setSelectedSubCategoryFilter(null);
+                        setFilterSubCategories([]);
+                      }}
+                      style={{
+                        fontSize: "0.85rem",
+                        padding: "0.25rem 0.75rem",
+                        backgroundColor: selectedCategoryFilter === null ? undefined : "#e9ecef",
+                        borderColor: selectedCategoryFilter === null ? undefined : "#dee2e6",
+                        color: selectedCategoryFilter === null ? undefined : "#495057",
+                        fontWeight: selectedCategoryFilter === null ? "500" : "400",
+                      }}
+                    >
+                      All
+                    </Button>
+                    {categories.map((category) => (
+                      <Button
+                        key={category.id}
+                        size="sm"
+                        color={selectedCategoryFilter === String(category.id) ? "primary" : "light"}
+                        onClick={() => handleCategoryFilterClick(String(category.id))}
+                        disabled={loadingFilterSubCategories}
+                        style={{
+                          fontSize: "0.85rem",
+                          padding: "0.25rem 0.75rem",
+                          backgroundColor: selectedCategoryFilter === String(category.id) ? undefined : "#e9ecef",
+                          borderColor: selectedCategoryFilter === String(category.id) ? undefined : "#dee2e6",
+                          color: selectedCategoryFilter === String(category.id) ? undefined : "#495057",
+                          fontWeight: selectedCategoryFilter === String(category.id) ? "500" : "400",
+                        }}
+                      >
+                        {category.name || `Category ${category.id}`}
+                      </Button>
+                    ))}
+                  </div>
+                </div>
+                {/* Subcategory Filter Tabs */}
+                {filterSubCategories.length > 0 && (
+                  <div style={{ 
+                    display: "flex", 
+                    flexWrap: "wrap", 
+                    gap: "0.5rem",
+                    alignItems: "center",
+                    paddingTop: "0.75rem",
+                    borderTop: "1px solid #e9ecef",
+                    marginTop: "0.75rem"
+                  }}>
+                    <small className="text-muted" style={{ marginRight: "0.5rem", fontWeight: "500" }}>
+                      Subcategories:
+                    </small>
+                    <Button
+                      size="sm"
+                      color={selectedSubCategoryFilter === null ? "info" : "light"}
+                      onClick={() => setSelectedSubCategoryFilter(null)}
+                      style={{
+                        fontSize: "0.85rem",
+                        padding: "0.25rem 0.75rem",
+                        backgroundColor: selectedSubCategoryFilter === null ? undefined : "#e9ecef",
+                        borderColor: selectedSubCategoryFilter === null ? undefined : "#dee2e6",
+                        color: selectedSubCategoryFilter === null ? undefined : "#495057",
+                        fontWeight: selectedSubCategoryFilter === null ? "500" : "400",
+                      }}
+                    >
+                      All
+                    </Button>
+                    {filterSubCategories.map((subCategory) => (
+                      <Button
+                        key={subCategory.id}
+                        size="sm"
+                        color={selectedSubCategoryFilter === String(subCategory.id) ? "info" : "light"}
+                        onClick={() => handleSubCategoryFilterClick(String(subCategory.id))}
+                        style={{
+                          fontSize: "0.85rem",
+                          padding: "0.25rem 0.75rem",
+                          backgroundColor: selectedSubCategoryFilter === String(subCategory.id) ? undefined : "#e9ecef",
+                          borderColor: selectedSubCategoryFilter === String(subCategory.id) ? undefined : "#dee2e6",
+                          color: selectedSubCategoryFilter === String(subCategory.id) ? undefined : "#495057",
+                          fontWeight: selectedSubCategoryFilter === String(subCategory.id) ? "500" : "400",
+                        }}
+                      >
+                        {subCategory.name || `Subcategory ${subCategory.id}`}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <CardBody>
+                {toast.message && (
+                  <div className={`alert alert-${toast.type}`} role="alert">
+                    {toast.message}
+                  </div>
+                )}
+                {!isSeller && (
+                  <div className="mb-4">
+                    <div className="d-flex align-items-center justify-content-between mb-2">
+                      <h5 className="mb-0">Pending Product Approvals</h5>
+                      <Badge color="info">{pendingApprovals.length}</Badge>
+                    </div>
+                    {loadingApprovals ? (
+                      <div className="text-center py-3">
+                        <Spinner size="sm" color="primary" />{" "}
+                        <span className="text-muted">Loading...</span>
+                      </div>
+                    ) : pendingApprovals.length > 0 ? (
+                      <div className="table-responsive">
+                        <Table hover size="sm" className="mb-0">
+                          <thead>
+                            <tr>
+                              <th>Product</th>
+                              <th>Seller</th>
+                              <th>Cost</th>
+                              <th>Submitted</th>
+                              <th></th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {pendingApprovals.map((pending) => (
+                              <tr key={pending.id}>
+                                <td>
+                                  <strong>{pending.title}</strong>
+                                  <br />
+                                  <small className="text-muted">
+                                    {pending.menuName || pending.category}
+                                  </small>
+                                </td>
+                                <td>
+                                  <div>{pending.sellerName || "-"}</div>
+                                  <small className="text-muted">
+                                    {pending.sellerEmail}
+                                  </small>
+                                </td>
+                                <td>{formatMoney(pending.sellerPrice)}</td>
+                                <td>
+                                  <small className="text-muted">
+                                    {pending.createdAt
+                                      ? new Date(
+                                          pending.createdAt
+                                        ).toLocaleString()
+                                      : "-"}
+                                  </small>
+                                </td>
+                                <td className="text-right">
+                                  <Button
+                                    size="sm"
+                                    color="info"
+                                    onClick={() => openApprovalModal(pending)}
+                                  >
+                                    Review
+                                  </Button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </Table>
+                      </div>
+                    ) : (
+                      <p className="text-muted mb-0">
+                        All caught up! No pending products right now.
+                      </p>
+                    )}
+                  </div>
+                )}
                 {error && (
                   <div className="alert alert-danger" role="alert">
                     {error}
@@ -377,6 +859,125 @@ function Products() {
         toggle={closeDetailsModal}
         selectedProduct={selectedProduct}
       />
+
+      {!isSeller && selectedPending && (
+        <Modal isOpen={approvalModalOpen} toggle={closeApprovalModal} size="lg">
+          <ModalHeader toggle={closeApprovalModal}>
+            Product Approval - {selectedPending.title}
+          </ModalHeader>
+          <ModalBody>
+            <Row>
+              <Col md={6}>
+                <h6 className="text-muted text-uppercase mb-2">
+                  Product Information
+                </h6>
+                <p className="mb-1">
+                  <strong>Category:</strong> {selectedPending.menuName || "-"}
+                </p>
+                <p className="mb-1">
+                  <strong>Subcategory:</strong>{" "}
+                  {selectedPending.subCategoryName || "-"}
+                </p>
+                <p>
+                  <strong>Description:</strong>{" "}
+                  {selectedPending.description || "-"}
+                </p>
+              </Col>
+              <Col md={6}>
+                <h6 className="text-muted text-uppercase mb-2">
+                  Seller Information
+                </h6>
+                <p className="mb-1">
+                  <strong>Name:</strong> {selectedPending.sellerName || "-"}
+                </p>
+                <p className="mb-1">
+                  <strong>Email:</strong> {selectedPending.sellerEmail || "-"}
+                </p>
+                <p className="mb-1">
+                  <strong>Shipping Location:</strong>{" "}
+                  {selectedPending.shippingLocation || "-"}
+                </p>
+                <p className="mb-1">
+                  <strong>Shipping Notes:</strong>{" "}
+                  {selectedPending.shippingDescription || "-"}
+                </p>
+              </Col>
+            </Row>
+            <hr />
+            <FormGroup>
+              <Label>Seller Requested Price (Cost)</Label>
+              <Input
+                value={formatMoney(selectedPending.sellerPrice)}
+                readOnly
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="approvalSellingPrice">Set Selling Price *</Label>
+              <Input
+                id="approvalSellingPrice"
+                name="sellingPrice"
+                type="number"
+                min="0"
+                step="0.01"
+                placeholder="0.00"
+                value={approvalForm.sellingPrice}
+                onChange={handleApprovalFieldChange}
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="approvalNotes">Internal Notes</Label>
+              <Input
+                id="approvalNotes"
+                name="notes"
+                type="textarea"
+                rows="2"
+                value={approvalForm.notes}
+                onChange={handleApprovalFieldChange}
+                placeholder="Optional notes visible to admins"
+              />
+            </FormGroup>
+            <FormGroup>
+              <Label for="approvalRejectionReason">Rejection Reason</Label>
+              <Input
+                id="approvalRejectionReason"
+                name="rejectionReason"
+                type="textarea"
+                rows="2"
+                value={approvalForm.rejectionReason}
+                onChange={handleApprovalFieldChange}
+                placeholder="Provide a reason before rejecting"
+              />
+            </FormGroup>
+          </ModalBody>
+          <ModalFooter className="justify-content-between">
+            <Button color="secondary" onClick={closeApprovalModal} disabled={processingApproval}>
+              Close
+            </Button>
+            <div className="d-flex" style={{ gap: "0.5rem" }}>
+              <Button
+                color="success"
+                onClick={handleApprovePending}
+                disabled={processingApproval}
+              >
+                {processingApproval ? (
+                  <>
+                    <Spinner size="sm" className="mr-2" /> Approving...
+                  </>
+                ) : (
+                  "Approve & Publish"
+                )}
+              </Button>
+              <Button
+                color="danger"
+                onClick={handleRejectPending}
+                disabled={processingApproval}
+              >
+                Reject
+              </Button>
+            </div>
+          </ModalFooter>
+        </Modal>
+      )}
     </>
   );
 }

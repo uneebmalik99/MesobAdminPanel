@@ -49,6 +49,7 @@ function DemoNavbar(props) {
   const handleLogout = () => {
     // Clear user session
     localStorage.removeItem("user_email");
+    localStorage.removeItem("user_role");
 
     // Redirect to the login page
     navigate("/login");

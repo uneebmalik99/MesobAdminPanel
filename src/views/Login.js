@@ -67,6 +67,9 @@ const Login = () => {
 
         localStorage.setItem("user_email", result.user.email);
         localStorage.setItem("user_name", result.user.name);
+        const parsedRole = Number(result.user?.role);
+        const normalizedRole = Number.isFinite(parsedRole) ? parsedRole : 0;
+        localStorage.setItem("user_role", String(normalizedRole));
 
         // Show success notification
         showNotification("success", "Login successful!");
@@ -76,7 +79,7 @@ const Login = () => {
 
         setLoading(false);
       } else {
-        setLoading(true);
+        setLoading(false);
         // Show error notification
         showNotification(
           "danger",

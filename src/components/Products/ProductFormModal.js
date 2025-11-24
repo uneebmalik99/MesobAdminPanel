@@ -374,7 +374,7 @@ const ProductFormModal = ({
                       </FormGroup>
                     </Col>
                   </Row>
-                  <Row>
+                  {/* <Row>
                     <Col md={12}>
                       <FormGroup>
                         <Label for="categoriesInput">Tags (comma separated)</Label>
@@ -387,7 +387,7 @@ const ProductFormModal = ({
                         />
                       </FormGroup>
                     </Col>
-                  </Row>
+                  </Row> */}
                   <Row>
                     <Col md={12}>
                       <FormGroup check className="mt-2">

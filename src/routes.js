@@ -4,6 +4,8 @@ import UserPage from "views/UserPage.js";
 import Users from "views/Users.js";
 import PromoCodes from "views/PromoCodes.js";
 import Products from "components/Products/ProductsPage";
+import Categories from "views/Categories.js";
+import SellerProductManagement from "views/SellerProductManagement.js";
 import Orders from "views/Orders.js";
 import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";
@@ -19,6 +21,7 @@ var dashRoutes = [
     icon: "design_app",
     component: <Dashboard />,
     layout: "/admin",
+    allowedRoles: [0],
   },
   {
     path: "/orders",
@@ -26,6 +29,7 @@ var dashRoutes = [
     icon: "shopping_box",
     component: <Orders />,
     layout: "/admin",
+    allowedRoles: [0],
   },
   {
     path: "/cart",
@@ -33,6 +37,7 @@ var dashRoutes = [
     icon: "shopping_cart-simple",
     component: <Cart />,
     layout: "/admin",
+    allowedRoles: [0],
   },
   {
     path: "/products",
@@ -42,11 +47,28 @@ var dashRoutes = [
     layout: "/admin",
   },
   {
+    path: "/seller-products",
+    name: "Product Management",
+    icon: "ui-1_simple-add",
+    component: <SellerProductManagement />,
+    layout: "/admin",
+    allowedRoles: [2],
+  },
+  {
+    path: "/categories",
+    name: "Categories",
+    icon: "design_bullet-list-67",
+    component: <Categories />,
+    layout: "/admin",
+    allowedRoles: [0],
+  },
+  {
     path: "/promo-codes",
     name: "Promo Codes",
     icon: "shopping_tag-content",
     component: <PromoCodes />,
     layout: "/admin",
+    allowedRoles: [0],
   },
   {
     path: "/users",
@@ -54,6 +76,7 @@ var dashRoutes = [
     icon: "users_single-02",
     component: <Users />,
     layout: "/admin",
+    allowedRoles: [0],
   },
   {
     path: "/notifications",
@@ -61,6 +84,7 @@ var dashRoutes = [
     icon: "ui-1_bell-53",
     component: <Notifications />,
     layout: "/admin",
+    allowedRoles: [0],
   },
   {
     path: "/order/details/:id",
@@ -82,6 +106,7 @@ var dashRoutes = [
     icon: "business_money-coins",
     component: <MesobFinancial />,
     layout: "/admin",
+    allowedRoles: [0],
   },
 ];
 export default dashRoutes;

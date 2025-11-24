@@ -27,6 +27,12 @@ import logo from "logo.jpeg";
 var ps;
 
 function Sidebar(props) {
+  const getUserRole = () => {
+    const stored = localStorage.getItem("user_role");
+    const parsed = Number(stored);
+    return Number.isFinite(parsed) ? parsed : 0;
+  };
+  const userRole = getUserRole();
   const sidebar = React.useRef();
   const location = useLocation();
   // verifies if routeName is the one active (in browser input)
@@ -68,6 +74,12 @@ function Sidebar(props) {
         <Nav>
           {props.routes.map((prop, key) => {
             if (prop.redirect || prop.invisible) return null;
+            if (
+              prop.allowedRoles &&
+              !prop.allowedRoles.includes(userRole)
+            ) {
+              return null;
+            }
             return (
               <li
                 className={

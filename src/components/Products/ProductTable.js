@@ -128,26 +128,36 @@ export const buildColumns = (onEdit, onDelete) => [
         <div className="d-flex align-items-center" style={{ gap: "0.4rem" }}>
           <Button
             id={editId}
-            color="info"
+            color="link"
             size="sm"
             className="btn-round btn-icon"
             onClick={() => onEdit(row)}
             aria-label="Edit product"
+            style={{
+              backgroundColor: "transparent",
+              border: "none",
+              padding: "0.25rem 0.5rem",
+            }}
           >
-            <FaEdit size={14} />
+            <FaEdit size={14} color="#17a2b8" />
           </Button>
           <UncontrolledTooltip target={editId}>
             Edit or duplicate product
           </UncontrolledTooltip>
           <Button
             id={deleteId}
-            color="danger"
+            color="link"
             size="sm"
             className="btn-round btn-icon"
             onClick={() => onDelete(row)}
             aria-label="Delete product"
+            style={{
+              backgroundColor: "transparent",
+              border: "none",
+              padding: "0.25rem 0.5rem",
+            }}
           >
-            <FaTrash size={13} />
+            <FaTrash size={13} color="#dc3545" />
           </Button>
           <UncontrolledTooltip target={deleteId}>
             Remove product from catalog

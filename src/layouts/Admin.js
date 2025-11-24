@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Route,
   Routes,
@@ -25,6 +25,27 @@ function Admin(props) {
   const [backgroundColor, setBackgroundColor] = useState("blue");
   const [showGoToTop, setShowGoToTop] = useState(false);
   const mainPanel = useRef();
+
+  const userRole = useMemo(() => {
+    const storedRole = Number(localStorage.getItem("user_role"));
+    return Number.isFinite(storedRole) ? storedRole : 0;
+  }, []);
+
+  const accessibleRoutes = useMemo(
+    () =>
+      routes.filter(
+        (route) =>
+          !route.allowedRoles || route.allowedRoles.includes(userRole)
+      ),
+    [userRole]
+  );
+
+  const defaultRoute = useMemo(() => {
+    if (accessibleRoutes.length > 0) {
+      return accessibleRoutes[0].path;
+    }
+    return "/dashboard";
+  }, [accessibleRoutes]);
 
   // Check user session on component mount
   useEffect(() => {
@@ -83,7 +104,11 @@ function Admin(props) {
 
   return (
     <div className="wrapper">
-      <Sidebar {...props} routes={routes} backgroundColor={backgroundColor} />
+      <Sidebar
+        {...props}
+        routes={accessibleRoutes}
+        backgroundColor={backgroundColor}
+      />
       <div
         className="main-panel"
         ref={mainPanel}
@@ -91,12 +116,12 @@ function Admin(props) {
       >
         <DemoNavbar {...props} />
         <Routes>
-          {routes.map((prop, key) => (
+          {accessibleRoutes.map((prop, key) => (
             <Route path={prop.path} element={prop.component} key={key} exact />
           ))}
           <Route
             path="/admin"
-            element={<Navigate to="/admin/dashboard" replace />}
+            element={<Navigate to={`/admin${defaultRoute}`} replace />}
           />
         </Routes>
         <Footer fluid />

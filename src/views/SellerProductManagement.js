@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import axios from "axios";
 import {
   Badge,
@@ -15,6 +15,7 @@ import {
   Spinner,
   Table,
 } from "reactstrap";
+import { FaUpload } from "react-icons/fa";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import { Helmet } from "react-helmet";
 
@@ -49,6 +50,8 @@ const SellerProductManagement = () => {
   const [formState, setFormState] = useState(defaultFormState);
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
+  const [fileName, setFileName] = useState("");
+  const fileInputRef = useRef(null);
 
   const [categories, setCategories] = useState([]);
   const [subCategories, setSubCategories] = useState([]);
@@ -141,6 +144,56 @@ const SellerProductManagement = () => {
 
   const resetForm = () => {
     setFormState(defaultFormState);
+    setFileName("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleFileButtonClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImageFileChange = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setFeedback({
+        type: "danger",
+        message: "Please select an image file.",
+      });
+      return;
+    }
+    
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setFeedback({
+        type: "danger",
+        message: "Image size should be less than 5MB.",
+      });
+      return;
+    }
+    
+    setFileName(file.name);
+    const reader = new FileReader();
+    reader.onload = () => {
+      setFormState((prev) => ({
+        ...prev,
+        image: reader.result || "",
+      }));
+    };
+    reader.onerror = () => {
+      setFeedback({
+        type: "danger",
+        message: "Failed to read image file.",
+      });
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
   };
 
   const handleInputChange = (event) => {
@@ -261,7 +314,7 @@ const SellerProductManagement = () => {
                       </h6>
                     </Col>
                     <Col md={6}>
-                      <FormGroup>
+                      <FormGroup style={{ marginBottom: "0" }}>
                         <Label for="title">Product Name *</Label>
                         <Input
                           id="title"
@@ -275,14 +328,73 @@ const SellerProductManagement = () => {
                     </Col>
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="image">Product Image URL</Label>
-                        <Input
-                          id="image"
-                          name="image"
-                          value={formState.image}
-                          onChange={handleInputChange}
-                          placeholder="https://example.com/image.jpg"
+                        <Label for="image">Product Image</Label>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          ref={fileInputRef}
+                          style={{ display: "none" }}
+                          onChange={handleImageFileChange}
                         />
+                        <div
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            border: "1px solid #e0e0e0",
+                            borderRadius: "4px",
+                            backgroundColor: "#f9f9f9",
+                            padding: "0.75rem 1rem",
+                            gap: "0.75rem",
+                            cursor: "pointer",
+                            marginBottom: formState.image ? "0.75rem" : "0",
+                          }}
+                          onClick={handleFileButtonClick}
+                        >
+                          <div style={{ flex: 1 }}>
+                            <span style={{ color: "#2c5aa0", fontWeight: "500" }}>
+                              Choose File
+                            </span>
+                            <span style={{ color: "#999", marginLeft: "0.5rem" }}>
+                              {fileName ? fileName : "No file chosen"}
+                            </span>
+                          </div>
+                          <div
+                            style={{
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              width: "36px",
+                              height: "36px",
+                              backgroundColor: "#f0f0f0",
+                              borderRadius: "4px",
+                              flexShrink: 0,
+                            }}
+                          >
+                            <FaUpload size={16} color="#666" />
+                          </div>
+                        </div>
+                        {formState.image && (
+                          <div
+                            style={{
+                              marginTop: "0.75rem",
+                              border: "1px solid #e0e0e0",
+                              borderRadius: "4px",
+                              padding: "0.5rem",
+                              backgroundColor: "#fff",
+                            }}
+                          >
+                            <img
+                              src={formState.image}
+                              alt="Preview"
+                              style={{
+                                maxWidth: "100%",
+                                maxHeight: "200px",
+                                borderRadius: "4px",
+                                objectFit: "contain",
+                              }}
+                            />
+                          </div>
+                        )}
                       </FormGroup>
                     </Col>
                     <Col md={12}>

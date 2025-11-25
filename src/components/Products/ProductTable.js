@@ -131,7 +131,10 @@ export const buildColumns = (onEdit, onDelete) => [
             color="link"
             size="sm"
             className="btn-round btn-icon"
-            onClick={() => onEdit(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(row);
+            }}
             aria-label="Edit product"
             style={{
               backgroundColor: "transparent",
@@ -141,15 +144,18 @@ export const buildColumns = (onEdit, onDelete) => [
           >
             <FaEdit size={14} color="#17a2b8" />
           </Button>
-          <UncontrolledTooltip target={editId}>
+          {/* <UncontrolledTooltip target={editId}>
             Edit or duplicate product
-          </UncontrolledTooltip>
+          </UncontrolledTooltip> */}
           <Button
             id={deleteId}
             color="link"
             size="sm"
             className="btn-round btn-icon"
-            onClick={() => onDelete(row)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(row);
+            }}
             aria-label="Delete product"
             style={{
               backgroundColor: "transparent",
@@ -159,9 +165,9 @@ export const buildColumns = (onEdit, onDelete) => [
           >
             <FaTrash size={13} color="#dc3545" />
           </Button>
-          <UncontrolledTooltip target={deleteId}>
+          {/* <UncontrolledTooltip target={deleteId}>
             Remove product from catalog
-          </UncontrolledTooltip>
+          </UncontrolledTooltip> */}
         </div>
       );
     },

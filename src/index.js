@@ -26,6 +26,9 @@ root.render(
       {/* Admin routes */}
       <Route path="/admin/*" element={<AdminLayout />} />
 
+      {/* Seller routes */}
+      <Route path="/seller/*" element={<AdminLayout />} />
+
       {/* Redirect any unknown routes to /login */}
       <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>

@@ -31,20 +31,27 @@ function Admin(props) {
     return Number.isFinite(storedRole) ? storedRole : 0;
   }, []);
 
+  // Detect if we're in /seller or /admin context
+  const basePath = useMemo(() => {
+    return location.pathname.startsWith("/seller") ? "/seller" : "/admin";
+  }, [location.pathname]);
+
   const accessibleRoutes = useMemo(
     () =>
-      routes.filter(
-        (route) =>
-          !route.allowedRoles || route.allowedRoles.includes(userRole)
-      ),
-    [userRole]
+      routes
+        .filter(
+          (route) =>
+            !route.allowedRoles || route.allowedRoles.includes(userRole)
+        )
+        .filter((route) => route.layout === basePath), // Filter by base path
+    [userRole, basePath]
   );
 
   const defaultRoute = useMemo(() => {
     if (accessibleRoutes.length > 0) {
       return accessibleRoutes[0].path;
     }
-    return "/dashboard";
+    return "/products"; // Default to products for sellers, or first available route
   }, [accessibleRoutes]);
 
   // Check user session on component mount
@@ -120,8 +127,8 @@ function Admin(props) {
             <Route path={prop.path} element={prop.component} key={key} exact />
           ))}
           <Route
-            path="/admin"
-            element={<Navigate to={`/admin${defaultRoute}`} replace />}
+            path={basePath === "/seller" ? "/seller" : "/admin"}
+            element={<Navigate to={`${basePath}${defaultRoute}`} replace />}
           />
         </Routes>
         <Footer fluid />

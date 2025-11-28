@@ -21,7 +21,9 @@ const Login = () => {
   useEffect(() => {
     const userEmail = localStorage.getItem("user_email");
     if (userEmail) {
-      navigate("/admin/dashboard");
+      const userRole = Number(localStorage.getItem("user_role")) || 0;
+      const redirectPath = userRole === 2 ? "/seller/products" : "/admin/dashboard";
+      navigate(redirectPath);
     }
   }, [navigate]);
 
@@ -74,8 +76,9 @@ const Login = () => {
         // Show success notification
         showNotification("success", "Login successful!");
 
-        // Redirect to the admin dashboard
-        setTimeout(() => navigate("/admin/dashboard"), 1000);
+        // Redirect based on role: sellers go to /seller/products, admins to /admin/dashboard
+        const redirectPath = normalizedRole === 2 ? "/seller/products" : "/admin/dashboard";
+        setTimeout(() => navigate(redirectPath), 1000);
 
         setLoading(false);
       } else {

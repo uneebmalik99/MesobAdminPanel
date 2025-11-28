@@ -26,7 +26,7 @@ import {
   Table,
 } from "reactstrap";
 import { FaPlus } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import { Helmet } from "react-helmet";
 import ProductFormModal from "components/Products/ProductFormModal";
@@ -47,6 +47,8 @@ function Products() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
+  const basePath = location.pathname.startsWith("/seller") ? "/seller" : "/admin";
   const [modalOpen, setModalOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -453,6 +455,12 @@ function Products() {
       return;
     }
 
+    // Validate that image is not a base64 data URL
+    if (formState.image && formState.image.trim().startsWith("data:image")) {
+      alert("Base64 images are not supported. Please use an image URL instead (e.g., https://example.com/image.jpg)");
+      return;
+    }
+
     const payload = buildPayload(formState);
     setSaving(true);
     try {
@@ -597,7 +605,7 @@ function Products() {
                     <Button
                       color="info"
                       className="btn-round"
-                      onClick={() => navigate("/admin/seller-products")}
+                      onClick={() => navigate(`${basePath}/seller-products`)}
                       style={{
                         height: "44px",
                         padding: "0.35rem 1.2rem",

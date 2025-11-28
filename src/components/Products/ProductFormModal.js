@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React from "react";
 import {
   Modal,
   ModalBody,
@@ -19,7 +19,6 @@ import {
 import {
   FaDatabase,
   FaDotCircle,
-  FaUpload,
   FaExternalLinkAlt,
 } from "react-icons/fa";
 
@@ -73,36 +72,18 @@ const ProductFormModal = ({
     boxShadow: "0 12px 24px rgba(50, 50, 93, 0.08)",
   };
 
-  const [fileName, setFileName] = useState("");
-  const fileInputRef = useRef(null);
-
-  useEffect(() => {
-    if (!isOpen) {
-      setFileName("");
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
-    }
-  }, [isOpen]);
-
-  const handleFileButtonClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleImageFileChange = (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = () => {
+  const handleImageChange = (event) => {
+    const value = event.target.value.trim();
+    // Check if it's a base64 data URL
+    if (value && value.startsWith("data:image")) {
+      // Clear base64 images and show warning
       handleInputChange({
-        target: { name: "image", value: reader.result || "", type: "text" },
+        target: { name: "image", value: "", type: "text" },
       });
-    };
-    reader.readAsDataURL(file);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      alert("Base64 images are not supported. Please use an image URL instead (e.g., https://example.com/image.jpg)");
+      return;
     }
+    handleInputChange(event);
   };
 
   const handlePreviewClick = () => {
@@ -151,52 +132,33 @@ const ProductFormModal = ({
                     />
                   </FormGroup>
                   <FormGroup>
-  <Label for="image">Product Image</Label>
-  <input
-    id="image-file"
-    type="file"
-    accept="image/*"
-    ref={fileInputRef}
-    style={{ display: "none" }}
-    onChange={handleImageFileChange}
-  />
-  <div
-    style={{
-      display: "flex",
-      alignItems: "center",
-      border: "1px solid #e0e0e0",
-      borderRadius: "4px",
-      backgroundColor: "#f9f9f9",
-      padding: "0.75rem 1rem",
-      gap: "0.75rem",
-      cursor: "pointer",
-    }}
-    onClick={handleFileButtonClick}
-  >
-    <div style={{ flex: 1 }}>
-      <span style={{ color: "#2c5aa0", fontWeight: "500" }}>
-        Choose File
-      </span>
-      <span style={{ color: "#999", marginLeft: "0.5rem" }}>
-        {fileName ? fileName : "No file chosen"}
-      </span>
-    </div>
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        width: "36px",
-        height: "36px",
-        backgroundColor: "#f0f0f0",
-        borderRadius: "4px",
-        flexShrink: 0,
-      }}
-    >
-      <FaUpload size={16} color="#666" />
-    </div>
-  </div>
-</FormGroup>
+                    <Label for="image">Product Image URL</Label>
+                    <Input
+                      id="image"
+                      name="image"
+                      type="url"
+                      value={formState.image}
+                      onChange={handleImageChange}
+                      placeholder="https://example.com/image.jpg"
+                    />
+                    <small className="text-muted">
+                      Enter a direct URL to the image. Base64 images are not supported.
+                    </small>
+                    {formState.image && !formState.image.startsWith("data:") && (
+                      <div className="mt-2">
+                        <Button
+                          type="button"
+                          color="link"
+                          size="sm"
+                          onClick={handlePreviewClick}
+                          style={{ padding: 0 }}
+                        >
+                          <FaExternalLinkAlt size={12} className="mr-1" />
+                          Preview Image
+                        </Button>
+                      </div>
+                    )}
+                  </FormGroup>
                   <FormGroup>
                     <Label for="description">Description</Label>
                     <Input

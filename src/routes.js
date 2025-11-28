@@ -47,6 +47,22 @@ var dashRoutes = [
     layout: "/admin",
   },
   {
+    path: "/products",
+    name: "Products",
+    icon: "shopping_bag-16",
+    component: <Products />,
+    layout: "/seller",
+    allowedRoles: [2],
+  },
+  {
+    path: "/seller-products",
+    name: "Product Management",
+    icon: "ui-1_simple-add",
+    component: <SellerProductManagement />,
+    layout: "/seller",
+    allowedRoles: [2],
+  },
+  {
     path: "/seller-products",
     name: "Product Management",
     icon: "ui-1_simple-add",

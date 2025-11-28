@@ -41,11 +41,17 @@ const statusColorMap = {
   pending: "warning",
   approved: "success",
   rejected: "danger",
+  deleted: "secondary",
 };
 
 const SellerProductManagement = () => {
   const sellerEmail = localStorage.getItem("user_email") || "";
   const sellerName = localStorage.getItem("user_name") || "";
+
+  // Debug: Log component mount
+  useEffect(() => {
+    console.log("SellerProductManagement component mounted");
+  }, []);
 
   const [formState, setFormState] = useState(defaultFormState);
   const [saving, setSaving] = useState(false);
@@ -109,10 +115,8 @@ const SellerProductManagement = () => {
         params: { sellerEmail },
       });
       const items = response.data?.Items || response.data || [];
-      const visibleItems = items.filter(
-        (item) => (item.status || "pending") !== "deleted"
-      );
-      const sorted = visibleItems.sort((a, b) =>
+      // Show all products including deleted ones
+      const sorted = items.sort((a, b) =>
         (b.updatedAt || b.createdAt || "").localeCompare(
           a.updatedAt || a.createdAt || ""
         )
@@ -213,6 +217,16 @@ const SellerProductManagement = () => {
       });
       return;
     }
+
+    // Validate that image is not a base64 data URL
+    if (formState.image && formState.image.trim().startsWith("data:image")) {
+      setFeedback({
+        type: "danger",
+        message: "Base64 images are not supported. Please use an image URL instead (e.g., https://example.com/image.jpg)",
+      });
+      return;
+    }
+
     setSaving(true);
     setFeedback({ type: "", message: "" });
     try {
@@ -258,11 +272,15 @@ const SellerProductManagement = () => {
     }
   };
 
-  const statusBadge = (status) => (
-    <Badge color={statusColorMap[status] || "secondary"} className="text-uppercase">
-      {status || "pending"}
-    </Badge>
-  );
+  const statusBadge = (status) => {
+    const normalizedStatus = status || "pending";
+    const displayStatus = normalizedStatus === "deleted" ? "deleted by admin" : normalizedStatus;
+    return (
+      <Badge color={statusColorMap[normalizedStatus] || "secondary"} className="text-uppercase">
+        {displayStatus}
+      </Badge>
+    );
+  };
 
   const hasPendingProducts = useMemo(
     () => (pendingProducts || []).length > 0,
@@ -328,73 +346,18 @@ const SellerProductManagement = () => {
                     </Col>
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="image">Product Image</Label>
-                        <input
-                          type="file"
-                          accept="image/*"
-                          ref={fileInputRef}
-                          style={{ display: "none" }}
-                          onChange={handleImageFileChange}
+                        <Label for="image">Product Image URL</Label>
+                        <Input
+                          id="image"
+                          name="image"
+                          type="url"
+                          value={formState.image}
+                          onChange={handleInputChange}
+                          placeholder="https://example.com/image.jpg"
                         />
-                        <div
-                          style={{
-                            display: "flex",
-                            alignItems: "center",
-                            border: "1px solid #e0e0e0",
-                            borderRadius: "4px",
-                            backgroundColor: "#f9f9f9",
-                            padding: "0.75rem 1rem",
-                            gap: "0.75rem",
-                            cursor: "pointer",
-                            marginBottom: formState.image ? "0.75rem" : "0",
-                          }}
-                          onClick={handleFileButtonClick}
-                        >
-                          <div style={{ flex: 1 }}>
-                            <span style={{ color: "#2c5aa0", fontWeight: "500" }}>
-                              Choose File
-                            </span>
-                            <span style={{ color: "#999", marginLeft: "0.5rem" }}>
-                              {fileName ? fileName : "No file chosen"}
-                            </span>
-                          </div>
-                          <div
-                            style={{
-                              display: "flex",
-                              alignItems: "center",
-                              justifyContent: "center",
-                              width: "36px",
-                              height: "36px",
-                              backgroundColor: "#f0f0f0",
-                              borderRadius: "4px",
-                              flexShrink: 0,
-                            }}
-                          >
-                            <FaUpload size={16} color="#666" />
-                          </div>
-                        </div>
-                        {formState.image && (
-                          <div
-                            style={{
-                              marginTop: "0.75rem",
-                              border: "1px solid #e0e0e0",
-                              borderRadius: "4px",
-                              padding: "0.5rem",
-                              backgroundColor: "#fff",
-                            }}
-                          >
-                            <img
-                              src={formState.image}
-                              alt="Preview"
-                              style={{
-                                maxWidth: "100%",
-                                maxHeight: "200px",
-                                borderRadius: "4px",
-                                objectFit: "contain",
-                              }}
-                            />
-                          </div>
-                        )}
+                        <small className="text-muted">
+                          Enter a direct URL to the image. Base64 images are not supported.
+                        </small>
                       </FormGroup>
                     </Col>
                     <Col md={12}>
@@ -652,6 +615,11 @@ const SellerProductManagement = () => {
                               <small className="text-muted">
                                 ${pending.sellerPrice ?? 0} cost
                               </small>
+                              {(pending.status || "pending") === "deleted" && (
+                                <div className="text-warning small mt-1 font-weight-bold">
+                                  ⚠️ Product deleted by admin
+                                </div>
+                              )}
                               {pending.rejectionReason && (
                                 <div className="text-danger small mt-1">
                                   Rejection reason: {pending.rejectionReason}

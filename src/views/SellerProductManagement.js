@@ -632,7 +632,7 @@ const SellerProductManagement = () => {
                     </Col>
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="menuId">Category *</Label>
+                        <Label for="menuId">Category/Country *</Label>
                         <Input
                           type="select"
                           id="menuId"

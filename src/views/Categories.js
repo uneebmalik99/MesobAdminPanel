@@ -146,9 +146,9 @@ function Categories() {
     try {
       const payload = {
         name: categoryFormState.name.trim(),
-        des: categoryFormState.des.trim() || undefined,
-        icon: categoryFormState.icon.trim() || undefined,
-        Seller_email: categoryFormState.sellerEmail.trim() || undefined,
+        des: categoryFormState.des?.trim() || "",
+        icon: categoryFormState.icon?.trim() || "",
+        Seller_email: categoryFormState.sellerEmail?.trim() || "",
       };
 
       if (isEditMode) {
@@ -208,9 +208,9 @@ function Categories() {
     try {
       const payload = {
         name: subCategoryFormState.name.trim(),
-        des: subCategoryFormState.des.trim() || undefined,
-        icon: subCategoryFormState.icon.trim() || undefined,
-        Seller_email: subCategoryFormState.sellerEmail.trim() || undefined,
+        des: subCategoryFormState.des?.trim() || "",
+        icon: subCategoryFormState.icon?.trim() || "",
+        Seller_email: subCategoryFormState.sellerEmail?.trim() || "",
       };
 
       if (isEditMode) {

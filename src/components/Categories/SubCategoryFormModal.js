@@ -86,13 +86,16 @@ const SubCategoryFormModal = ({
           <FormGroup>
             <Label for="sellerEmail">Seller Email</Label>
             <Input
-              type="email"
+              type="text"
               id="sellerEmail"
               name="sellerEmail"
               value={formState.sellerEmail || ""}
               onChange={handleInputChange}
-              placeholder="seller@example.com"
+              placeholder="seller@example.com, seller2@example.com"
             />
+            <small className="text-muted">
+              Enter one or more email addresses separated by commas
+            </small>
           </FormGroup>
         </ModalBody>
         <ModalFooter>

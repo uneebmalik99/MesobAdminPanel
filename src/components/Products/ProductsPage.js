@@ -65,6 +65,7 @@ function Products() {
   const [selectedSubCategoryFilter, setSelectedSubCategoryFilter] = useState(null);
   const [filterSubCategories, setFilterSubCategories] = useState([]);
   const [loadingFilterSubCategories, setLoadingFilterSubCategories] = useState(false);
+  const [allSubCategories, setAllSubCategories] = useState([]); // Store all subcategories for filtering
   const [pendingApprovals, setPendingApprovals] = useState([]);
   const [loadingApprovals, setLoadingApprovals] = useState(false);
   const [approvalModalOpen, setApprovalModalOpen] = useState(false);
@@ -175,30 +176,115 @@ function Products() {
         return productSubCategoryId === String(selectedSubCategoryFilter);
       });
     } else if (selectedCategoryFilter) {
+      const selectedCategoryId = String(selectedCategoryFilter);
+      const selectedCategory =
+        categories.find((cat) => String(cat.id) === selectedCategoryId) || null;
+
       filtered = filtered.filter((product) => {
-        // Check categories array first (first element is menuId)
-        const rawCategories = Array.isArray(product.categories) ? product.categories : [];
-        const derivedMenuId = rawCategories.length > 0
-          ? String(rawCategories[0])
-          : product.Menu_id !== undefined && product.Menu_id !== null
-          ? String(product.Menu_id)
-          : product.menuId !== undefined && product.menuId !== null
-          ? String(product.menuId)
-          : product.menu_id !== undefined && product.menu_id !== null
-          ? String(product.menu_id)
-          : "";
-        return derivedMenuId === String(selectedCategoryFilter);
+        // 1) Collect ALL possible category/menu ids on the product
+        const categoryIds = new Set();
+
+        // categories array (may contain menuId and tags)
+        const rawCategories = Array.isArray(product.categories)
+          ? product.categories
+          : [];
+        rawCategories.forEach((c) => {
+          const v = String(c).trim();
+          if (v) categoryIds.add(v);
+        });
+
+        // Menu_id on product (may be scalar or list)
+        const productMenuField = product.Menu_id;
+        if (Array.isArray(productMenuField)) {
+          productMenuField.forEach((entry) => {
+            const v = String(entry).trim();
+            if (v) categoryIds.add(v);
+          });
+        } else if (productMenuField !== undefined && productMenuField !== null) {
+          const v = String(productMenuField).trim();
+          if (v) categoryIds.add(v);
+        }
+
+        // Other menuId variants
+        if (product.menuId !== undefined && product.menuId !== null) {
+          const v = String(product.menuId).trim();
+          if (v) categoryIds.add(v);
+        }
+        if (product.menu_id !== undefined && product.menu_id !== null) {
+          const v = String(product.menu_id).trim();
+          if (v) categoryIds.add(v);
+        }
+
+        // Direct category id match against any collected id
+        if (categoryIds.has(selectedCategoryId)) {
+          return true;
+        }
+
+        // 2) Fallback: match by category name if we know the selected category
+        if (selectedCategory) {
+          const productCategoryName = (product.category || "").toLowerCase();
+          const selectedCategoryName = (selectedCategory.name || "").toLowerCase();
+          if (
+            productCategoryName &&
+            selectedCategoryName &&
+            (productCategoryName === selectedCategoryName ||
+              productCategoryName.includes(selectedCategoryName) ||
+              selectedCategoryName.includes(productCategoryName))
+          ) {
+            return true;
+          }
+        }
+
+        // 3) Also check if product's subcategory belongs to the selected category
+        const productSubCategoryId =
+          product.Sub_category_id !== undefined &&
+          product.Sub_category_id !== null
+            ? product.Sub_category_id
+            : product.subCategoryId !== undefined &&
+              product.subCategoryId !== null
+            ? product.subCategoryId
+            : product.sub_category_id !== undefined &&
+              product.sub_category_id !== null
+            ? product.sub_category_id
+            : null;
+
+        if (productSubCategoryId !== null) {
+          // Find the subcategory in our list
+          const subCategory = allSubCategories.find(
+            (sub) => String(sub.id) === String(productSubCategoryId)
+          );
+
+          if (subCategory) {
+            // Check if subcategory's Menu_id includes the selected category
+            const menuField = subCategory.Menu_id;
+            if (Array.isArray(menuField)) {
+              if (
+                menuField.some(
+                  (menuId) => String(menuId) === selectedCategoryId
+                )
+              ) {
+                return true;
+              }
+            } else if (menuField !== undefined && menuField !== null) {
+              if (String(menuField) === selectedCategoryId) {
+                return true;
+              }
+            }
+          }
+        }
+
+        return false;
       });
     }
 
     // Filter by search
     if (search) {
       filtered = filtered.filter((product) => {
-        const haystack = `${product.title} ${product.category} ${
-          product.country
-        } ${(product.categories || []).join(" ")}`.toLowerCase();
-        return haystack.includes(search.toLowerCase());
-      });
+      const haystack = `${product.title} ${product.category} ${
+        product.country
+      } ${(product.categories || []).join(" ")}`.toLowerCase();
+      return haystack.includes(search.toLowerCase());
+    });
     }
 
     return filtered;
@@ -209,6 +295,8 @@ function Products() {
     selectedSubCategoryFilter,
     isSeller,
     userEmail,
+    allSubCategories,
+    categories,
   ]);
 
   const fetchProducts = useCallback(async () => {
@@ -248,6 +336,29 @@ function Products() {
     }
   }, []);
 
+  // Fetch all subcategories for filtering
+  const fetchAllSubCategories = useCallback(async () => {
+    try {
+      // Fetch subcategories for each category
+      const allSubs = [];
+      for (const category of categories) {
+        try {
+          const response = await axios.get(
+            `${API_BASE}/categories/${category.id}/subcategories`
+          );
+          const items = response.data?.Items || response.data || [];
+          allSubs.push(...items);
+        } catch (err) {
+          console.error(`Failed to load subcategories for category ${category.id}`, err);
+        }
+      }
+      setAllSubCategories(allSubs);
+    } catch (err) {
+      console.error("Failed to load all subcategories", err);
+      setAllSubCategories([]);
+    }
+  }, [categories]);
+
   const fetchSubCategories = useCallback(async (menuId) => {
     if (!menuId) {
       setSubCategories([]);
@@ -279,6 +390,12 @@ function Products() {
   useEffect(() => {
     fetchCategories();
   }, [fetchCategories]);
+
+  useEffect(() => {
+    if (categories.length > 0) {
+      fetchAllSubCategories();
+    }
+  }, [categories, fetchAllSubCategories]);
 
   useEffect(() => {
     if (modalOpen && formState.menuId) {
@@ -617,19 +734,19 @@ function Products() {
                       Products
                     </Button>
                   ) : (
-                    <Button
-                      color="primary"
-                      className="btn-round"
-                      onClick={handleAddNew}
-                      style={{
-                        height: "44px",
-                        padding: "0.35rem 1.2rem",
-                        fontSize: "0.9rem",
-                        whiteSpace: "nowrap",
-                      }}
-                    >
+                  <Button
+                    color="primary"
+                    className="btn-round"
+                    onClick={handleAddNew}
+                    style={{
+                      height: "44px",
+                      padding: "0.35rem 1.2rem",
+                      fontSize: "0.9rem",
+                    whiteSpace: "nowrap",
+                    }}
+                  >
                       <FaPlus style={{ marginRight: "0.5rem" }} /> Add Product
-                    </Button>
+                  </Button>
                   )}
                 </div>
               </CardHeader>

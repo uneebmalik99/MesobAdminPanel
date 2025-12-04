@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useRef } from "react";
 import {
   Modal,
   ModalBody,
@@ -15,12 +15,20 @@ import {
   CardBody,
   CardTitle,
   Spinner,
+  Progress,
 } from "reactstrap";
 import {
   FaDatabase,
   FaDotCircle,
   FaExternalLinkAlt,
+  FaUpload,
+  FaImage,
 } from "react-icons/fa";
+import axios from "axios";
+
+const API_BASE =
+  process.env.REACT_APP_MESOB_API_BASE ||
+  "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev";
 
 const ProductFormModal = ({
   isOpen,
@@ -37,6 +45,11 @@ const ProductFormModal = ({
   loadingCategories,
   loadingSubCategories,
 }) => {
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadError, setUploadError] = useState("");
+  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const fileInputRef = useRef(null);
   const cardHeaderStyle = {
     display: "flex",
     alignItems: "flex-start",
@@ -72,17 +85,125 @@ const ProductFormModal = ({
     boxShadow: "0 12px 24px rgba(50, 50, 93, 0.08)",
   };
 
-  const handleImageChange = (event) => {
-    const value = event.target.value.trim();
-    // Check if it's a base64 data URL
-    if (value && value.startsWith("data:image")) {
-      // Clear base64 images and show warning
-      handleInputChange({
-        target: { name: "image", value: "", type: "text" },
-      });
-      alert("Base64 images are not supported. Please use an image URL instead (e.g., https://example.com/image.jpg)");
+  const handleFileButtonClick = () => {
+    if (fileInputRef.current && typeof fileInputRef.current.click === 'function') {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileChange = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setUploadError("Please select an image file (PNG, JPG, JPEG, GIF, or WEBP).");
       return;
     }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setUploadError("Image size should be less than 5MB.");
+      return;
+    }
+
+    setUploadError("");
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target.result;
+        
+        try {
+          setUploadProgress(50);
+          
+          // Upload to S3 via Lambda
+          console.log('Sending upload request to:', `${API_BASE}/upload-image`);
+          console.log('File name:', file.name);
+          console.log('Base64 data length:', base64Data.length);
+          
+          const response = await axios.post(`${API_BASE}/upload-image`, {
+            imageData: base64Data,
+            fileName: file.name,
+          });
+
+          console.log('Upload response:', response);
+          console.log('Response data:', response.data);
+
+          setUploadProgress(100);
+          
+          // Handle both direct response and stringified response
+          let responseData = response.data;
+          if (typeof responseData === 'string') {
+            try {
+              responseData = JSON.parse(responseData);
+            } catch (e) {
+              console.error('Failed to parse response as JSON:', e);
+            }
+          }
+          
+          if (responseData?.url) {
+            // Update form state with S3 URL
+            const s3Url = responseData.url;
+            console.log('Upload successful, S3 URL:', s3Url);
+            setUploadedImageUrl(s3Url);
+            handleInputChange({
+              target: { name: "image", value: s3Url, type: "text" },
+            });
+            setTimeout(() => setUploadProgress(0), 1000);
+          } else {
+            console.error('No URL in response:', responseData);
+            throw new Error("No URL returned from upload");
+          }
+        } catch (error) {
+          console.error("Upload error:", error);
+          console.error("Error response:", error.response?.data);
+          console.error("Error status:", error.response?.status);
+          console.error("Error details:", JSON.stringify(error.response?.data, null, 2));
+          
+          let errorMessage = "Failed to upload image. Please try again.";
+          
+          if (error.response?.status === 500) {
+            errorMessage = "Server error. Please check if the upload endpoint is configured correctly in Lambda.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Upload endpoint not found. Please add the /upload-image endpoint to your Lambda function.";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          setUploadError(errorMessage);
+          setUploadProgress(0);
+        } finally {
+          setUploading(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        }
+      };
+      
+      reader.onerror = () => {
+        setUploadError("Failed to read image file.");
+        setUploading(false);
+        setUploadProgress(0);
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("File processing error:", error);
+      setUploadError("Failed to process image file.");
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleImageChange = (event) => {
+    const value = event.target.value.trim();
+    // Allow manual URL entry
     handleInputChange(event);
   };
 
@@ -132,30 +253,77 @@ const ProductFormModal = ({
                     />
                   </FormGroup>
                   <FormGroup>
-                    <Label for="image">Product Image URL</Label>
-                    <Input
-                      id="image"
-                      name="image"
-                      type="url"
-                      value={formState.image}
-                      onChange={handleImageChange}
-                      placeholder="https://example.com/image.jpg"
-                    />
-                    <small className="text-muted">
-                      Enter a direct URL to the image. Base64 images are not supported.
-                    </small>
-                    {formState.image && !formState.image.startsWith("data:") && (
+                    <Label for="image">Product Image</Label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        disabled={uploading}
+                        style={{ 
+                          flex: 1,
+                          padding: "0.375rem 0.75rem",
+                          fontSize: "0.875rem",
+                          lineHeight: "1.5",
+                          color: "#495057",
+                          backgroundColor: "#fff",
+                          border: "1px solid #ced4da",
+                          borderRadius: "0.25rem"
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        color="primary"
+                        size="sm"
+                        onClick={handleFileButtonClick}
+                        disabled={uploading}
+                        style={{ 
+                          display: "flex", 
+                          alignItems: "center", 
+                          gap: "0.25rem",
+                          whiteSpace: "nowrap",
+                          minWidth: "80px"
+                        }}
+                      >
+                        <FaUpload size={12} />
+                        {uploading ? "Uploading..." : "Upload"}
+                      </Button>
+                    </div>
+                    {uploadProgress > 0 && uploadProgress < 100 && (
                       <div className="mt-2">
-                        <Button
-                          type="button"
-                          color="link"
-                          size="sm"
-                          onClick={handlePreviewClick}
-                          style={{ padding: 0 }}
-                        >
-                          <FaExternalLinkAlt size={12} className="mr-1" />
-                          Preview Image
-                        </Button>
+                        <Progress value={uploadProgress} color="success" />
+                        <small className="text-muted">Uploading... {uploadProgress}%</small>
+                      </div>
+                    )}
+                    {uploadError && (
+                      <div className="mt-2">
+                        <small className="text-danger">{uploadError}</small>
+                      </div>
+                    )}
+                    {uploadedImageUrl && (
+                      <div className="mt-2">
+                        <small className="text-success">✓ Image uploaded successfully</small>
+                      </div>
+                    )}
+                    <small className="text-muted">
+                      Upload an image file (PNG, JPG, JPEG, GIF, WEBP - max 5MB)
+                    </small>
+                    {(formState.image || uploadedImageUrl) && (
+                      <div className="mt-2" style={{ textAlign: "center" }}>
+                        <img
+                          src={formState.image || uploadedImageUrl}
+                          alt="Preview"
+                          style={{
+                            maxWidth: "200px",
+                            maxHeight: "200px",
+                            borderRadius: "8px",
+                            border: "1px solid #dee2e6",
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = "none";
+                          }}
+                        />
                       </div>
                     )}
                   </FormGroup>
@@ -285,7 +453,7 @@ const ProductFormModal = ({
                   <Row>
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="menuId">Category *</Label>
+                        <Label for="menuId">Category/Country</Label>
                         <Input
                           type="select"
                           id="menuId"

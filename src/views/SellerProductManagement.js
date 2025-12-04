@@ -14,6 +14,7 @@ import {
   Row,
   Spinner,
   Table,
+  Progress,
 } from "reactstrap";
 import { FaUpload } from "react-icons/fa";
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
@@ -57,6 +58,8 @@ const SellerProductManagement = () => {
   const [saving, setSaving] = useState(false);
   const [feedback, setFeedback] = useState({ type: "", message: "" });
   const [fileName, setFileName] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef(null);
 
   const [categories, setCategories] = useState([]);
@@ -155,10 +158,12 @@ const SellerProductManagement = () => {
   };
 
   const handleFileButtonClick = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current && typeof fileInputRef.current.click === 'function') {
+      fileInputRef.current.click();
+    }
   };
 
-  const handleImageFileChange = (event) => {
+  const handleImageFileChange = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     
@@ -166,7 +171,7 @@ const SellerProductManagement = () => {
     if (!file.type.startsWith("image/")) {
       setFeedback({
         type: "danger",
-        message: "Please select an image file.",
+        message: "Please select an image file (PNG, JPG, JPEG, GIF, or WEBP).",
       });
       return;
     }
@@ -181,22 +186,94 @@ const SellerProductManagement = () => {
     }
     
     setFileName(file.name);
-    const reader = new FileReader();
-    reader.onload = () => {
-      setFormState((prev) => ({
-        ...prev,
-        image: reader.result || "",
-      }));
-    };
-    reader.onerror = () => {
+    setUploading(true);
+    setUploadProgress(0);
+    setFeedback({ type: "", message: "" });
+
+    try {
+      // Convert file to base64
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const base64Data = e.target.result;
+        
+        try {
+          setUploadProgress(50);
+          
+          // Upload to S3 via Lambda
+          const response = await axios.post(`${API_BASE}/upload-image`, {
+            imageData: base64Data,
+            fileName: file.name,
+          });
+
+          setUploadProgress(100);
+          
+          if (response.data?.url) {
+            // Update form state with S3 URL
+            setFormState((prev) => ({
+              ...prev,
+              image: response.data.url,
+            }));
+            setFeedback({
+              type: "success",
+              message: "Image uploaded successfully!",
+            });
+            setTimeout(() => {
+              setUploadProgress(0);
+              setFeedback({ type: "", message: "" });
+            }, 2000);
+          } else {
+            throw new Error("No URL returned from upload");
+          }
+        } catch (error) {
+          console.error("Upload error:", error);
+          console.error("Error response:", error.response?.data);
+          console.error("Error status:", error.response?.status);
+          console.error("Error details:", JSON.stringify(error.response?.data, null, 2));
+          
+          let errorMessage = "Failed to upload image. Please try again.";
+          
+          if (error.response?.status === 500) {
+            errorMessage = error.response?.data?.message || 
+              "Server error. Please check if the upload endpoint is configured correctly in Lambda.";
+          } else if (error.response?.status === 404) {
+            errorMessage = "Upload endpoint not found. Please add the /upload-image endpoint to your Lambda function.";
+          } else if (error.response?.data?.message) {
+            errorMessage = error.response.data.message;
+          } else if (error.message) {
+            errorMessage = error.message;
+          }
+          
+          setFeedback({
+            type: "danger",
+            message: errorMessage,
+          });
+          setUploadProgress(0);
+        } finally {
+          setUploading(false);
+          if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+          }
+        }
+      };
+      
+      reader.onerror = () => {
+        setFeedback({
+          type: "danger",
+          message: "Failed to read image file.",
+        });
+        setUploading(false);
+        setUploadProgress(0);
+      };
+      
+      reader.readAsDataURL(file);
+    } catch (error) {
+      console.error("File processing error:", error);
       setFeedback({
         type: "danger",
-        message: "Failed to read image file.",
+        message: "Failed to process image file.",
       });
-    };
-    reader.readAsDataURL(file);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      setUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -346,18 +423,69 @@ const SellerProductManagement = () => {
                     </Col>
                     <Col md={6}>
                       <FormGroup>
-                        <Label for="image">Product Image URL</Label>
-                        <Input
-                          id="image"
-                          name="image"
-                          type="url"
-                          value={formState.image}
-                          onChange={handleInputChange}
-                          placeholder="https://example.com/image.jpg"
-                        />
+                        <Label for="image">Product Image</Label>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageFileChange}
+                            disabled={uploading}
+                            style={{ 
+                              flex: 1,
+                              padding: "0.375rem 0.75rem",
+                              fontSize: "0.875rem",
+                              lineHeight: "1.5",
+                              color: "#495057",
+                              backgroundColor: "#fff",
+                              border: "1px solid #ced4da",
+                              borderRadius: "0.25rem"
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            color="primary"
+                            size="sm"
+                            onClick={handleFileButtonClick}
+                            disabled={uploading}
+                            style={{ 
+                              display: "flex", 
+                              alignItems: "center", 
+                              gap: "0.25rem",
+                              whiteSpace: "nowrap",
+                              minWidth: "80px"
+                            }}
+                          >
+                            <FaUpload size={12} />
+                            {uploading ? "Uploading..." : "Upload"}
+                          </Button>
+                        </div>
+                        {uploadProgress > 0 && uploadProgress < 100 && (
+                          <div className="mt-2 mb-2">
+                            <Progress value={uploadProgress} color="success" />
+                            <small className="text-muted">Uploading... {uploadProgress}%</small>
+                          </div>
+                        )}
                         <small className="text-muted">
-                          Enter a direct URL to the image. Base64 images are not supported.
+                          Upload an image file (PNG, JPG, JPEG, GIF, WEBP - max 5MB)
                         </small>
+                        {formState.image && (
+                          <div className="mt-2" style={{ textAlign: "center" }}>
+                            <img
+                              src={formState.image}
+                              alt="Preview"
+                              style={{
+                                maxWidth: "200px",
+                                maxHeight: "200px",
+                                borderRadius: "8px",
+                                border: "1px solid #dee2e6",
+                              }}
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                              }}
+                            />
+                          </div>
+                        )}
                       </FormGroup>
                     </Col>
                     <Col md={12}>

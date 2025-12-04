@@ -168,10 +168,10 @@ function Products() {
           product.Sub_category_id !== undefined && product.Sub_category_id !== null
             ? product.Sub_category_id
             : product.subCategoryId !== undefined && product.subCategoryId !== null
-            ? product.subCategoryId
-            : product.sub_category_id !== undefined && product.sub_category_id !== null
-            ? product.sub_category_id
-            : ""
+              ? product.subCategoryId
+              : product.sub_category_id !== undefined && product.sub_category_id !== null
+                ? product.sub_category_id
+                : ""
         );
         return productSubCategoryId === String(selectedSubCategoryFilter);
       });
@@ -238,15 +238,15 @@ function Products() {
         // 3) Also check if product's subcategory belongs to the selected category
         const productSubCategoryId =
           product.Sub_category_id !== undefined &&
-          product.Sub_category_id !== null
+            product.Sub_category_id !== null
             ? product.Sub_category_id
             : product.subCategoryId !== undefined &&
               product.subCategoryId !== null
-            ? product.subCategoryId
-            : product.sub_category_id !== undefined &&
-              product.sub_category_id !== null
-            ? product.sub_category_id
-            : null;
+              ? product.subCategoryId
+              : product.sub_category_id !== undefined &&
+                product.sub_category_id !== null
+                ? product.sub_category_id
+                : null;
 
         if (productSubCategoryId !== null) {
           // Find the subcategory in our list
@@ -280,11 +280,10 @@ function Products() {
     // Filter by search
     if (search) {
       filtered = filtered.filter((product) => {
-      const haystack = `${product.title} ${product.category} ${
-        product.country
-      } ${(product.categories || []).join(" ")}`.toLowerCase();
-      return haystack.includes(search.toLowerCase());
-    });
+        const haystack = `${product.title} ${product.category} ${product.country
+          } ${(product.categories || []).join(" ")}`.toLowerCase();
+        return haystack.includes(search.toLowerCase());
+      });
     }
 
     return filtered;
@@ -459,8 +458,8 @@ function Products() {
   }, []);
 
   const columns = useMemo(
-    () => buildColumns(handleEdit, handleDelete),
-    [handleEdit, handleDelete]
+    () => buildColumns(handleEdit, handleDelete, isSeller),
+    [handleEdit, handleDelete, isSeller]
   );
 
   const handleCategorySelect = (event) => {
@@ -695,7 +694,7 @@ function Products() {
                 className="d-flex flex-column flex-md-row align-items-md-center justify-content-between"
                 style={{ gap: "1rem" }}
               >
-                <div style={{whiteSpace: "nowrap"}}>
+                <div style={{ whiteSpace: "nowrap" }}>
                   {/* <CardTitle tag="h4" className="mb-0">
                     Products 
                   </CardTitle> */}
@@ -734,32 +733,32 @@ function Products() {
                       Products
                     </Button>
                   ) : (
-                  <Button
-                    color="primary"
-                    className="btn-round"
-                    onClick={handleAddNew}
-                    style={{
-                      height: "44px",
-                      padding: "0.35rem 1.2rem",
-                      fontSize: "0.9rem",
-                    whiteSpace: "nowrap",
-                    }}
-                  >
+                    <Button
+                      color="primary"
+                      className="btn-round"
+                      onClick={handleAddNew}
+                      style={{
+                        height: "44px",
+                        padding: "0.35rem 1.2rem",
+                        fontSize: "0.9rem",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
                       <FaPlus style={{ marginRight: "0.5rem" }} /> Add Product
-                  </Button>
+                    </Button>
                   )}
                 </div>
               </CardHeader>
               {/* Category Filter Tabs */}
-              <div style={{ 
-                padding: "1rem", 
+              <div style={{
+                padding: "1rem",
                 borderBottom: "1px solid #dee2e6",
                 backgroundColor: "#f8f9fa"
               }}>
                 <div style={{ marginBottom: filterSubCategories.length > 0 ? "0.75rem" : "0" }}>
-                  <div style={{ 
-                    display: "flex", 
-                    flexWrap: "wrap", 
+                  <div style={{
+                    display: "flex",
+                    flexWrap: "wrap",
                     gap: "0.5rem",
                     alignItems: "center"
                   }}>
@@ -808,9 +807,9 @@ function Products() {
                 </div>
                 {/* Subcategory Filter Tabs */}
                 {filterSubCategories.length > 0 && (
-                  <div style={{ 
-                    display: "flex", 
-                    flexWrap: "wrap", 
+                  <div style={{
+                    display: "flex",
+                    flexWrap: "wrap",
                     gap: "0.5rem",
                     alignItems: "center",
                     paddingTop: "0.75rem",
@@ -906,8 +905,8 @@ function Products() {
                                   <small className="text-muted">
                                     {pending.createdAt
                                       ? new Date(
-                                          pending.createdAt
-                                        ).toLocaleString()
+                                        pending.createdAt
+                                      ).toLocaleString()
                                       : "-"}
                                   </small>
                                 </td>

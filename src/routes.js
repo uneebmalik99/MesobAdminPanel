@@ -6,6 +6,8 @@ import PromoCodes from "views/PromoCodes.js";
 import Products from "components/Products/ProductsPage";
 import Categories from "views/Categories.js";
 import SellerProductManagement from "views/SellerProductManagement.js";
+import SellerSubcategoryManagement from "views/SellerSubcategoryManagement.js";
+import SellerOrders from "views/SellerOrders.js";
 import Orders from "views/Orders.js";
 import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";
@@ -71,6 +73,22 @@ var dashRoutes = [
     allowedRoles: [2],
   },
   {
+    path: "/seller-subcategories",
+    name: "Subcategory Management",
+    icon: "design_bullet-list-67",
+    component: <SellerSubcategoryManagement />,
+    layout: "/seller",
+    allowedRoles: [2],
+  },
+  {
+    path: "/seller-orders",
+    name: "My Orders",
+    icon: "shopping_box",
+    component: <SellerOrders />,
+    layout: "/seller",
+    allowedRoles: [2],
+  },
+  {
     path: "/categories",
     name: "Categories",
     icon: "design_bullet-list-67",
@@ -107,6 +125,13 @@ var dashRoutes = [
     name: "Order Details",
     component: <OrderDetails />,
     layout: "/admin",
+    invisible: true,
+  },
+  {
+    path: "/order/details/:id",
+    name: "Order Details",
+    component: <OrderDetails />,
+    layout: "/seller",
     invisible: true,
   },
   {

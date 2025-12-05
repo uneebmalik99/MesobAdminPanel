@@ -698,9 +698,11 @@ function Products() {
                   {/* <CardTitle tag="h4" className="mb-0">
                     Products 
                   </CardTitle> */}
-                  <small className="text-muted">
-                    {filteredProducts.length} of {products.length} Products
-                  </small>
+                  {!isSeller && (
+                    <small className="text-muted">
+                      {filteredProducts.length} of {products.length} Products
+                    </small>
+                  )}
                 </div>
                 <div
                   className="d-flex flex-column flex-md-row w-100"

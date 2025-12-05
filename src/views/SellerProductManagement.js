@@ -118,8 +118,12 @@ const SellerProductManagement = () => {
         params: { sellerEmail },
       });
       const items = response.data?.Items || response.data || [];
-      // Show all products including deleted ones
-      const sorted = items.sort((a, b) =>
+      // Filter out deleted products
+      const filtered = items.filter((item) => {
+        const status = item.status || "pending";
+        return status !== "deleted";
+      });
+      const sorted = filtered.sort((a, b) =>
         (b.updatedAt || b.createdAt || "").localeCompare(
           a.updatedAt || a.createdAt || ""
         )

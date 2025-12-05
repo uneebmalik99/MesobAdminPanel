@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import {
   Card,
   CardHeader,
@@ -20,6 +20,16 @@ import { faArrowLeft } from "@fortawesome/free-solid-svg-icons";
 const OrderDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Check if this is seller view
+  const isSellerView = useMemo(() => {
+    return location.pathname.startsWith("/seller");
+  }, [location.pathname]);
+  
+  const sellerEmail = useMemo(() => {
+    return isSellerView ? localStorage.getItem("user_email") || "" : "";
+  }, [isSellerView]);
   const [orderDetails, setOrderDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [totalPrice, setTotalPrice] = useState(0);
@@ -36,7 +46,6 @@ const OrderDetails = () => {
         );
         const itemData = response.data.Item;
         setOrderDetails(itemData);
-        calculateTotals(itemData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching order details:", error);
@@ -47,18 +56,71 @@ const OrderDetails = () => {
     fetchOrderDetails();
   }, [id]);
 
-  let promo_discount = "";
-
-  const calculateTotals = (item) => {
+  // Filter products for seller view (only show seller's products)
+  const displayProducts = useMemo(() => {
+    if (!orderDetails?.Products) return [];
+    if (!isSellerView) return orderDetails.Products;
+    
+    const normalizedEmail = sellerEmail.toLowerCase();
+    const emailMatches = (productSellerEmail) => {
+      if (!productSellerEmail) return false;
+      const emailString = String(productSellerEmail).trim();
+      if (!emailString) return false;
+      const emailList = emailString
+        .split(',')
+        .map(email => email.trim().toLowerCase())
+        .filter(email => email.length > 0);
+      return emailList.includes(normalizedEmail);
+    };
+    
+    return orderDetails.Products.filter((product) => {
+      const productSellerEmail = 
+        product.selleremail || 
+        product.sellerEmail || 
+        product.seller_email ||
+        "";
+      return emailMatches(productSellerEmail);
+    });
+  }, [orderDetails, isSellerView, sellerEmail]);
+  
+  // Calculate totals for seller view (only seller's products)
+  const sellerTotals = useMemo(() => {
+    if (!isSellerView || !displayProducts.length || !orderDetails) {
+      return { totalCost: 0, discountedCost: 0 };	Price
+    }
+    
+    let total_cost = 0;
+    const promo_discount = orderDetails?.promodiscount || 0;
+    
+    displayProducts.forEach((product) => {
+      const costStr = product.cost || product.content?.cost || "0";
+      const cost = parseFloat(String(costStr).replace(/[\$,]/g, ""));
+      const quantity = product.qty ?? product.quantity ?? 1;
+      total_cost += quantity * cost;
+    });
+    
+    const discounted_cost = promo_discount ? total_cost - promo_discount : total_cost;
+    
+    return { totalCost: total_cost, discountedCost: discounted_cost };
+  }, [displayProducts, isSellerView, orderDetails]);
+  
+  // Calculate totals
+  useEffect(() => {
+    if (!orderDetails) return;
+    
     let total_price = 0;
     let total_cost = 0;
-    promo_discount = item.promodiscount;
+    const promo_discount = orderDetails.promodiscount || 0;
 
-    item.Products.forEach((product) => {
+    const productsToCalculate = isSellerView ? displayProducts : (orderDetails.Products || []);
+    
+    productsToCalculate.forEach((product) => {
       // Remove $ and comma from price and cost
-      const price = parseFloat(product.price.replace(/[\$,]/g, ""));
-      const cost = parseFloat(product.cost.replace(/[\$,]/g, ""));
-      const quantity = product.qty ?? product.quantity;
+      const priceStr = product.price || product.content?.price || "0";
+      const costStr = product.cost || product.content?.cost || "0";
+      const price = parseFloat(String(priceStr).replace(/[\$,]/g, ""));
+      const cost = parseFloat(String(costStr).replace(/[\$,]/g, ""));
+      const quantity = product.qty ?? product.quantity ?? 1;
 
       // Calculate totals
       total_price += quantity * price;
@@ -77,9 +139,10 @@ const OrderDetails = () => {
     setTotalCost(total_cost);
     setDiscountedPrice(discounted_price);
     setDiscountedCost(discounted_cost);
-  };
+  }, [orderDetails, displayProducts, isSellerView]);
 
-  if (loading) {
+  // Early return AFTER all hooks
+  if (loading || !orderDetails) {
     return (
       <div style={{ textAlign: "center", padding: "20px" }}>
         <Spinner color="primary" />
@@ -98,6 +161,8 @@ const OrderDetails = () => {
     state: orderDetails.state,
     country: orderDetails.country,
   };
+  
+  const promo_discount = orderDetails.promodiscount || 0;
 
   return (
     <>
@@ -121,7 +186,7 @@ const OrderDetails = () => {
                 <div className="d-flex align-items-center">
                   <Button
                     className="btn btn-link"
-                    onClick={() => navigate("/admin/orders")}
+                    onClick={() => navigate(isSellerView ? "/seller/seller-orders" : "/admin/orders")}
                     style={{ fontSize: "20px", marginRight: "10px" }}
                   >
                     <FontAwesomeIcon icon={faArrowLeft} />
@@ -138,26 +203,30 @@ const OrderDetails = () => {
                     <h5 className="section-heading">Sender Information</h5>
                     <ul className="list-unstyled">
                       <li>
-                        <strong>Name:</strong> {senderInfo.name}
+                        <strong>Name:</strong> {senderInfo.name || "N/A"}
                       </li>
-                      <li>
-                        <strong>Email:</strong> {senderInfo.email}
-                      </li>
-                      <li>
-                        <strong>Phone:</strong> {senderInfo.phone}
-                      </li>
-                      <li>
-                        <strong>Address:</strong> {senderInfo.address}
-                      </li>
-                      <li>
-                        <strong>City:</strong> {senderInfo.city}
-                      </li>
-                      <li>
-                        <strong>State:</strong> {senderInfo.state}
-                      </li>
-                      <li>
-                        <strong>Pin Code:</strong> {senderInfo.pincode}
-                      </li>
+                      {!isSellerView && (
+                        <>
+                          <li>
+                            <strong>Email:</strong> {senderInfo.email || "N/A"}
+                          </li>
+                          <li>
+                            <strong>Phone:</strong> {senderInfo.phone || "N/A"}
+                          </li>
+                          <li>
+                            <strong>Address:</strong> {senderInfo.address || "N/A"}
+                          </li>
+                          <li>
+                            <strong>City:</strong> {senderInfo.city || "N/A"}
+                          </li>
+                          <li>
+                            <strong>State:</strong> {senderInfo.state || "N/A"}
+                          </li>
+                          <li>
+                            <strong>Pin Code:</strong> {senderInfo.pincode || "N/A"}
+                          </li>
+                        </>
+                      )}
                     </ul>
                   </Col>
 
@@ -201,27 +270,28 @@ const OrderDetails = () => {
                       <th>Description</th>
                       <th>Country</th>
                       <th>Quantity</th>
-                      <th>Price</th>
+                      {!isSellerView && <th>Price</th>}
                       <th>Cost</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orderDetails.Products.map((product) => (
-                      <tr key={product.id}>
+                    {displayProducts.map((product, index) => (
+                      <tr key={product.id || index}>
                         <td>
                           <img
-                            src={product.image}
-                            alt={product.title}
+                            src={product.image || product.content?.image || ""}
+                            alt={product.title || product.content?.title || "Product"}
                             className="img-fluid"
+                            style={{ maxWidth: "80px", maxHeight: "80px", objectFit: "cover" }}
                           />
                         </td>
-                        <td>{product.title}</td>
-                        <td>{product.category}</td>
-                        <td>{product.description}</td>
-                        <td>{product.country}</td>
-                        <td>{product.qty}</td>
-                        <td>{product.price}</td>
-                        <td>{product.cost}</td>
+                        <td>{product.title || product.content?.title || product.name || "N/A"}</td>
+                        <td>{product.category || "N/A"}</td>
+                        <td>{product.description || product.content?.description || "N/A"}</td>
+                        <td>{product.country || product.content?.country || "N/A"}</td>
+                        <td>{product.qty || product.quantity || 1}</td>
+                        {!isSellerView && <td>{product.price || "N/A"}</td>}
+                        <td>{product.cost || "N/A"}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -236,11 +306,13 @@ const OrderDetails = () => {
                     </div>
                   </div>
                   <div className="d-flex justify-content-between">
+                    {!isSellerView && (
+                      <div>
+                        Selling Price: <span>$ {discountedPrice.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div>
-                      Selling Price: <span>$ {discountedPrice.toFixed(2)}</span>
-                    </div>
-                    <div>
-                      Cost Price: <span>$ {discountedCost.toFixed(2)}</span>
+                      {isSellerView ? "Total Price" : "Cost Price"}: <span>$ {isSellerView ? sellerTotals.discountedCost.toFixed(2) : discountedCost.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

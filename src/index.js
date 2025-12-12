@@ -10,6 +10,7 @@ import AdminLayout from "layouts/Admin.js";
 import FinancialLayout from "layouts/financial.js";
 import Login from "../src/views/Login";
 import MesobFinanceLogin from "views/MesobFinanceLogin";
+import ForgotPassword from "views/ForgotPassword";
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 
@@ -18,6 +19,7 @@ root.render(
     <Routes>
       {/* Route for the Login page */}
       <Route path="/login" element={<Login />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
       <Route path="/mesonfinancelogin" element={<MesobFinanceLogin />} />
 
       {/* Admin routes */}

@@ -510,7 +510,8 @@ function Products() {
       setFilterSubCategories([]);
     } else {
       setSelectedCategoryFilter(categoryId);
-      setSelectedSubCategoryFilter(null);
+      // Don't clear subcategory filter - let user keep it if they want
+      // setSelectedSubCategoryFilter(null);
       await fetchFilterSubCategories(categoryId);
     }
   }, [selectedCategoryFilter, fetchFilterSubCategories]);
@@ -772,7 +773,13 @@ function Products() {
                       color={selectedCategoryFilter === null ? "primary" : "light"}
                       onClick={() => {
                         setSelectedCategoryFilter(null);
-                        setSelectedSubCategoryFilter(null);
+                        // Only clear subcategory filter if no subcategory is selected
+                        // This allows users to filter by subcategory alone
+                        if (selectedSubCategoryFilter) {
+                          // Keep subcategory filter, just clear category
+                        } else {
+                          setSelectedSubCategoryFilter(null);
+                        }
                         setFilterSubCategories([]);
                       }}
                       style={{
@@ -807,8 +814,8 @@ function Products() {
                     ))}
                   </div>
                 </div>
-                {/* Subcategory Filter Tabs */}
-                {filterSubCategories.length > 0 && (
+                {/* Subcategory Filter Tabs - Always show all subcategories */}
+                {allSubCategories.length > 0 && (
                   <div style={{
                     display: "flex",
                     flexWrap: "wrap",
@@ -824,7 +831,13 @@ function Products() {
                     <Button
                       size="sm"
                       color={selectedSubCategoryFilter === null ? "info" : "light"}
-                      onClick={() => setSelectedSubCategoryFilter(null)}
+                      onClick={() => {
+                        setSelectedSubCategoryFilter(null);
+                        // If a category is selected, keep it; otherwise clear both filters
+                        if (!selectedCategoryFilter) {
+                          setSelectedCategoryFilter(null);
+                        }
+                      }}
                       style={{
                         fontSize: "0.85rem",
                         padding: "0.25rem 0.75rem",
@@ -836,12 +849,22 @@ function Products() {
                     >
                       All
                     </Button>
-                    {filterSubCategories.map((subCategory) => (
+                    {allSubCategories.map((subCategory) => (
                       <Button
                         key={subCategory.id}
                         size="sm"
                         color={selectedSubCategoryFilter === String(subCategory.id) ? "info" : "light"}
-                        onClick={() => handleSubCategoryFilterClick(String(subCategory.id))}
+                        onClick={() => {
+                          handleSubCategoryFilterClick(String(subCategory.id));
+                          // When a subcategory is selected, optionally auto-select its parent category
+                          if (subCategory.Menu_id && Array.isArray(subCategory.Menu_id) && subCategory.Menu_id.length > 0) {
+                            const parentCategoryId = String(subCategory.Menu_id[0]);
+                            if (!selectedCategoryFilter || selectedCategoryFilter !== parentCategoryId) {
+                              setSelectedCategoryFilter(parentCategoryId);
+                              fetchFilterSubCategories(parentCategoryId);
+                            }
+                          }
+                        }}
                         style={{
                           fontSize: "0.85rem",
                           padding: "0.25rem 0.75rem",

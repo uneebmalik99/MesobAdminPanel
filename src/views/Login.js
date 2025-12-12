@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import "../assets/css/Login.css";
 import NotificationAlert from "react-notification-alert";
 import "react-notification-alert/dist/animate.css";
@@ -106,7 +106,6 @@ const Login = () => {
           <img src={logo} alt="Logo" className="logo_img" />
           <h2>Login</h2>
           <p>Welcome! Login to access the Mesob Store</p>
-          <p>Did you Forget Password?</p>
           <form onSubmit={handleSubmit}>
             <div className="login-input-group">
               <label>Email</label>
@@ -149,6 +148,18 @@ const Login = () => {
               )}
             </button>
           </form>
+          <div style={{ marginTop: "15px" }}>
+            <Link
+              to="/forgot-password"
+              style={{
+                color: "#007bff",
+                textDecoration: "none",
+                fontSize: "14px",
+              }}
+            >
+              Forgot Password?
+            </Link>
+          </div>
         </div>
       </div>
     </>

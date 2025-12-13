@@ -62,6 +62,40 @@ export const buildColumns = (onEdit, onDelete, isSeller = false) => {
       width: "160px",
     },
     {
+      name: "Subcategory",
+      selector: (row) => {
+        // Try to get subcategory name first
+        if (row.subCategoryName) return row.subCategoryName;
+        if (row.subCategoryName) return row.subCategoryName;
+        // If no name, show ID if available
+        if (row.Sub_category_id !== undefined && row.Sub_category_id !== null) {
+          return `ID: ${row.Sub_category_id}`;
+        }
+        if (row.subCategoryId !== undefined && row.subCategoryId !== null) {
+          return `ID: ${row.subCategoryId}`;
+        }
+        if (row.sub_category_id !== undefined && row.sub_category_id !== null) {
+          return `ID: ${row.sub_category_id}`;
+        }
+        return "-";
+      },
+      cell: (row) => {
+        // Try to get subcategory name first
+        const subcategoryName = row.sub_category_name || row.subCategoryName;
+        if (subcategoryName) {
+          return <span>{subcategoryName}</span>;
+        }
+        // If no name, show ID if available
+        const subcategoryId = row.Sub_category_id ?? row.subCategoryId ?? row.sub_category_id;
+        if (subcategoryId !== undefined && subcategoryId !== null) {
+          return <span className="text-muted">ID: {subcategoryId}</span>;
+        }
+        return <span className="text-muted">-</span>;
+      },
+      sortable: true,
+      width: "160px",
+    },
+    {
       name: "Description",
       selector: (row) => row.content?.description || "-",
       cell: (row) => {

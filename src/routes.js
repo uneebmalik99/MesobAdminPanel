@@ -13,7 +13,6 @@ import Cart from "views/Cart";
 import OrderDetails from "views/OrderDetails";
 import EditOrder from "views/EditOrder";
 import MesobFinancial from "views/MesobFinancial";
-import Analytics from "views/Analytics";
 
 // import EditOrder from "views/EditOrder";
 
@@ -149,13 +148,6 @@ var dashRoutes = [
     component: <MesobFinancial />,
     layout: "/admin",
     allowedRoles: [0],
-  },
-  {
-    path: "/analytics",
-    name: "Analytics",
-    icon: "business_chart-pie-36",
-    component: <Analytics />,
-    layout: "/admin",
   },
 ];
 export default dashRoutes;

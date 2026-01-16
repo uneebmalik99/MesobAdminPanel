@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useState } from "react";
 
 // reactstrap components
 import {
@@ -9,31 +9,45 @@ import {
   CardTitle,
   Row,
   Col,
-  Table,
-  Button,
-  Label,
-  FormGroup,
-  Input,
-  UncontrolledTooltip,
   Spinner,
-  Popover,
-  PopoverBody,
 } from "reactstrap";
+
+// Material-UI components for Analytics
+import {
+  Card as MUICard,
+  CardContent,
+  CardHeader as MUICardHeader,
+  Grid,
+  Typography,
+  Box,
+  Table as MUITable,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableRow,
+  CircularProgress,
+  Chip,
+  Tabs,
+  Tab,
+  Paper,
+  TextField,
+  InputAdornment,
+  Button as MUIButton
+} from '@material-ui/core';
 
 // core components
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 
 import axios from "axios";
-import formatDate from "utils/formatDate";
 import { Helmet } from "react-helmet";
-import DataTable from "react-data-table-component";
-import formatUserId from "utils/formatUID";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEdit } from "@fortawesome/free-solid-svg-icons";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
+import { Line } from 'react-chartjs-2';
+
+const API_URL = "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev";
 
 function Dashboard() {
-  const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [Users, setUsers] = useState([]);
   const [totalStats, setTotalStats] = useState({
@@ -42,132 +56,41 @@ function Dashboard() {
     totalCost: 0,
     totalCustomers: 0
   });
+
+  // Analytics state
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [dashboardData, setDashboardData] = useState(null);
+  const [revenueData, setRevenueData] = useState(null);
+  const [purchaseData, setPurchaseData] = useState(null);
+  const [userData, setUserData] = useState(null);
+  const [activeTab, setActiveTab] = useState(0);
+  const [timeFilter, setTimeFilter] = useState("all"); // "all", "daily", "weekly", "monthly", "yearly"
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
+
   const navigate = useNavigate();
-  const handleEdit = (id) => {
-    navigate(`/admin/order/edit/${id}`);
-  };
-
-  const columns = [
-    {
-      name: "User ID",
-      selector: (row) => row.id,
-      sortable: true,
-      width: "150px",
-      cell: (row) => <UserIdCell userId={row.id} />,
-    },
-    {
-      name: "Name",
-      selector: (row) => row.name,
-      sortable: true,
-      width: "200px",
-    },
-    {
-      name: "Phone",
-      selector: (row) => row.phone ?? "-",
-      sortable: true,
-      width: "150px",
-    },
-    {
-      name: "City",
-      selector: (row) => row.city ?? "-",
-      sortable: true,
-      width: "150px",
-    },
-    {
-      name: "Is Sender",
-      selector: (row) => (row.isSender === true ? "Yes" : "No"),
-      sortable: true,
-      width: "120px",
-    },
-    {
-      name: "Created At",
-      selector: (row) => formatDate(row.createdAt),
-      sortable: true,
-      width: "250px",
-    },
-    {
-      name: "Assign",
-      cell: (row) => {
-        if (row.assignedEmail || row.assignedName) {
-          return (
-            <Button
-              className="btn btn-info btn-round btn-sm"
-              onClick={() => handleEdit(row.id)}
-            >
-              <FontAwesomeIcon icon={faEdit} className="mr-2" />
-              {row.assignedName || row.assignedEmail}
-            </Button>
-          );
-        } else {
-          return (
-            <Button
-              className="btn btn-info btn-round btn-sm"
-              onClick={() => handleEdit(row.id)}
-            >
-              <FontAwesomeIcon icon={faEdit} className="mr-2" />
-              Assign
-            </Button>
-          );
-        }
-      },
-      width: "150px",
-    },
-  ];
-
-  function UserIdCell({ userId }) {
-    const [isOpen, setIsOpen] = useState(false);
-    const targetRef = useRef(null);
-
-    const toggle = () => setIsOpen(!isOpen);
-
-    return (
-      <div>
-        <span ref={targetRef} onMouseEnter={toggle} onMouseLeave={toggle}>
-          {formatUserId(userId)}
-        </span>
-        <Popover
-          placement="right"
-          isOpen={isOpen}
-          target={targetRef}
-          toggle={toggle}
-          trigger="hover"
-        >
-          <PopoverBody>{userId}</PopoverBody>
-        </Popover>
-      </div>
-    );
-  }
-  const calculateTotals = (data) => {
-    const succeededOrders = data.filter(item => item.adminStatus === "Succeeded");
-    let totalSales = 0;
-    let totalCost = 0;
-
-    succeededOrders.forEach(order => {
-      // Round each value to 2 decimal places before adding
-      totalSales += Number((order.totalSellingPrice || 0).toFixed(2));
-      totalCost += Number((order.totalCostPrice || 0).toFixed(2));
-    });
-
-    setTotalStats({
-      totalOrders: succeededOrders.length,
-      totalSales: Number(totalSales.toFixed(2)),
-      totalCost: Number(totalCost.toFixed(2)),
-      totalCustomers: new Set(succeededOrders.map(order => order.userID)).size
-    });
-  };
 
   useEffect(() => {
+    // Fetch dashboard totals from /dashboard endpoint
     axios
-      .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items")
+      .get("https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/dashboard")
       .then((response) => {
         if (response.data) {
-          setItems(response.data);
-          calculateTotals(response.data);
+          console.log('dashboard totals=>>>>>', response.data);
+          // Directly set totals from API response
+          setTotalStats({
+            totalOrders: response.data.totalOrders || 0,
+            totalSales: response.data.totalSales || 0,
+            totalCost: response.data.totalCost || 0,
+            totalCustomers: 0 // Not provided by /dashboard endpoint
+          });
         }
         setLoading(false);
       })
       .catch((error) => {
-        console.error("Error fetching data:", error);
+        console.error("Error fetching dashboard data:", error);
         setLoading(false);
       });
     axios
@@ -184,10 +107,121 @@ function Dashboard() {
       });
   }, []);
 
-  const latestSucceededOrders = items
-    .filter((item) => item.adminStatus === "Succeeded")
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)) // Sort by createdAt in descending order
-    .slice(0, 10);
+  // Analytics functions
+  useEffect(() => {
+    fetchProductsAndCategories();
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [timeFilter]);
+
+  const fetchProductsAndCategories = async () => {
+    try {
+      // Fetch all products
+      const productsResponse = await fetch(`${API_URL}/products`);
+      const productsData = await productsResponse.json();
+      const productsList = Array.isArray(productsData) ? productsData : (productsData?.Items || []);
+      setProducts(productsList);
+
+      // Fetch all categories
+      const categoriesResponse = await fetch(`${API_URL}/categories`);
+      const categoriesData = await categoriesResponse.json();
+      const categoriesList = Array.isArray(categoriesData) ? categoriesData : (categoriesData?.Items || []);
+      setCategories(categoriesList);
+
+      // Fetch subcategories for each category
+      const allSubcategories = [];
+      for (const category of categoriesList) {
+        try {
+          const subCatResponse = await fetch(`${API_URL}/categories/${category.id}/subcategories`);
+          const subCatData = await subCatResponse.json();
+          const subCatList = Array.isArray(subCatData) ? subCatData : (subCatData?.Items || []);
+          allSubcategories.push(...subCatList);
+        } catch (err) {
+          console.error(`Failed to load subcategories for category ${category.id}`, err);
+        }
+      }
+      setSubcategories(allSubcategories);
+    } catch (error) {
+      console.error("Error fetching products and categories:", error);
+    }
+  };
+
+  // Helper function to get product details by ID
+  const getProductDetails = (productId) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return null;
+
+    // Get category name
+    const categoryId = product.categories?.[0] || product.Menu_id || product.menuId;
+    const category = categories.find(c => String(c.id) === String(categoryId));
+    const categoryName = category?.name || product.category || "-";
+
+    // Get subcategory name
+    const subCategoryId = product.Sub_category_id || product.subCategoryId || product.sub_category_id;
+    const subcategory = subcategories.find(sc => sc.id === subCategoryId);
+    const subcategoryName = subcategory?.name || "-";
+
+    return {
+      title: product.title || productId,
+      category: categoryName,
+      subcategory: subcategoryName
+    };
+  };
+
+  // Helper function to filter products based on search query
+  const filterProducts = (productList) => {
+    if (!searchQuery.trim()) return productList;
+
+    const query = searchQuery.toLowerCase().trim();
+    return productList.filter((product) => {
+      const productDetails = getProductDetails(product.productId);
+      const title = (productDetails?.title || product.productId || "").toLowerCase();
+      const category = (productDetails?.category || "").toLowerCase();
+      const subcategory = (productDetails?.subcategory || "").toLowerCase();
+      const productId = (product.productId || "").toLowerCase();
+
+      return (
+        title.includes(query) ||
+        category.includes(query) ||
+        subcategory.includes(query) ||
+        productId.includes(query)
+      );
+    });
+  };
+
+  const fetchAnalytics = async () => {
+    try {
+      setAnalyticsLoading(true);
+
+      // Build query parameters with time filter - always include it for consistency
+      const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+
+      console.log(`Fetching analytics with time filter: ${timeFilter}`);
+
+      const [dashboard, revenue, purchases, users] = await Promise.all([
+        fetch(`${API_URL}/analytics/dashboard${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/revenue${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/purchases${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/users${timeParam}`).then(r => r.json())
+      ]);
+
+      setDashboardData(dashboard);
+      setRevenueData(revenue);
+      setPurchaseData(purchases);
+      setUserData(users);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+    setSearchQuery(""); // Clear search when switching tabs
+  };
 
   return (
     <>
@@ -202,10 +236,72 @@ function Dashboard() {
           </div>
         }
       />
+      <style>{`
+        @media (max-width: 768px) {
+          .dashboard-table-wrapper {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            margin: 0 -10px;
+            padding: 0 10px;
+          }
+          .dashboard-table-wrapper table {
+            min-width: 600px;
+          }
+          .dashboard-card-header {
+            flex-direction: column !important;
+          }
+          .dashboard-card-header > div:first-child {
+            margin-bottom: 12px !important;
+          }
+          .analytics-section {
+            padding: 10px 5px !important;
+          }
+          .MuiCard-root {
+            margin-bottom: 15px;
+          }
+          .MuiCardContent-root {
+            padding: 12px !important;
+          }
+        }
+        @media (max-width: 576px) {
+          .card-stats .numbers {
+            text-align: left;
+          }
+          .card-stats .icon-big {
+            font-size: 2em;
+          }
+          .card-stats .card-category {
+            font-size: 11px !important;
+          }
+          .card-stats h3 {
+            font-size: 1.3rem !important;
+          }
+          .MuiButton-root {
+            font-size: 0.7rem !important;
+            padding: 4px 8px !important;
+            min-width: 70px !important;
+          }
+          .MuiTab-root {
+            font-size: 0.7rem !important;
+            min-width: 70px !important;
+            padding: 8px 10px !important;
+          }
+          .MuiTypography-h4 {
+            font-size: 1.2rem !important;
+          }
+          .MuiTypography-body1 {
+            font-size: 0.8rem !important;
+          }
+          .MuiChip-root {
+            font-size: 0.65rem !important;
+            height: 20px !important;
+          }
+        }
+      `}</style>
       <div className="content">
         <Row>
-          <Col lg="3" md="6">
-            <Card className="card-stats">
+          <Col xs="12" sm="6" lg="3" md="6">
+            <Card className="card-stats" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -215,18 +311,23 @@ function Dashboard() {
                   </Col>
                   <Col xs="7">
                     <div className="numbers">
-                      <p className="card-category">TOTAL ORDERS</p>
-                      <CardTitle tag="h3">{totalStats.totalOrders}</CardTitle>
+                      <p className="card-category" style={{ fontSize: '12px', marginBottom: '5px' }}>TOTAL ORDERS</p>
+                      {loading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '30px' }}>
+                          <Spinner color="warning" size="sm" />
+                        </div>
+                      ) : (
+                        <CardTitle tag="h3" style={{ fontSize: '1.5rem', marginBottom: 0 }}>{totalStats.totalOrders}</CardTitle>
+                      )}
                     </div>
                   </Col>
                 </Row>
               </CardBody>
-
             </Card>
           </Col>
 
-          <Col lg="3" md="6">
-            <Card className="card-stats">
+          <Col xs="12" sm="6" lg="3" md="6">
+            <Card className="card-stats" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -236,23 +337,28 @@ function Dashboard() {
                   </Col>
                   <Col xs="7">
                     <div className="numbers">
-                      <p className="card-category">TOTAL SALES</p>
-                      <CardTitle tag="h3">
-                        ${Number(totalStats.totalSales).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}
-                      </CardTitle>
+                      <p className="card-category" style={{ fontSize: '12px', marginBottom: '5px' }}>TOTAL SALES</p>
+                      {loading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '30px' }}>
+                          <Spinner color="success" size="sm" />
+                        </div>
+                      ) : (
+                        <CardTitle tag="h3" style={{ fontSize: '1.5rem', marginBottom: 0 }}>
+                          ${Number(totalStats.totalSales).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </CardTitle>
+                      )}
                     </div>
                   </Col>
                 </Row>
               </CardBody>
-
             </Card>
           </Col>
 
-          <Col lg="3" md="6">
-            <Card className="card-stats">
+          <Col xs="12" sm="6" lg="3" md="6">
+            <Card className="card-stats" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -262,23 +368,28 @@ function Dashboard() {
                   </Col>
                   <Col xs="7">
                     <div className="numbers">
-                      <p className="card-category">TOTAL COST</p>
-                      <CardTitle tag="h3">
-                        ${Number(totalStats.totalCost).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2
-                        })}
-                      </CardTitle>
+                      <p className="card-category" style={{ fontSize: '12px', marginBottom: '5px' }}>TOTAL COST</p>
+                      {loading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '30px' }}>
+                          <Spinner color="danger" size="sm" />
+                        </div>
+                      ) : (
+                        <CardTitle tag="h3" style={{ fontSize: '1.5rem', marginBottom: 0 }}>
+                          ${Number(totalStats.totalCost).toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                          })}
+                        </CardTitle>
+                      )}
                     </div>
                   </Col>
                 </Row>
               </CardBody>
-
             </Card>
           </Col>
 
-          <Col lg="3" md="6">
-            <Card className="card-stats">
+          <Col xs="12" sm="6" lg="3" md="6">
+            <Card className="card-stats" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -288,45 +399,750 @@ function Dashboard() {
                   </Col>
                   <Col xs="7">
                     <div className="numbers">
-                      <p className="card-category">TOTAL USERS</p>
-                      <CardTitle tag="h3">
-                        ${Users}
-                      </CardTitle>
+                      <p className="card-category" style={{ fontSize: '12px', marginBottom: '5px' }}>TOTAL USERS</p>
+                      {loading ? (
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '30px' }}>
+                          <Spinner color="primary" size="sm" />
+                        </div>
+                      ) : (
+                        <CardTitle tag="h3" style={{ fontSize: '1.5rem', marginBottom: 0 }}>
+                          {Users}
+                        </CardTitle>
+                      )}
                     </div>
                   </Col>
                 </Row>
               </CardBody>
-
             </Card>
           </Col>
         </Row>
+
+        {/* Analytics Section */}
         <Row>
           <Col md={12}>
-            <Card>
-              <CardHeader>
-                <h5 className="card-category">Orders</h5>
-                <CardTitle tag="h4">Latest Succeeded Orders</CardTitle>
-              </CardHeader>
-              <CardBody>
-                {loading ? (
-                  <div style={{ textAlign: "center", padding: "20px" }}>
-                    <Spinner color="primary" />
-                    <p>Loading orders...</p>
-                  </div>
-                ) : (
-                  <DataTable
-                    columns={columns}
-                    data={latestSucceededOrders}
-                    responsive
-                    pagination
-                    paginationPerPage={100}
-                    paginationRowsPerPageOptions={[100, 200, 300, 500, 1000]}
-                    highlightOnHover
-                  />
-                )}
-              </CardBody>
-            </Card>
+            <div style={{ padding: "15px 10px" }} className="analytics-section">
+              {/* Time Filter Buttons */}
+              <Box
+                display="flex"
+                gap={1}
+                mb={3}
+                flexWrap="wrap"
+                style={{
+                  gap: '8px'
+                }}
+              >
+                <MUIButton
+                  variant={timeFilter === "all" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setTimeFilter("all")}
+                  size="small"
+                >
+                  All Time
+                </MUIButton>
+                <MUIButton
+                  variant={timeFilter === "daily" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setTimeFilter("daily")}
+                  size="small"
+                >
+                  Today
+                </MUIButton>
+                <MUIButton
+                  variant={timeFilter === "weekly" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setTimeFilter("weekly")}
+                  size="small"
+                >
+                  Last 7 Days
+                </MUIButton>
+                <MUIButton
+                  variant={timeFilter === "monthly" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setTimeFilter("monthly")}
+                  size="small"
+                >
+                  This Month
+                </MUIButton>
+                <MUIButton
+                  variant={timeFilter === "yearly" ? "contained" : "outlined"}
+                  color="primary"
+                  onClick={() => setTimeFilter("yearly")}
+                  size="small"
+                >
+                  This Year
+                </MUIButton>
+              </Box>
+
+              {/* Analytics Key Metrics Row 2 - Tracking Events */}
+              <Grid container spacing={2} style={{ marginBottom: 20 }}>
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard style={{ background: '#f0f7ff', height: '100%' }}>
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Total Events Tracked
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.totalEvents || 0}
+                      </Typography>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
+
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard style={{ background: '#fff4e6', height: '100%' }}>
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Web Visits
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.deviceBreakdown?.web || 0}
+                      </Typography>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
+
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard style={{ background: '#e8f5e9', height: '100%' }}>
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Mobile Visits
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.deviceBreakdown?.mobile || 0}
+                      </Typography>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
+
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard style={{ background: '#fce4ec', height: '100%' }}>
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Product Views
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.mostViewedProducts?.reduce((sum, p) => sum + p.views, 0) || 0}
+                      </Typography>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
+              </Grid>
+
+              {/* Tabs for Different Analytics Views */}
+              <Paper style={{ marginBottom: 15, overflowX: 'auto' }}>
+                <Tabs
+                  value={activeTab}
+                  onChange={handleTabChange}
+                  indicatorColor="primary"
+                  textColor="primary"
+                  variant="scrollable"
+                  scrollButtons="auto"
+                >
+                  <Tab label="Product Views" />
+                  <Tab label="Purchases" />
+                  <Tab label="Cart Additions" />
+                  <Tab label="Page Views" />
+                  <Tab label="Categories" />
+                  <Tab label="Revenue" />
+                </Tabs>
+              </Paper>
+
+              {analyticsLoading ? (
+                <Box display="flex" justifyContent="center" alignItems="center" minHeight="40vh">
+                  <CircularProgress />
+                </Box>
+              ) : (
+                <>
+                  {/* Tab 1: Most Viewed Products */}
+                  {activeTab === 0 && (
+                    <Grid container spacing={2}>
+                      <Grid item xs={12}>
+                        <MUICard>
+                          <Box className="dashboard-card-header" style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            padding: '12px 16px',
+                            borderBottom: '2px solid #1976d2'
+                          }}>
+                            <Box style={{ marginBottom: '12px' }}>
+                              <Typography variant="h6" style={{ fontSize: '1.1rem', marginBottom: '4px' }}>
+                                Most Viewed Products
+                              </Typography>
+                              <Typography variant="body2" color="textSecondary" style={{ fontSize: '0.75rem' }}>
+                                {dashboardData?.mostViewedProducts?.length || 0} products tracked - Showing products that users clicked on
+                              </Typography>
+                            </Box>
+                            <TextField
+                              placeholder="Search products..."
+                              variant="outlined"
+                              size="small"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              InputProps={{
+                                startAdornment: (
+                                  <InputAdornment position="start">
+                                    <FontAwesomeIcon icon={faSearch} />
+                                  </InputAdornment>
+                                ),
+                              }}
+                              style={{
+                                width: '100%'
+                              }}
+                            />
+                          </Box>
+                          <CardContent style={{ padding: 0 }}>
+                            {(() => {
+                              const filteredProducts = filterProducts(dashboardData?.mostViewedProducts || []);
+                              return filteredProducts.length > 0 ? (
+                                <Box className="dashboard-table-wrapper" style={{ overflowX: 'auto', width: '100%' }}>
+                                  <MUITable style={{ minWidth: 650 }}>
+                                    <TableHead>
+                                      <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                                        <TableCell style={{ fontWeight: 'bold', padding: '8px', fontSize: '0.75rem' }}>#</TableCell>
+                                        <TableCell style={{ fontWeight: 'bold', padding: '8px', fontSize: '0.75rem' }}>Product Title</TableCell>
+                                        <TableCell className="d-none d-md-table-cell" style={{ fontWeight: 'bold', padding: '8px', fontSize: '0.75rem' }}>Category</TableCell>
+                                        <TableCell className="d-none d-lg-table-cell" style={{ fontWeight: 'bold', padding: '8px', fontSize: '0.75rem' }}>Subcategory</TableCell>
+                                        <TableCell align="right" style={{ fontWeight: 'bold', padding: '8px', fontSize: '0.75rem' }}>Total Views</TableCell>
+                                      </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                      {filteredProducts.map((product, index) => {
+                                        const productDetails = getProductDetails(product.productId);
+                                        return (
+                                          <TableRow
+                                            key={product.productId}
+                                            style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                                            hover
+                                          >
+                                            <TableCell style={{ padding: '8px' }}>
+                                              <Chip
+                                                label={index + 1}
+                                                size="small"
+                                                color={index < 3 ? "primary" : "default"}
+                                                style={{ minWidth: 30, fontSize: '0.7rem' }}
+                                              />
+                                            </TableCell>
+                                            <TableCell style={{ padding: '8px' }}>
+                                              <Typography variant="body1" style={{ fontWeight: 500, fontSize: '0.875rem' }}>
+                                                {productDetails?.title || product.productId}
+                                              </Typography>
+                                              <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem', display: 'block' }}>
+                                                ID: {product.productId}
+                                              </Typography>
+                                              <Box className="d-block d-md-none" style={{ marginTop: '4px' }}>
+                                                <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.7rem' }}>
+                                                  {productDetails?.category || "-"} {productDetails?.subcategory ? ` • ${productDetails.subcategory}` : ''}
+                                                </Typography>
+                                              </Box>
+                                            </TableCell>
+                                            <TableCell className="d-none d-md-table-cell" style={{ padding: '8px' }}>
+                                              <Typography variant="body2" style={{ fontSize: '0.75rem' }}>
+                                                {productDetails?.category || "-"}
+                                              </Typography>
+                                            </TableCell>
+                                            <TableCell className="d-none d-lg-table-cell" style={{ padding: '8px' }}>
+                                              <Typography variant="body2" style={{ fontSize: '0.75rem' }}>
+                                                {productDetails?.subcategory || "-"}
+                                              </Typography>
+                                            </TableCell>
+                                            <TableCell align="right" style={{ padding: '8px' }}>
+                                              <Chip
+                                                label={`${product.views} views`}
+                                                color="primary"
+                                                style={{ minWidth: 70, fontWeight: 'bold', fontSize: '0.7rem' }}
+                                              />
+                                            </TableCell>
+                                          </TableRow>
+                                        );
+                                      })}
+                                    </TableBody>
+                                  </MUITable>
+                                </Box>
+                              ) : (
+                                <Box p={8} textAlign="center">
+                                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                                    {searchQuery ? "🔍 No products found matching your search" : "📊 No Product Views Yet"}
+                                  </Typography>
+                                  <Typography color="textSecondary">
+                                    {searchQuery ? "Try adjusting your search query" : "Add trackProductView() to your product detail pages to start tracking."}
+                                  </Typography>
+                                </Box>
+                              );
+                            })()}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  {/* Tab 2: Most Purchased Products */}
+                  {activeTab === 1 && (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <MUICard>
+                          <MUICardHeader
+                            title="Most Purchased Products"
+                            subheader={`${purchaseData?.mostPurchased?.length || 0} products sold - Based on completed orders`}
+                            style={{ borderBottom: '2px solid #2e7d32' }}
+                            action={
+                              <TextField
+                                placeholder="Search products..."
+                                variant="outlined"
+                                size="small"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <FontAwesomeIcon icon={faSearch} />
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                style={{ minWidth: 250, marginRight: 16 }}
+                              />
+                            }
+                          />
+                          <CardContent style={{ padding: 0 }}>
+                            {(() => {
+                              const filteredProducts = filterProducts(purchaseData?.mostPurchased || []);
+                              return filteredProducts.length > 0 ? (
+                                <MUITable>
+                                  <TableHead>
+                                    <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                                      <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                                      <TableCell style={{ fontWeight: 'bold' }}>Product Name</TableCell>
+                                      <TableCell style={{ fontWeight: 'bold' }}>Category</TableCell>
+                                      <TableCell style={{ fontWeight: 'bold' }}>Subcategory</TableCell>
+                                      <TableCell align="right" style={{ fontWeight: 'bold' }}>Units Sold</TableCell>
+                                      <TableCell align="right" style={{ fontWeight: 'bold' }}>Total Revenue</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {filteredProducts.map((product, index) => {
+                                      const productDetails = getProductDetails(product.productId);
+                                      return (
+                                        <TableRow
+                                          key={product.productId}
+                                          style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                                          hover
+                                        >
+                                          <TableCell>
+                                            <Chip
+                                              label={index + 1}
+                                              size="small"
+                                              color={index < 3 ? "primary" : "default"}
+                                              style={{ minWidth: 40 }}
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body1" style={{ fontWeight: 500 }}>
+                                              {product.title || productDetails?.title || product.productId}
+                                            </Typography>
+                                            <Typography variant="caption" color="textSecondary">
+                                              ID: {product.productId}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body2">
+                                              {productDetails?.category || "-"}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body2">
+                                              {productDetails?.subcategory || "-"}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell align="right">
+                                            <Chip
+                                              label={`${product.count} units`}
+                                              style={{ backgroundColor: '#e3f2fd', minWidth: 100 }}
+                                            />
+                                          </TableCell>
+                                          <TableCell align="right">
+                                            <Typography
+                                              variant="h6"
+                                              style={{ color: '#2e7d32', fontWeight: 'bold' }}
+                                            >
+                                              ${product.revenue.toFixed(2)}
+                                            </Typography>
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </MUITable>
+                              ) : (
+                                <Box p={8} textAlign="center">
+                                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                                    {searchQuery ? "🔍 No products found matching your search" : "🛒 No Purchases Yet"}
+                                  </Typography>
+                                  <Typography color="textSecondary">
+                                    {searchQuery ? "Try adjusting your search query" : "Purchase data comes from completed orders."}
+                                  </Typography>
+                                </Box>
+                              );
+                            })()}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  {/* Tab 3: Most Added to Cart */}
+                  {activeTab === 2 && (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <MUICard>
+                          <MUICardHeader
+                            title="Most Added to Cart"
+                            subheader={`${dashboardData?.mostAddedToCart?.length || 0} products tracked - Products users are interested in`}
+                            style={{ borderBottom: '2px solid #f50057' }}
+                            action={
+                              <TextField
+                                placeholder="Search products..."
+                                variant="outlined"
+                                size="small"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                                InputProps={{
+                                  startAdornment: (
+                                    <InputAdornment position="start">
+                                      <FontAwesomeIcon icon={faSearch} />
+                                    </InputAdornment>
+                                  ),
+                                }}
+                                style={{ minWidth: 250, marginRight: 16 }}
+                              />
+                            }
+                          />
+                          <CardContent style={{ padding: 0 }}>
+                            {(() => {
+                              const filteredProducts = filterProducts(dashboardData?.mostAddedToCart || []);
+                              return filteredProducts.length > 0 ? (
+                                <MUITable>
+                                  <TableHead>
+                                    <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                                      <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                                      <TableCell style={{ fontWeight: 'bold' }}>Product Title</TableCell>
+                                      <TableCell style={{ fontWeight: 'bold' }}>Category</TableCell>
+                                      <TableCell style={{ fontWeight: 'bold' }}>Subcategory</TableCell>
+                                      <TableCell align="right" style={{ fontWeight: 'bold' }}>Times Added</TableCell>
+                                    </TableRow>
+                                  </TableHead>
+                                  <TableBody>
+                                    {filteredProducts.map((product, index) => {
+                                      const productDetails = getProductDetails(product.productId);
+                                      return (
+                                        <TableRow
+                                          key={product.productId}
+                                          style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                                          hover
+                                        >
+                                          <TableCell>
+                                            <Chip
+                                              label={index + 1}
+                                              size="small"
+                                              color={index < 3 ? "secondary" : "default"}
+                                              style={{ minWidth: 40 }}
+                                            />
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body1" style={{ fontWeight: 500 }}>
+                                              {productDetails?.title || product.productId}
+                                            </Typography>
+                                            <Typography variant="caption" color="textSecondary">
+                                              ID: {product.productId}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body2">
+                                              {productDetails?.category || "-"}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell>
+                                            <Typography variant="body2">
+                                              {productDetails?.subcategory || "-"}
+                                            </Typography>
+                                          </TableCell>
+                                          <TableCell align="right">
+                                            <Chip
+                                              label={`${product.adds} times`}
+                                              color="secondary"
+                                              style={{ minWidth: 100, fontWeight: 'bold' }}
+                                            />
+                                          </TableCell>
+                                        </TableRow>
+                                      );
+                                    })}
+                                  </TableBody>
+                                </MUITable>
+                              ) : (
+                                <Box p={8} textAlign="center">
+                                  <Typography variant="h6" color="textSecondary" gutterBottom>
+                                    {searchQuery ? "🔍 No products found matching your search" : "🛒 No Cart Additions Yet"}
+                                  </Typography>
+                                  <Typography color="textSecondary">
+                                    {searchQuery ? "Try adjusting your search query" : "Add trackAddToCart() to your cart buttons to start tracking."}
+                                  </Typography>
+                                </Box>
+                              );
+                            })()}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  {/* Tab 4: Page Views */}
+                  {activeTab === 3 && (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <MUICard>
+                          <MUICardHeader
+                            title="Page Views"
+                            subheader={`${dashboardData?.pageViews?.length || 0} pages tracked - Most visited pages on your site`}
+                            style={{ borderBottom: '2px solid #9c27b0' }}
+                          />
+                          <CardContent style={{ padding: 0 }}>
+                            {dashboardData?.pageViews?.length > 0 ? (
+                              <MUITable>
+                                <TableHead>
+                                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                                    <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                                    <TableCell style={{ fontWeight: 'bold' }}>Page Name</TableCell>
+                                    <TableCell align="right" style={{ fontWeight: 'bold' }}>Total Views</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {dashboardData.pageViews.map((page, index) => (
+                                    <TableRow
+                                      key={index}
+                                      style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                                      hover
+                                    >
+                                      <TableCell>
+                                        <Chip
+                                          label={index + 1}
+                                          size="small"
+                                          color={index < 3 ? "primary" : "default"}
+                                          style={{ minWidth: 40 }}
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography variant="body1" style={{ fontWeight: 500 }}>
+                                          {page.page}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        <Chip
+                                          label={`${page.views} views`}
+                                          style={{ backgroundColor: '#e1bee7', minWidth: 100, fontWeight: 'bold' }}
+                                        />
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </MUITable>
+                            ) : (
+                              <Box p={8} textAlign="center">
+                                <Typography variant="h6" color="textSecondary" gutterBottom>
+                                  📄 No Page Views Yet
+                                </Typography>
+                                <Typography color="textSecondary">
+                                  Add trackPageView() to your pages to start tracking.
+                                </Typography>
+                              </Box>
+                            )}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  {/* Tab 5: Categories & Subcategories */}
+                  {activeTab === 4 && (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12} lg={6}>
+                        <MUICard style={{ height: '100%' }}>
+                          <MUICardHeader
+                            title="Most Viewed Categories"
+                            subheader={`${dashboardData?.mostViewedCategories?.length || 0} categories tracked`}
+                            style={{ borderBottom: '2px solid #ff9800' }}
+                          />
+                          <CardContent style={{ padding: 0 }}>
+                            {dashboardData?.mostViewedCategories?.length > 0 ? (
+                              <MUITable>
+                                <TableHead>
+                                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                                    <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                                    <TableCell style={{ fontWeight: 'bold' }}>Category ID</TableCell>
+                                    <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {dashboardData.mostViewedCategories.map((category, index) => (
+                                    <TableRow
+                                      key={category.categoryId}
+                                      style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                                      hover
+                                    >
+                                      <TableCell>
+                                        <Chip
+                                          label={index + 1}
+                                          size="small"
+                                          style={{ minWidth: 40 }}
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography variant="body1" style={{ fontWeight: 500 }}>
+                                          {category.categoryId}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        <Chip
+                                          label={`${category.views} views`}
+                                          style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
+                                        />
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </MUITable>
+                            ) : (
+                              <Box p={8} textAlign="center">
+                                <Typography variant="h6" color="textSecondary" gutterBottom>
+                                  📂 No Category Views Yet
+                                </Typography>
+                                <Typography color="textSecondary">
+                                  Add trackCategoryView() to category pages.
+                                </Typography>
+                              </Box>
+                            )}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+
+                      <Grid item xs={12} lg={6}>
+                        <MUICard style={{ height: '100%' }}>
+                          <MUICardHeader
+                            title="Most Viewed Subcategories"
+                            subheader={`${dashboardData?.mostViewedSubCategories?.length || 0} subcategories tracked`}
+                            style={{ borderBottom: '2px solid #ff9800' }}
+                          />
+                          <CardContent style={{ padding: 0 }}>
+                            {dashboardData?.mostViewedSubCategories?.length > 0 ? (
+                              <MUITable>
+                                <TableHead>
+                                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                                    <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                                    <TableCell style={{ fontWeight: 'bold' }}>Subcategory ID</TableCell>
+                                    <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
+                                  </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                  {dashboardData.mostViewedSubCategories.map((subCat, index) => (
+                                    <TableRow
+                                      key={subCat.subCategoryId}
+                                      style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                                      hover
+                                    >
+                                      <TableCell>
+                                        <Chip
+                                          label={index + 1}
+                                          size="small"
+                                          style={{ minWidth: 40 }}
+                                        />
+                                      </TableCell>
+                                      <TableCell>
+                                        <Typography variant="body1" style={{ fontWeight: 500 }}>
+                                          {subCat.subCategoryId}
+                                        </Typography>
+                                      </TableCell>
+                                      <TableCell align="right">
+                                        <Chip
+                                          label={`${subCat.views} views`}
+                                          style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
+                                        />
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </MUITable>
+                            ) : (
+                              <Box p={8} textAlign="center">
+                                <Typography variant="h6" color="textSecondary" gutterBottom>
+                                  📑 No Subcategory Views Yet
+                                </Typography>
+                                <Typography color="textSecondary">
+                                  Add trackSubCategoryView() to subcategory pages.
+                                </Typography>
+                              </Box>
+                            )}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
+
+                  {/* Tab 6: Revenue */}
+                  {activeTab === 5 && (
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <MUICard>
+                          <MUICardHeader
+                            title="Revenue Over Time"
+                            subheader="Daily revenue trends from orders"
+                            style={{ borderBottom: '2px solid #00bcd4' }}
+                          />
+                          <CardContent>
+                            <Line
+                              data={{
+                                labels: revenueData?.revenueByDate?.map(d => d.date) || [],
+                                datasets: [{
+                                  label: 'Revenue ($)',
+                                  data: revenueData?.revenueByDate?.map(d => parseFloat(d.revenue)) || [],
+                                  borderColor: 'rgb(75, 192, 192)',
+                                  backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                  tension: 0.1,
+                                  fill: true
+                                }]
+                              }}
+                              options={{
+                                responsive: true,
+                                maintainAspectRatio: true,
+                                plugins: {
+                                  legend: {
+                                    position: 'top',
+                                  },
+                                  title: {
+                                    display: false
+                                  }
+                                },
+                                scales: {
+                                  y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                      callback: function (value) {
+                                        return '$' + value.toFixed(0);
+                                      }
+                                    }
+                                  }
+                                }
+                              }}
+                            />
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
+                </>
+              )}
+            </div>
           </Col>
+        </Row>
+
+        {/* Tasks Section - Commented Out */}
+        {/* <Row>
           <Col md={12}>
             <Card className="card-tasks">
               <CardHeader>
@@ -483,7 +1299,7 @@ function Dashboard() {
               </CardFooter>
             </Card>
           </Col>
-        </Row>
+        </Row> */}
       </div>
     </>
   );

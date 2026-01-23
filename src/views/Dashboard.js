@@ -1020,7 +1020,7 @@ function Dashboard() {
                   )}
 
                   {/* Tab 5: Categories & Subcategories */}
-                  {activeTab === 4 && (
+                  {/* {activeTab === 4 && (
                     <Grid container spacing={3}>
                       <Grid item xs={12} lg={6}>
                         <MUICard style={{ height: '100%' }}>
@@ -1142,8 +1142,138 @@ function Dashboard() {
                         </MUICard>
                       </Grid>
                     </Grid>
-                  )}
+                  )} */}
+{activeTab === 4 && (
+  <Grid container spacing={3}>
+    {/* Most Viewed Categories */}
+    <Grid item xs={12} lg={6}>
+      <MUICard style={{ height: '100%' }}>
+        <MUICardHeader
+          title="Most Viewed Categories"
+          subheader={`${dashboardData?.mostViewedCategories?.length || 0} categories tracked`}
+          style={{ borderBottom: '2px solid #ff9800' }}
+        />
+        <CardContent style={{ padding: 0 }}>
+          {dashboardData?.mostViewedCategories?.length > 0 ? (
+            <MUITable>
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                  <TableCell style={{ fontWeight: 'bold' }}>Category</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {dashboardData.mostViewedCategories.map((category, index) => (
+                  <TableRow
+                    key={category.categoryId}
+                    style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                    hover
+                  >
+                    <TableCell>
+                      <Chip
+                        label={index + 1}
+                        size="small"
+                        style={{ minWidth: 40 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" style={{ fontWeight: 500 }}>
+                        {category.name || category.categoryId}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.75rem' }}>
+                        ID: {category.categoryId}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={`${category.views} views`}
+                        style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MUITable>
+          ) : (
+            <Box p={8} textAlign="center">
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                📂 No Category Views Yet
+              </Typography>
+              <Typography color="textSecondary">
+                Add trackCategoryView() to category pages.
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </MUICard>
+    </Grid>
 
+    {/* Most Viewed Subcategories */}
+    <Grid item xs={12} lg={6}>
+      <MUICard style={{ height: '100%' }}>
+        <MUICardHeader
+          title="Most Viewed Subcategories"
+          subheader={`${dashboardData?.mostViewedSubCategories?.length || 0} subcategories tracked`}
+          style={{ borderBottom: '2px solid #ff9800' }}
+        />
+        <CardContent style={{ padding: 0 }}>
+          {dashboardData?.mostViewedSubCategories?.length > 0 ? (
+            <MUITable>
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#f5f5f5' }}>
+                  <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
+                  <TableCell style={{ fontWeight: 'bold' }}>Subcategory</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {dashboardData.mostViewedSubCategories.map((subCat, index) => (
+                  <TableRow
+                    key={subCat.subCategoryId}
+                    style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
+                    hover
+                  >
+                    <TableCell>
+                      <Chip
+                        label={index + 1}
+                        size="small"
+                        style={{ minWidth: 40 }}
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body1" style={{ fontWeight: 500 }}>
+                        {subCat.name || subCat.subCategoryId}
+                      </Typography>
+                      <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.75rem' }}>
+                        ID: {subCat.subCategoryId}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={`${subCat.views} views`}
+                        style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
+                      />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MUITable>
+          ) : (
+            <Box p={8} textAlign="center">
+              <Typography variant="h6" color="textSecondary" gutterBottom>
+                📑 No Subcategory Views Yet
+              </Typography>
+              <Typography color="textSecondary">
+                Add trackSubCategoryView() to subcategory pages.
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </MUICard>
+    </Grid>
+  </Grid>
+)}
                   {/* Tab 6: Revenue */}
                   {activeTab === 5 && (
                     <Grid container spacing={3}>
@@ -1495,7 +1625,7 @@ function Dashboard() {
                         </Typography>
                       </TableCell>
                     </TableRow>
-                    {productViewsBreakdown.mobile && (
+                    {/* {productViewsBreakdown.mobile && (
                       <TableRow>
                         <TableCell>
                           <Box display="flex" alignItems="center">
@@ -1525,7 +1655,7 @@ function Dashboard() {
                           </Typography>
                         </TableCell>
                       </TableRow>
-                    )}
+                    )} */}
                   </TableBody>
                 </MUITable>
               </Box>

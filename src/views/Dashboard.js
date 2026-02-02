@@ -37,9 +37,12 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  IconButton
+  IconButton,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@material-ui/core';
-import { Close as CloseIcon } from '@material-ui/icons';
+import { Close as CloseIcon, ExpandMore as ExpandMoreIcon } from '@material-ui/icons';
 
 // core components
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
@@ -79,7 +82,25 @@ function Dashboard() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [productViewsBreakdown, setProductViewsBreakdown] = useState(null);
   const [loadingBreakdown, setLoadingBreakdown] = useState(false);
+const [cartModalOpen, setCartModalOpen] = useState(false);
+const [selectedCartProduct, setSelectedCartProduct] = useState(null);
+const [cartBreakdown, setCartBreakdown] = useState(null);
+const [loadingCartBreakdown, setLoadingCartBreakdown] = useState(false);
 
+const [pageViewModalOpen, setPageViewModalOpen] = useState(false);
+const [selectedPage, setSelectedPage] = useState(null);
+const [pageViewBreakdown, setPageViewBreakdown] = useState(null);
+const [loadingPageViewBreakdown, setLoadingPageViewBreakdown] = useState(false);
+
+const [categoryModalOpen, setCategoryModalOpen] = useState(false);
+const [selectedCategory, setSelectedCategory] = useState(null);
+const [categoryBreakdown, setCategoryBreakdown] = useState(null);
+const [loadingCategoryBreakdown, setLoadingCategoryBreakdown] = useState(false);
+
+const [subcategoryModalOpen, setSubcategoryModalOpen] = useState(false);
+const [selectedSubcategory, setSelectedSubcategory] = useState(null);
+const [subcategoryBreakdown, setSubcategoryBreakdown] = useState(null);
+const [loadingSubcategoryBreakdown, setLoadingSubcategoryBreakdown] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -233,44 +254,236 @@ function Dashboard() {
     setSearchQuery(""); // Clear search when switching tabs
   };
 
-  const handleViewsClick = async (product) => {
-    setSelectedProduct(product);
-    setViewsModalOpen(true);
-    setLoadingBreakdown(true);
+  // const handleViewsClick = async (product) => {
+  //   setSelectedProduct(product);
+  //   setViewsModalOpen(true);
+  //   setLoadingBreakdown(true);
     
-    try {
-      // Fetch platform-specific view breakdown for this product
-      const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-      const response = await fetch(`${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
-      const data = await response.json();
+  //   try {
+  //     // Fetch platform-specific view breakdown for this product
+  //     const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+  //     const response = await fetch(`${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
+  //     const data = await response.json();
       
-      // If API returns platform breakdown, use it; otherwise create a default structure
-      if (data && (data.platformBreakdown || data.deviceBreakdown)) {
-        setProductViewsBreakdown(data.platformBreakdown || data.deviceBreakdown);
-      } else {
-        // Fallback: create breakdown from available data or use defaults
-        // This assumes the API might not have platform-specific data yet
-        setProductViewsBreakdown({
-          web: data?.web || Math.floor(product.views * 0.6) || 0,
-          ios: data?.ios || Math.floor(product.views * 0.25) || 0,
-          android: data?.android || Math.floor(product.views * 0.15) || 0,
-          total: product.views
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching product views breakdown:", error);
-      // Fallback breakdown if API call fails
+  //     // If API returns platform breakdown, use it; otherwise create a default structure
+  //     if (data && (data.platformBreakdown || data.deviceBreakdown)) {
+  //       setProductViewsBreakdown(data.platformBreakdown || data.deviceBreakdown);
+  //     } else {
+  //       // Fallback: create breakdown from available data or use defaults
+  //       // This assumes the API might not have platform-specific data yet
+  //       setProductViewsBreakdown({
+  //         web: data?.web || Math.floor(product.views * 0.6) || 0,
+  //         ios: data?.ios || Math.floor(product.views * 0.25) || 0,
+  //         android: data?.android || Math.floor(product.views * 0.15) || 0,
+  //         total: product.views
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching product views breakdown:", error);
+  //     // Fallback breakdown if API call fails
+  //     setProductViewsBreakdown({
+  //       web: Math.floor(product.views * 0.6) || 0,
+  //       ios: Math.floor(product.views * 0.25) || 0,
+  //       android: Math.floor(product.views * 0.15) || 0,
+  //       total: product.views
+  //     });
+  //   } finally {
+  //     setLoadingBreakdown(false);
+  //   }
+  // };
+const handleViewsClick = async (product) => {
+  setSelectedProduct(product);
+  setViewsModalOpen(true);
+  setLoadingBreakdown(true);
+  
+  try {
+    // Fetch platform-specific view breakdown with user details for this product
+    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    const response = await fetch(`${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
+    const data = await response.json();    
+    if (data && (data.web || data.ios || data.android)) {
+      setProductViewsBreakdown(data);
+    } else {
+      // Fallback structure
       setProductViewsBreakdown({
-        web: Math.floor(product.views * 0.6) || 0,
-        ios: Math.floor(product.views * 0.25) || 0,
-        android: Math.floor(product.views * 0.15) || 0,
-        total: product.views
+        total: product.views,
+        web: { total: 0, users: [] },
+        ios: { total: 0, users: [] },
+        android: { total: 0, users: [] }
       });
-    } finally {
-      setLoadingBreakdown(false);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching product views breakdown:", error);
+    setProductViewsBreakdown({
+      total: product.views,
+      web: { total: 0, users: [] },
+      ios: { total: 0, users: [] },
+      android: { total: 0, users: [] }
+    });
+  } finally {
+    setLoadingBreakdown(false);
+  }
+};
 
+// Handler for Cart Additions
+const handleCartClick = async (product) => {
+  setSelectedCartProduct(product);
+  setCartModalOpen(true);
+  setLoadingCartBreakdown(true);
+  
+  try {
+    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    const response = await fetch(`${API_URL}/analytics/product/${product.productId}/cart${timeParam}`);
+    const data = await response.json();
+    
+    if (data && (data.web || data.ios || data.android)) {
+      setCartBreakdown(data);
+    } else {
+      setCartBreakdown({
+        total: product.adds,
+        web: { total: 0, users: [] },
+        ios: { total: 0, users: [] },
+        android: { total: 0, users: [] }
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching cart breakdown:", error);
+    setCartBreakdown({
+      total: product.adds,
+      web: { total: 0, users: [] },
+      ios: { total: 0, users: [] },
+      android: { total: 0, users: [] }
+    });
+  } finally {
+    setLoadingCartBreakdown(false);
+  }
+};
+
+const handleCloseCartModal = () => {
+  setCartModalOpen(false);
+  setSelectedCartProduct(null);
+  setCartBreakdown(null);
+};
+
+// Handler for Page Views
+const handlePageViewClick = async (page) => {
+  setSelectedPage(page);
+  setPageViewModalOpen(true);
+  setLoadingPageViewBreakdown(true);
+  
+  try {
+    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    const response = await fetch(`${API_URL}/analytics/page/${encodeURIComponent(page.page)}/views${timeParam}`);
+    const data = await response.json();
+    
+    if (data && (data.web || data.ios || data.android)) {
+      setPageViewBreakdown(data);
+    } else {
+      setPageViewBreakdown({
+        total: page.views,
+        web: { total: 0, users: [] },
+        ios: { total: 0, users: [] },
+        android: { total: 0, users: [] }
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching page view breakdown:", error);
+    setPageViewBreakdown({
+      total: page.views,
+      web: { total: 0, users: [] },
+      ios: { total: 0, users: [] },
+      android: { total: 0, users: [] }
+    });
+  } finally {
+    setLoadingPageViewBreakdown(false);
+  }
+};
+
+const handleClosePageViewModal = () => {
+  setPageViewModalOpen(false);
+  setSelectedPage(null);
+  setPageViewBreakdown(null);
+};
+
+// Handler for Categories
+const handleCategoryClick = async (category) => {
+  setSelectedCategory(category);
+  setCategoryModalOpen(true);
+  setLoadingCategoryBreakdown(true);
+  
+  try {
+    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    const response = await fetch(`${API_URL}/analytics/category/${category.categoryId}/views${timeParam}`);
+    const data = await response.json();
+    
+    if (data && (data.web || data.ios || data.android)) {
+      setCategoryBreakdown(data);
+    } else {
+      setCategoryBreakdown({
+        total: category.views,
+        web: { total: 0, users: [] },
+        ios: { total: 0, users: [] },
+        android: { total: 0, users: [] }
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching category breakdown:", error);
+    setCategoryBreakdown({
+      total: category.views,
+      web: { total: 0, users: [] },
+      ios: { total: 0, users: [] },
+      android: { total: 0, users: [] }
+    });
+  } finally {
+    setLoadingCategoryBreakdown(false);
+  }
+};
+
+const handleCloseCategoryModal = () => {
+  setCategoryModalOpen(false);
+  setSelectedCategory(null);
+  setCategoryBreakdown(null);
+};
+
+// Handler for Subcategories
+const handleSubcategoryClick = async (subcategory) => {
+  setSelectedSubcategory(subcategory);
+  setSubcategoryModalOpen(true);
+  setLoadingSubcategoryBreakdown(true);
+  
+  try {
+    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    const response = await fetch(`${API_URL}/analytics/subcategory/${subcategory.subCategoryId}/views${timeParam}`);
+    const data = await response.json();
+    
+    if (data && (data.web || data.ios || data.android)) {
+      setSubcategoryBreakdown(data);
+    } else {
+      setSubcategoryBreakdown({
+        total: subcategory.views,
+        web: { total: 0, users: [] },
+        ios: { total: 0, users: [] },
+        android: { total: 0, users: [] }
+      });
+    }
+  } catch (error) {
+    console.error("Error fetching subcategory breakdown:", error);
+    setSubcategoryBreakdown({
+      total: subcategory.views,
+      web: { total: 0, users: [] },
+      ios: { total: 0, users: [] },
+      android: { total: 0, users: [] }
+    });
+  } finally {
+    setLoadingSubcategoryBreakdown(false);
+  }
+};
+
+const handleCloseSubcategoryModal = () => {
+  setSubcategoryModalOpen(false);
+  setSelectedSubcategory(null);
+  setSubcategoryBreakdown(null);
+};
   const handleCloseViewsModal = () => {
     setViewsModalOpen(false);
     setSelectedProduct(null);
@@ -925,11 +1138,13 @@ function Dashboard() {
                                             </Typography>
                                           </TableCell>
                                           <TableCell align="right">
-                                            <Chip
-                                              label={`${product.adds} times`}
-                                              color="secondary"
-                                              style={{ minWidth: 100, fontWeight: 'bold' }}
-                                            />
+                                          <Chip
+                                            label={`${product.adds} times`}
+                                            color="secondary"
+                                            onClick={() => handleCartClick(product)}
+                                            
+                                            style={{ minWidth: 100, fontWeight: 'bold', cursor: 'pointer' }}
+                                          />
                                           </TableCell>
                                         </TableRow>
                                       );
@@ -994,9 +1209,10 @@ function Dashboard() {
                                         </Typography>
                                       </TableCell>
                                       <TableCell align="right">
-                                        <Chip
+                                       <Chip
                                           label={`${page.views} views`}
-                                          style={{ backgroundColor: '#e1bee7', minWidth: 100, fontWeight: 'bold' }}
+                                          onClick={() => handlePageViewClick(page)}
+                                          style={{ backgroundColor: '#e1bee7', minWidth: 100, fontWeight: 'bold', cursor: 'pointer' }}
                                         />
                                       </TableCell>
                                     </TableRow>
@@ -1018,131 +1234,6 @@ function Dashboard() {
                       </Grid>
                     </Grid>
                   )}
-
-                  {/* Tab 5: Categories & Subcategories */}
-                  {/* {activeTab === 4 && (
-                    <Grid container spacing={3}>
-                      <Grid item xs={12} lg={6}>
-                        <MUICard style={{ height: '100%' }}>
-                          <MUICardHeader
-                            title="Most Viewed Categories"
-                            subheader={`${dashboardData?.mostViewedCategories?.length || 0} categories tracked`}
-                            style={{ borderBottom: '2px solid #ff9800' }}
-                          />
-                          <CardContent style={{ padding: 0 }}>
-                            {dashboardData?.mostViewedCategories?.length > 0 ? (
-                              <MUITable>
-                                <TableHead>
-                                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
-                                    <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
-                                    <TableCell style={{ fontWeight: 'bold' }}>Category ID</TableCell>
-                                    <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {dashboardData.mostViewedCategories.map((category, index) => (
-                                    <TableRow
-                                      key={category.categoryId}
-                                      style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
-                                      hover
-                                    >
-                                      <TableCell>
-                                        <Chip
-                                          label={index + 1}
-                                          size="small"
-                                          style={{ minWidth: 40 }}
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <Typography variant="body1" style={{ fontWeight: 500 }}>
-                                          {category.categoryId}
-                                        </Typography>
-                                      </TableCell>
-                                      <TableCell align="right">
-                                        <Chip
-                                          label={`${category.views} views`}
-                                          style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
-                                        />
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </MUITable>
-                            ) : (
-                              <Box p={8} textAlign="center">
-                                <Typography variant="h6" color="textSecondary" gutterBottom>
-                                  📂 No Category Views Yet
-                                </Typography>
-                                <Typography color="textSecondary">
-                                  Add trackCategoryView() to category pages.
-                                </Typography>
-                              </Box>
-                            )}
-                          </CardContent>
-                        </MUICard>
-                      </Grid>
-
-                      <Grid item xs={12} lg={6}>
-                        <MUICard style={{ height: '100%' }}>
-                          <MUICardHeader
-                            title="Most Viewed Subcategories"
-                            subheader={`${dashboardData?.mostViewedSubCategories?.length || 0} subcategories tracked`}
-                            style={{ borderBottom: '2px solid #ff9800' }}
-                          />
-                          <CardContent style={{ padding: 0 }}>
-                            {dashboardData?.mostViewedSubCategories?.length > 0 ? (
-                              <MUITable>
-                                <TableHead>
-                                  <TableRow style={{ backgroundColor: '#f5f5f5' }}>
-                                    <TableCell style={{ fontWeight: 'bold' }}>#</TableCell>
-                                    <TableCell style={{ fontWeight: 'bold' }}>Subcategory ID</TableCell>
-                                    <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
-                                  </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                  {dashboardData.mostViewedSubCategories.map((subCat, index) => (
-                                    <TableRow
-                                      key={subCat.subCategoryId}
-                                      style={{ backgroundColor: index % 2 === 0 ? 'white' : '#fafafa' }}
-                                      hover
-                                    >
-                                      <TableCell>
-                                        <Chip
-                                          label={index + 1}
-                                          size="small"
-                                          style={{ minWidth: 40 }}
-                                        />
-                                      </TableCell>
-                                      <TableCell>
-                                        <Typography variant="body1" style={{ fontWeight: 500 }}>
-                                          {subCat.subCategoryId}
-                                        </Typography>
-                                      </TableCell>
-                                      <TableCell align="right">
-                                        <Chip
-                                          label={`${subCat.views} views`}
-                                          style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
-                                        />
-                                      </TableCell>
-                                    </TableRow>
-                                  ))}
-                                </TableBody>
-                              </MUITable>
-                            ) : (
-                              <Box p={8} textAlign="center">
-                                <Typography variant="h6" color="textSecondary" gutterBottom>
-                                  📑 No Subcategory Views Yet
-                                </Typography>
-                                <Typography color="textSecondary">
-                                  Add trackSubCategoryView() to subcategory pages.
-                                </Typography>
-                              </Box>
-                            )}
-                          </CardContent>
-                        </MUICard>
-                      </Grid>
-                    </Grid>
-                  )} */}
 {activeTab === 4 && (
   <Grid container spacing={3}>
     {/* Most Viewed Categories */}
@@ -1186,10 +1277,12 @@ function Dashboard() {
                       </Typography>
                     </TableCell>
                     <TableCell align="right">
-                      <Chip
-                        label={`${category.views} views`}
-                        style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
-                      />
+                    <Chip
+                      label={`${category.views} views`}
+      
+                      onClick={() => handleCategoryClick(category)}
+                      style={{ backgroundColor: '#ffe0b2', minWidth: 100, cursor: 'pointer' }}
+                    />
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1252,7 +1345,8 @@ function Dashboard() {
                     <TableCell align="right">
                       <Chip
                         label={`${subCat.views} views`}
-                        style={{ backgroundColor: '#ffe0b2', minWidth: 100 }}
+                        onClick={() => handleSubcategoryClick(subCat)}
+                        style={{ backgroundColor: '#ffe0b2', minWidth: 100, cursor: 'pointer' }}
                       />
                     </TableCell>
                   </TableRow>
@@ -1519,160 +1613,1165 @@ function Dashboard() {
               </IconButton>
             </Box>
           </DialogTitle>
-          <DialogContent>
-            {loadingBreakdown ? (
-              <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
-                <CircularProgress />
+
+
+          <DialogContent dividers style={{ padding: 0 }}>
+  {loadingBreakdown ? (
+    <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+      <CircularProgress />
+    </Box>
+  ) : productViewsBreakdown ? (
+    <Box>
+      <Box style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+        <Typography variant="h6" style={{ fontSize: '1.1rem' }}>
+          Total Views: <strong>{productViewsBreakdown.total || selectedProduct?.views || 0}</strong>
+        </Typography>
+      </Box>
+      
+      {/* Web Platform Accordion */}
+      <Accordion defaultExpanded={productViewsBreakdown.web?.total > 0}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+            <Box display="flex" alignItems="center">
+              <Box
+                component="span"
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: '#1976d2',
+                  marginRight: 12
+                }}
+              />
+              <Typography variant="body1" style={{ fontWeight: 600 }}>Web</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+              <Chip
+                label={`${productViewsBreakdown.web?.total || 0} views`}
+                size="small"
+                style={{ backgroundColor: '#e3f2fd', fontWeight: 500 }}
+              />
+              <Typography variant="body2" color="textSecondary">
+                {productViewsBreakdown.total 
+                  ? `${((productViewsBreakdown.web?.total || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
+                  : '0%'}
+              </Typography>
+            </Box>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails style={{ padding: 0 }}>
+          {productViewsBreakdown.web?.users?.length > 0 ? (
+            <MUITable size="small">
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#fafafa' }}>
+                  <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productViewsBreakdown.web.users.map((user, idx) => (
+                  <TableRow key={idx} hover>
+                    <TableCell>
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        {user.username || 'Anonymous'}
+                      </Typography>
+                      {user.userId && user.userId !== 'anonymous' && (
+                        <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                          ID: {user.userId.substring(0, 8)}...
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={user.count}
+                        size="small"
+                        style={{ minWidth: 40, fontSize: '0.7rem' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="caption" color="textSecondary">
+                        {new Date(user.lastViewTimestamp).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MUITable>
+          ) : (
+            <Box p={3} textAlign="center">
+              <Typography variant="body2" color="textSecondary">
+                No web views recorded
+              </Typography>
+            </Box>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+      {/* iOS Platform Accordion */}
+      <Accordion defaultExpanded={productViewsBreakdown.ios?.total > 0}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+            <Box display="flex" alignItems="center">
+              <Box
+                component="span"
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: '#2e7d32',
+                  marginRight: 12
+                }}
+              />
+              <Typography variant="body1" style={{ fontWeight: 600 }}>iOS</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+              <Chip
+                label={`${productViewsBreakdown.ios?.total || 0} views`}
+                size="small"
+                style={{ backgroundColor: '#e8f5e9', fontWeight: 500 }}
+              />
+              <Typography variant="body2" color="textSecondary">
+                {productViewsBreakdown.total 
+                  ? `${((productViewsBreakdown.ios?.total || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
+                  : '0%'}
+              </Typography>
+            </Box>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails style={{ padding: 0 }}>
+          {productViewsBreakdown.ios?.users?.length > 0 ? (
+            <MUITable size="small">
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#fafafa' }}>
+                  <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productViewsBreakdown.ios.users.map((user, idx) => (
+                  <TableRow key={idx} hover>
+                    <TableCell>
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        {user.username || 'Anonymous'}
+                      </Typography>
+                      {user.userId && user.userId !== 'anonymous' && (
+                        <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                          ID: {user.userId.substring(0, 8)}...
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={user.count}
+                        size="small"
+                        style={{ minWidth: 40, fontSize: '0.7rem' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="caption" color="textSecondary">
+                        {new Date(user.lastViewTimestamp).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MUITable>
+          ) : (
+            <Box p={3} textAlign="center">
+              <Typography variant="body2" color="textSecondary">
+                No iOS views recorded
+              </Typography>
+            </Box>
+          )}
+        </AccordionDetails>
+      </Accordion>
+
+      {/* Android Platform Accordion */}
+      <Accordion defaultExpanded={productViewsBreakdown.android?.total > 0}>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+          <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+            <Box display="flex" alignItems="center">
+              <Box
+                component="span"
+                style={{
+                  width: 12,
+                  height: 12,
+                  borderRadius: '50%',
+                  backgroundColor: '#f50057',
+                  marginRight: 12
+                }}
+              />
+              <Typography variant="body1" style={{ fontWeight: 600 }}>Android</Typography>
+            </Box>
+            <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+              <Chip
+                label={`${productViewsBreakdown.android?.total || 0} views`}
+                size="small"
+                style={{ backgroundColor: '#fce4ec', fontWeight: 500 }}
+              />
+              <Typography variant="body2" color="textSecondary">
+                {productViewsBreakdown.total 
+                  ? `${((productViewsBreakdown.android?.total || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
+                  : '0%'}
+              </Typography>
+            </Box>
+          </Box>
+        </AccordionSummary>
+        <AccordionDetails style={{ padding: 0 }}>
+          {productViewsBreakdown.android?.users?.length > 0 ? (
+            <MUITable size="small">
+              <TableHead>
+                <TableRow style={{ backgroundColor: '#fafafa' }}>
+                  <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                  <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {productViewsBreakdown.android.users.map((user, idx) => (
+                  <TableRow key={idx} hover>
+                    <TableCell>
+                      <Typography variant="body2" style={{ fontWeight: 500 }}>
+                        {user.username || 'Anonymous'}
+                      </Typography>
+                      {user.userId && user.userId !== 'anonymous' && (
+                        <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                          ID: {user.userId.substring(0, 8)}...
+                        </Typography>
+                      )}
+                    </TableCell>
+                    <TableCell align="right">
+                      <Chip
+                        label={user.count}
+                        size="small"
+                        style={{ minWidth: 40, fontSize: '0.7rem' }}
+                      />
+                    </TableCell>
+                    <TableCell align="right">
+                      <Typography variant="caption" color="textSecondary">
+                        {new Date(user.lastViewTimestamp).toLocaleString()}
+                      </Typography>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </MUITable>
+          ) : (
+            <Box p={3} textAlign="center">
+              <Typography variant="body2" color="textSecondary">
+                No Android views recorded
+              </Typography>
+            </Box>
+          )}
+        </AccordionDetails>
+      </Accordion>
+    </Box>
+  ) : (
+    <Box p={4} textAlign="center">
+      <Typography variant="body1" color="textSecondary">
+        No view data available for this product.
+      </Typography>
+    </Box>
+  )}
+</DialogContent>
+<DialogActions>
+  <MUIButton onClick={handleCloseViewsModal} color="primary">Close</MUIButton>
+</DialogActions>
+</Dialog>
+
+{/* Cart Additions Breakdown Modal */}
+<Dialog
+  open={cartModalOpen}
+  onClose={handleCloseCartModal}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h6">
+        Cart Addition Breakdown
+        {selectedCartProduct && (
+          <Typography variant="body2" color="textSecondary" style={{ marginTop: '4px' }}>
+            {getProductDetails(selectedCartProduct.productId)?.title || selectedCartProduct.productId}
+          </Typography>
+        )}
+      </Typography>
+      <IconButton
+        edge="end"
+        color="inherit"
+        onClick={handleCloseCartModal}
+        aria-label="close"
+        size="small"
+      >
+        <CloseIcon />
+      </IconButton>
+    </Box>
+  </DialogTitle>
+  <DialogContent dividers style={{ padding: 0 }}>
+    {loadingCartBreakdown ? (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    ) : cartBreakdown ? (
+      <Box>
+        <Box style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+          <Typography variant="h6" style={{ fontSize: '1.1rem' }}>
+            Total Additions: <strong>{cartBreakdown.total || selectedCartProduct?.adds || 0}</strong>
+          </Typography>
+        </Box>
+        
+        {/* Web Platform */}
+        <Accordion defaultExpanded={cartBreakdown.web?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#1976d2', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Web</Typography>
               </Box>
-            ) : productViewsBreakdown ? (
-              <Box>
-                <Typography variant="h6" gutterBottom style={{ marginBottom: '20px', fontSize: '1.1rem' }}>
-                  Total Views: <strong>{productViewsBreakdown.total || selectedProduct?.views || 0}</strong>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${cartBreakdown.web?.total || 0} additions`} size="small" style={{ backgroundColor: '#e3f2fd', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {cartBreakdown.total ? `${((cartBreakdown.web?.total || 0) / cartBreakdown.total * 100).toFixed(1)}%` : '0%'}
                 </Typography>
-                <MUITable>
-                  <TableHead>
-                    <TableRow style={{ backgroundColor: '#f5f5f5' }}>
-                      <TableCell style={{ fontWeight: 'bold' }}>Platform</TableCell>
-                      <TableCell align="right" style={{ fontWeight: 'bold' }}>Views</TableCell>
-                      <TableCell align="right" style={{ fontWeight: 'bold' }}>Percentage</TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    <TableRow>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          <Box
-                            component="span"
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              backgroundColor: '#1976d2',
-                              marginRight: 8
-                            }}
-                          />
-                          <Typography variant="body1">Web</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body1" style={{ fontWeight: 500 }}>
-                          {productViewsBreakdown.web || 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" color="textSecondary">
-                          {productViewsBreakdown.total 
-                            ? `${((productViewsBreakdown.web || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
-                            : '0%'}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          <Box
-                            component="span"
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              backgroundColor: '#2e7d32',
-                              marginRight: 8
-                            }}
-                          />
-                          <Typography variant="body1">iOS</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body1" style={{ fontWeight: 500 }}>
-                          {productViewsBreakdown.ios || 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" color="textSecondary">
-                          {productViewsBreakdown.total 
-                            ? `${((productViewsBreakdown.ios || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
-                            : '0%'}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    <TableRow>
-                      <TableCell>
-                        <Box display="flex" alignItems="center">
-                          <Box
-                            component="span"
-                            style={{
-                              width: 12,
-                              height: 12,
-                              borderRadius: '50%',
-                              backgroundColor: '#f50057',
-                              marginRight: 8
-                            }}
-                          />
-                          <Typography variant="body1">Android</Typography>
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body1" style={{ fontWeight: 500 }}>
-                          {productViewsBreakdown.android || 0}
-                        </Typography>
-                      </TableCell>
-                      <TableCell align="right">
-                        <Typography variant="body2" color="textSecondary">
-                          {productViewsBreakdown.total 
-                            ? `${((productViewsBreakdown.android || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
-                            : '0%'}
-                        </Typography>
-                      </TableCell>
-                    </TableRow>
-                    {/* {productViewsBreakdown.mobile && (
-                      <TableRow>
-                        <TableCell>
-                          <Box display="flex" alignItems="center">
-                            <Box
-                              component="span"
-                              style={{
-                                width: 12,
-                                height: 12,
-                                borderRadius: '50%',
-                                backgroundColor: '#ff9800',
-                                marginRight: 8
-                              }}
-                            />
-                            <Typography variant="body1">Mobile (Other)</Typography>
-                          </Box>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body1" style={{ fontWeight: 500 }}>
-                            {productViewsBreakdown.mobile || 0}
-                          </Typography>
-                        </TableCell>
-                        <TableCell align="right">
-                          <Typography variant="body2" color="textSecondary">
-                            {productViewsBreakdown.total 
-                              ? `${((productViewsBreakdown.mobile || 0) / productViewsBreakdown.total * 100).toFixed(1)}%`
-                              : '0%'}
-                          </Typography>
-                        </TableCell>
-                      </TableRow>
-                    )} */}
-                  </TableBody>
-                </MUITable>
               </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {cartBreakdown.web?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Additions</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Added</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cartBreakdown.web.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
             ) : (
-              <Box p={4} textAlign="center">
-                <Typography variant="body1" color="textSecondary">
-                  No view data available for this product.
-                </Typography>
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No web additions recorded</Typography>
               </Box>
             )}
-          </DialogContent>
-          <DialogActions>
-            <MUIButton onClick={handleCloseViewsModal} color="primary">
-              Close
-            </MUIButton>
-          </DialogActions>
-        </Dialog>
+          </AccordionDetails>
+        </Accordion>
+
+        {/* iOS Platform */}
+        <Accordion defaultExpanded={cartBreakdown.ios?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#2e7d32', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>iOS</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${cartBreakdown.ios?.total || 0} additions`} size="small" style={{ backgroundColor: '#e8f5e9', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {cartBreakdown.total ? `${((cartBreakdown.ios?.total || 0) / cartBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {cartBreakdown.ios?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Additions</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Added</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cartBreakdown.ios.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No iOS additions recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Android Platform */}
+        <Accordion defaultExpanded={cartBreakdown.android?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f50057', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Android</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${cartBreakdown.android?.total || 0} additions`} size="small" style={{ backgroundColor: '#fce4ec', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {cartBreakdown.total ? `${((cartBreakdown.android?.total || 0) / cartBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {cartBreakdown.android?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Additions</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Added</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {cartBreakdown.android.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No Android additions recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+    ) : (
+      <Box p={4} textAlign="center">
+        <Typography variant="body1" color="textSecondary">No cart addition data available.</Typography>
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <MUIButton onClick={handleCloseCartModal} color="primary">Close</MUIButton>
+  </DialogActions>
+</Dialog>
+
+{/* Page Views Breakdown Modal */}
+<Dialog
+  open={pageViewModalOpen}
+  onClose={handleClosePageViewModal}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h6">
+        Page View Breakdown
+        {selectedPage && (
+          <Typography variant="body2" color="textSecondary" style={{ marginTop: '4px' }}>
+            {selectedPage.page}
+          </Typography>
+        )}
+      </Typography>
+      <IconButton
+        edge="end"
+        color="inherit"
+        onClick={handleClosePageViewModal}
+        aria-label="close"
+        size="small"
+      >
+        <CloseIcon />
+      </IconButton>
+    </Box>
+  </DialogTitle>
+  <DialogContent dividers style={{ padding: 0 }}>
+    {loadingPageViewBreakdown ? (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    ) : pageViewBreakdown ? (
+      <Box>
+        <Box style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+          <Typography variant="h6" style={{ fontSize: '1.1rem' }}>
+            Total Views: <strong>{pageViewBreakdown.total || selectedPage?.views || 0}</strong>
+          </Typography>
+        </Box>
+        
+        {/* Web Platform */}
+        <Accordion defaultExpanded={pageViewBreakdown.web?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#1976d2', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Web</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${pageViewBreakdown.web?.total || 0} views`} size="small" style={{ backgroundColor: '#e3f2fd', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {pageViewBreakdown.total ? `${((pageViewBreakdown.web?.total || 0) / pageViewBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {pageViewBreakdown.web?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pageViewBreakdown.web.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No web views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* iOS Platform */}
+        <Accordion defaultExpanded={pageViewBreakdown.ios?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#2e7d32', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>iOS</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${pageViewBreakdown.ios?.total || 0} views`} size="small" style={{ backgroundColor: '#e8f5e9', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {pageViewBreakdown.total ? `${((pageViewBreakdown.ios?.total || 0) / pageViewBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {pageViewBreakdown.ios?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pageViewBreakdown.ios.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No iOS views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Android Platform */}
+        <Accordion defaultExpanded={pageViewBreakdown.android?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f50057', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Android</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${pageViewBreakdown.android?.total || 0} views`} size="small" style={{ backgroundColor: '#fce4ec', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {pageViewBreakdown.total ? `${((pageViewBreakdown.android?.total || 0) / pageViewBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {pageViewBreakdown.android?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {pageViewBreakdown.android.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No Android views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+    ) : (
+      <Box p={4} textAlign="center">
+        <Typography variant="body1" color="textSecondary">No page view data available.</Typography>
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <MUIButton onClick={handleClosePageViewModal} color="primary">Close</MUIButton>
+  </DialogActions>
+</Dialog>
+
+{/* Category Views Breakdown Modal */}
+<Dialog
+  open={categoryModalOpen}
+  onClose={handleCloseCategoryModal}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h6">
+        Category View Breakdown
+        {selectedCategory && (
+          <Typography variant="body2" color="textSecondary" style={{ marginTop: '4px' }}>
+            {selectedCategory.name || selectedCategory.categoryId}
+          </Typography>
+        )}
+      </Typography>
+      <IconButton
+        edge="end"
+        color="inherit"
+        onClick={handleCloseCategoryModal}
+        aria-label="close"
+        size="small"
+      >
+        <CloseIcon />
+      </IconButton>
+    </Box>
+  </DialogTitle>
+  <DialogContent dividers style={{ padding: 0 }}>
+    {loadingCategoryBreakdown ? (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    ) : categoryBreakdown ? (
+      <Box>
+        <Box style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+          <Typography variant="h6" style={{ fontSize: '1.1rem' }}>
+            Total Views: <strong>{categoryBreakdown.total || selectedCategory?.views || 0}</strong>
+          </Typography>
+        </Box>
+        
+        {/* Web Platform */}
+        <Accordion defaultExpanded={categoryBreakdown.web?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#1976d2', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Web</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${categoryBreakdown.web?.total || 0} views`} size="small" style={{ backgroundColor: '#e3f2fd', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {categoryBreakdown.total ? `${((categoryBreakdown.web?.total || 0) / categoryBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {categoryBreakdown.web?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {categoryBreakdown.web.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No web views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* iOS Platform */}
+        <Accordion defaultExpanded={categoryBreakdown.ios?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#2e7d32', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>iOS</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${categoryBreakdown.ios?.total || 0} views`} size="small" style={{ backgroundColor: '#e8f5e9', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {categoryBreakdown.total ? `${((categoryBreakdown.ios?.total || 0) / categoryBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {categoryBreakdown.ios?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {categoryBreakdown.ios.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No iOS views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Android Platform */}
+        <Accordion defaultExpanded={categoryBreakdown.android?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f50057', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Android</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${categoryBreakdown.android?.total || 0} views`} size="small" style={{ backgroundColor: '#fce4ec', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {categoryBreakdown.total ? `${((categoryBreakdown.android?.total || 0) / categoryBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {categoryBreakdown.android?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {categoryBreakdown.android.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No Android views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+    ) : (
+      <Box p={4} textAlign="center">
+        <Typography variant="body1" color="textSecondary">No category view data available.</Typography>
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <MUIButton onClick={handleCloseCategoryModal} color="primary">Close</MUIButton>
+  </DialogActions>
+</Dialog>
+
+{/* Subcategory Views Breakdown Modal */}
+<Dialog
+  open={subcategoryModalOpen}
+  onClose={handleCloseSubcategoryModal}
+  maxWidth="sm"
+  fullWidth
+>
+  <DialogTitle>
+    <Box display="flex" justifyContent="space-between" alignItems="center">
+      <Typography variant="h6">
+        Subcategory View Breakdown
+        {selectedSubcategory && (
+          <Typography variant="body2" color="textSecondary" style={{ marginTop: '4px' }}>
+            {selectedSubcategory.name || selectedSubcategory.subCategoryId}
+          </Typography>
+        )}
+      </Typography>
+      <IconButton
+        edge="end"
+        color="inherit"
+        onClick={handleCloseSubcategoryModal}
+        aria-label="close"
+        size="small"
+      >
+        <CloseIcon />
+      </IconButton>
+    </Box>
+  </DialogTitle>
+  <DialogContent dividers style={{ padding: 0 }}>
+    {loadingSubcategoryBreakdown ? (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="200px">
+        <CircularProgress />
+      </Box>
+    ) : subcategoryBreakdown ? (
+      <Box>
+        <Box style={{ padding: '20px', borderBottom: '1px solid #e0e0e0', backgroundColor: '#f5f5f5' }}>
+          <Typography variant="h6" style={{ fontSize: '1.1rem' }}>
+            Total Views: <strong>{subcategoryBreakdown.total || selectedSubcategory?.views || 0}</strong>
+          </Typography>
+        </Box>
+        
+        {/* Web Platform */}
+        <Accordion defaultExpanded={subcategoryBreakdown.web?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#1976d2', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Web</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${subcategoryBreakdown.web?.total || 0} views`} size="small" style={{ backgroundColor: '#e3f2fd', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {subcategoryBreakdown.total ? `${((subcategoryBreakdown.web?.total || 0) / subcategoryBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {subcategoryBreakdown.web?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {subcategoryBreakdown.web.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No web views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* iOS Platform */}
+        <Accordion defaultExpanded={subcategoryBreakdown.ios?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#2e7d32', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>iOS</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${subcategoryBreakdown.ios?.total || 0} views`} size="small" style={{ backgroundColor: '#e8f5e9', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {subcategoryBreakdown.total ? `${((subcategoryBreakdown.ios?.total || 0) / subcategoryBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {subcategoryBreakdown.ios?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {subcategoryBreakdown.ios.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No iOS views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+
+        {/* Android Platform */}
+        <Accordion defaultExpanded={subcategoryBreakdown.android?.total > 0}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />} style={{ backgroundColor: '#f9fafb' }}>
+            <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+              <Box display="flex" alignItems="center">
+                <Box component="span" style={{ width: 12, height: 12, borderRadius: '50%', backgroundColor: '#f50057', marginRight: 12 }} />
+                <Typography variant="body1" style={{ fontWeight: 600 }}>Android</Typography>
+              </Box>
+              <Box display="flex" alignItems="center" gap={2} marginRight={2}>
+                <Chip label={`${subcategoryBreakdown.android?.total || 0} views`} size="small" style={{ backgroundColor: '#fce4ec', fontWeight: 500 }} />
+                <Typography variant="body2" color="textSecondary">
+                  {subcategoryBreakdown.total ? `${((subcategoryBreakdown.android?.total || 0) / subcategoryBreakdown.total * 100).toFixed(1)}%` : '0%'}
+                </Typography>
+              </Box>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails style={{ padding: 0 }}>
+            {subcategoryBreakdown.android?.users?.length > 0 ? (
+              <MUITable size="small">
+                <TableHead>
+                  <TableRow style={{ backgroundColor: '#fafafa' }}>
+                    <TableCell style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>User</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Views</TableCell>
+                    <TableCell align="right" style={{ fontWeight: 'bold', fontSize: '0.75rem' }}>Last Viewed</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {subcategoryBreakdown.android.users.map((user, idx) => (
+                    <TableRow key={idx} hover>
+                      <TableCell>
+                        <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
+                        {user.userId && user.userId !== 'anonymous' && (
+                          <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                            ID: {user.userId.substring(0, 8)}...
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell align="right">
+                        <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                      </TableCell>
+                      <TableCell align="right">
+                        <Typography variant="caption" color="textSecondary">
+                          {new Date(user.lastViewTimestamp).toLocaleString()}
+                        </Typography>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </MUITable>
+            ) : (
+              <Box p={3} textAlign="center">
+                <Typography variant="body2" color="textSecondary">No Android views recorded</Typography>
+              </Box>
+            )}
+          </AccordionDetails>
+        </Accordion>
+      </Box>
+    ) : (
+      <Box p={4} textAlign="center">
+        <Typography variant="body1" color="textSecondary">No subcategory view data available.</Typography>
+      </Box>
+    )}
+  </DialogContent>
+  <DialogActions>
+    <MUIButton onClick={handleCloseSubcategoryModal} color="primary">Close</MUIButton>
+  </DialogActions>
+</Dialog>
       </div>
     </>
   );

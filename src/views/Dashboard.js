@@ -154,7 +154,14 @@ const [loadingSubcategoryBreakdown, setLoadingSubcategoryBreakdown] = useState(f
       const productsData = await productsResponse.json();
       const productsList = Array.isArray(productsData) ? productsData : (productsData?.Items || []);
       setProducts(productsList);
+      console.log('products list', productsList);
+const productWithId2 = productsList.find(product => product.id === '2' || product.productId === '2');
 
+if (productWithId2) {
+  console.log('Product with ID 2:', productWithId2);
+} else {
+  console.log('No product found with ID 2');
+}
       // Fetch all categories
       const categoriesResponse = await fetch(`${API_URL}/categories`);
       const categoriesData = await categoriesResponse.json();
@@ -182,6 +189,7 @@ const [loadingSubcategoryBreakdown, setLoadingSubcategoryBreakdown] = useState(f
   // Helper function to get product details by ID
   const getProductDetails = (productId) => {
     const product = products.find(p => p.id === productId);
+    console.log('getProductDetails', { productId, product });
     if (!product) return null;
 
     // Get category name
@@ -193,7 +201,7 @@ const [loadingSubcategoryBreakdown, setLoadingSubcategoryBreakdown] = useState(f
     const subCategoryId = product.Sub_category_id || product.subCategoryId || product.sub_category_id;
     const subcategory = subcategories.find(sc => sc.id === subCategoryId);
     const subcategoryName = subcategory?.name || "-";
-
+console.log('product details', { productId, product, categoryName, subcategoryName });
     return {
       title: product.title || productId,
       category: categoryName,
@@ -237,6 +245,7 @@ const [loadingSubcategoryBreakdown, setLoadingSubcategoryBreakdown] = useState(f
         fetch(`${API_URL}/analytics/purchases${timeParam}`).then(r => r.json()),
         fetch(`${API_URL}/analytics/users${timeParam}`).then(r => r.json())
       ]);
+      console.log('dashboard analytics data', { dashboard, revenue, purchases, users });
 
       setDashboardData(dashboard);
       setRevenueData(revenue);
@@ -292,6 +301,7 @@ const [loadingSubcategoryBreakdown, setLoadingSubcategoryBreakdown] = useState(f
   //   }
   // };
 const handleViewsClick = async (product) => {
+  console.log("Selected product:", product);
   setSelectedProduct(product);
   setViewsModalOpen(true);
   setLoadingBreakdown(true);
@@ -299,8 +309,12 @@ const handleViewsClick = async (product) => {
   try {
     // Fetch platform-specific view breakdown with user details for this product
     const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    console.log('route', `${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
+    
     const response = await fetch(`${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
     const data = await response.json();    
+    console.log('data of proudct when click',data);
+    
     if (data && (data.web || data.ios || data.android)) {
       setProductViewsBreakdown(data);
     } else {
@@ -875,6 +889,8 @@ const handleCloseSubcategoryModal = () => {
                                     <TableBody>
                                       {filteredProducts.map((product, index) => {
                                         const productDetails = getProductDetails(product.productId);
+                                        console.log('filteredProducts', product);
+                                        
                                         return (
                                           <TableRow
                                             key={product.productId}
@@ -1009,7 +1025,7 @@ const handleCloseSubcategoryModal = () => {
                                           </TableCell>
                                           <TableCell>
                                             <Typography variant="body1" style={{ fontWeight: 500 }}>
-                                              {product.title || productDetails?.title || product.productId}
+                                                {typeof product.title === 'string' ? product.title : (productDetails?.title || product.productId)}
                                             </Typography>
                                             <Typography variant="caption" color="textSecondary">
                                               ID: {product.productId}

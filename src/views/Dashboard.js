@@ -894,7 +894,7 @@ const handleCloseViewsModal = () => {
               <Grid item xs={6} sm={6} md={3}>
                 <MUICard 
                   style={{ background: '#fff4e6', height: '100%', cursor: 'pointer' }}
-                  onClick={handleWebVisitsClick}
+                  // onClick={handleWebVisitsClick}
                   hover
                 >
                   <CardContent style={{ padding: '12px' }}>
@@ -915,7 +915,7 @@ const handleCloseViewsModal = () => {
               <Grid item xs={6} sm={6} md={3}>
                 <MUICard 
                   style={{ background: '#e8f5e9', height: '100%', cursor: 'pointer' }}
-                  onClick={handleMobileVisitsClick}
+                  // onClick={handleMobileVisitsClick}
                   hover
                 >
                   <CardContent style={{ padding: '12px' }}>

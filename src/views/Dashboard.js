@@ -239,32 +239,6 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
     });
   };
 
-  // const fetchAnalytics = async () => {
-  //   try {
-  //     setAnalyticsLoading(true);
-
-  //     // Build query parameters with time filter - always include it for consistency
-  //     const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-
-  //     console.log(`Fetching analytics with time filter: ${timeFilter}`);
-
-  //     const [dashboard, revenue, purchases, users] = await Promise.all([
-  //       fetch(`${API_URL}/analytics/dashboard${timeParam}`).then(r => r.json()),
-  //       fetch(`${API_URL}/analytics/revenue${timeParam}`).then(r => r.json()),
-  //       fetch(`${API_URL}/analytics/purchases${timeParam}`).then(r => r.json()),
-  //       fetch(`${API_URL}/analytics/users${timeParam}`).then(r => r.json())
-  //     ]);
-
-  //     setDashboardData(dashboard);
-  //     setRevenueData(revenue);
-  //     setPurchaseData(purchases);
-  //     setUserData(users);
-  //   } catch (error) {
-  //     console.error("Error fetching analytics:", error);
-  //   } finally {
-  //     setAnalyticsLoading(false);
-  //   }
-  // };
 
   const fetchAnalytics = async () => {
   try {
@@ -302,76 +276,6 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
     setSearchQuery(""); // Clear search when switching tabs
   };
 
-  // const handleViewsClick = async (product) => {
-  //   setSelectedProduct(product);
-  //   setViewsModalOpen(true);
-  //   setLoadingBreakdown(true);
-
-  //   try {
-  //     // Fetch platform-specific view breakdown for this product
-  //     const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-  //     const response = await fetch(`${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
-  //     const data = await response.json();
-
-  //     // If API returns platform breakdown, use it; otherwise create a default structure
-  //     if (data && (data.platformBreakdown || data.deviceBreakdown)) {
-  //       setProductViewsBreakdown(data.platformBreakdown || data.deviceBreakdown);
-  //     } else {
-  //       // Fallback: create breakdown from available data or use defaults
-  //       // This assumes the API might not have platform-specific data yet
-  //       setProductViewsBreakdown({
-  //         web: data?.web || Math.floor(product.views * 0.6) || 0,
-  //         ios: data?.ios || Math.floor(product.views * 0.25) || 0,
-  //         android: data?.android || Math.floor(product.views * 0.15) || 0,
-  //         total: product.views
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching product views breakdown:", error);
-  //     // Fallback breakdown if API call fails
-  //     setProductViewsBreakdown({
-  //       web: Math.floor(product.views * 0.6) || 0,
-  //       ios: Math.floor(product.views * 0.25) || 0,
-  //       android: Math.floor(product.views * 0.15) || 0,
-  //       total: product.views
-  //     });
-  //   } finally {
-  //     setLoadingBreakdown(false);
-  //   }
-  // };
-  // const handleViewsClick = async (product) => {
-  //   setSelectedProduct(product);
-  //   setViewsModalOpen(true);
-  //   setLoadingBreakdown(true);
-
-  //   try {
-  //     // Fetch platform-specific view breakdown with user details for this product
-  //     const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-  //     const response = await fetch(`${API_URL}/analytics/product/${product.productId}/views${timeParam}`);
-  //     const data = await response.json();
-  //     if (data && (data.web || data.ios || data.android)) {
-  //       setProductViewsBreakdown(data);
-  //     } else {
-  //       // Fallback structure
-  //       setProductViewsBreakdown({
-  //         total: product.views,
-  //         web: { total: 0, users: [] },
-  //         ios: { total: 0, users: [] },
-  //         android: { total: 0, users: [] }
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching product views breakdown:", error);
-  //     setProductViewsBreakdown({
-  //       total: product.views,
-  //       web: { total: 0, users: [] },
-  //       ios: { total: 0, users: [] },
-  //       android: { total: 0, users: [] }
-  //     });
-  //   } finally {
-  //     setLoadingBreakdown(false);
-  //   }
-  // };
   const handleViewsClick = async (product) => {
     setSelectedProduct(product);
     setViewsModalOpen(true);

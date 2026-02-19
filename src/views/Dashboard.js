@@ -427,6 +427,8 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
 
   // Handler for Categories
   const handleCategoryClick = async (category) => {
+    console.log('Category clicked', { category, timeFilter });
+    
     setSelectedCategory(category);
     setCategoryModalOpen(true);
     setLoadingCategoryBreakdown(true);
@@ -466,39 +468,77 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
   };
 
   // Handler for Subcategories
-  const handleSubcategoryClick = async (subcategory) => {
-    setSelectedSubcategory(subcategory);
-    setSubcategoryModalOpen(true);
-    setLoadingSubcategoryBreakdown(true);
+  // const handleSubcategoryClick = async (subcategory) => {
+  //   setSelectedSubcategory(subcategory);
+  //   setSubcategoryModalOpen(true);
+  //   setLoadingSubcategoryBreakdown(true);
 
-    try {
-      const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-      const response = await fetch(`${API_URL}/analytics/subcategory/${subcategory.subCategoryId}/views${timeParam}`);
-      const data = await response.json();
+  //   try {
+  //     const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+  //     const response = await fetch(`${API_URL}/analytics/subcategory/${subcategory.subCategoryId}/views${timeParam}`);
+  //     const data = await response.json();
 
-      if (data && (data.web || data.ios || data.android)) {
-        setSubcategoryBreakdown(data);
-      } else {
-        setSubcategoryBreakdown({
-          total: subcategory.views,
-          web: { total: 0, users: [] },
-          ios: { total: 0, users: [] },
-          android: { total: 0, users: [] }
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching subcategory breakdown:", error);
+  //     if (data && (data.web || data.ios || data.android)) {
+  //       setSubcategoryBreakdown(data);
+  //     } else {
+  //       setSubcategoryBreakdown({
+  //         total: subcategory.views,
+  //         web: { total: 0, users: [] },
+  //         ios: { total: 0, users: [] },
+  //         android: { total: 0, users: [] }
+  //       });
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching subcategory breakdown:", error);
+  //     setSubcategoryBreakdown({
+  //       total: subcategory.views,
+  //       web: { total: 0, users: [] },
+  //       ios: { total: 0, users: [] },
+  //       android: { total: 0, users: [] }
+  //     });
+  //   } finally {
+  //     setLoadingSubcategoryBreakdown(false);
+  //   }
+  // };
+const handleSubcategoryClick = async (subcategory) => {
+  console.log('Subcategory clicked', { subcategory, timeFilter });
+  setSelectedSubcategory(subcategory);
+  setSubcategoryModalOpen(true);
+  setLoadingSubcategoryBreakdown(true);
+
+  try {
+    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+    
+    // FIX: Use multiple possible field names and encode properly
+    const subCatId = subcategory.subCategoryId || subcategory.id || subcategory.subcategoryId;
+    
+    const response = await fetch(
+      `${API_URL}/analytics/subcategory/${encodeURIComponent(subCatId)}/views${timeParam}`
+    );
+    const data = await response.json();
+
+    if (data && (data.web || data.ios || data.android)) {
+      setSubcategoryBreakdown(data);
+    } else {
       setSubcategoryBreakdown({
-        total: subcategory.views,
+        total: subcategory.views || 0,
         web: { total: 0, users: [] },
         ios: { total: 0, users: [] },
         android: { total: 0, users: [] }
       });
-    } finally {
-      setLoadingSubcategoryBreakdown(false);
     }
-  };
-
+  } catch (error) {
+    console.error("Error fetching subcategory breakdown:", error);
+    setSubcategoryBreakdown({
+      total: subcategory.views || 0,
+      web: { total: 0, users: [] },
+      ios: { total: 0, users: [] },
+      android: { total: 0, users: [] }
+    });
+  } finally {
+    setLoadingSubcategoryBreakdown(false);
+  }
+};
   const handleCloseSubcategoryModal = () => {
     setSubcategoryModalOpen(false);
     setSelectedSubcategory(null);

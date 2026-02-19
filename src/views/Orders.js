@@ -65,39 +65,39 @@ const Orders = () => {
   //     setLoading(false);
   //   }
   // };
+// 1. Updated fetchOrders
 const fetchOrders = async (page = 1, limit = 10, status = "Succeeded", environment = "production") => {
-    setLoading(true);
-    try {
-      const response = await axios.get(
-        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items",
-        {
-          params: {
-            page,
-            limit,
-            ...(environment !== "test" && { status }),
-          },
-        }
-      );
-
-      if (response.data) {
-        let fetchedItems = response.data.items || [];
-
-        // Client-side filter: test tab shows only environment=test, other tabs exclude test
-        if (environment === "test") {
-          fetchedItems = fetchedItems.filter((item) => item.environment === "test");
-        } else {
-          fetchedItems = fetchedItems.filter((item) => item.environment !== "test");
-        }
-
-        setItems(fetchedItems);
-        setTotalRows(response.data.total || 0);
+  setLoading(true);
+  try {
+    const response = await axios.get(
+      "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items",
+      {
+        params: {
+          page,
+          limit,
+          status,
+          ...(environment === "test" && { environment: "test" }),
+        },
       }
-    } catch (error) {
-      console.error("There was an error fetching the items!", error);
-    } finally {
-      setLoading(false);
+    );
+
+    if (response.data) {
+      let fetchedItems = response.data.items || [];
+
+      if (environment === "test") {
+        fetchedItems = fetchedItems.filter((item) => item.environment === "test");
+      }
+
+      setItems(fetchedItems);
+      // For test tab: use filtered count for accurate pagination
+      setTotalRows(environment === "test" ? fetchedItems.length : (response.data.total || 0));
     }
-  };
+  } catch (error) {
+    console.error("There was an error fetching the items!", error);
+  } finally {
+    setLoading(false);
+  }
+};
   // Fetch data when component mounts or when tab/page changes
   // useEffect(() => {
   //   const statusMap = {

@@ -163,7 +163,8 @@ const [loadingWebSessions, setLoadingWebSessions] = useState(false);
       const productsData = await productsResponse.json();
       const productsList = Array.isArray(productsData) ? productsData : (productsData?.Items || []);
       setProducts(productsList);
-      console.log('products list', productsList);
+      console.log('Total products loaded:', productsList.length);
+      console.log('First 5 product IDs:', productsList.slice(0, 5).map(p => p.id));
 const productWithId2 = productsList.find(product => product.id === '2' || product.productId === '2');
 
 if (productWithId2) {
@@ -199,7 +200,14 @@ if (productWithId2) {
   const getProductDetails = (productId) => {
     const product = products.find(p => p.id === productId);
     console.log('getProductDetails', { productId, product });
-    if (!product) return null;
+    if (!product) {
+      console.warn(`Product not found: ${productId}`);
+      return {
+        title: `Product ${productId} (Not Found)`,
+        category: "-",
+        subcategory: "-"
+      };
+    }
 
     // Get category name
     const categoryId = product.categories?.[0] || product.Menu_id || product.menuId;
@@ -256,6 +264,14 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
       fetch(`${API_URL}/analytics/mobile-sessions${timeParam}`).then(r => r.json()),
       fetch(`${API_URL}/analytics/web-sessions${timeParam}`).then(r => r.json()) // NEW
     ]);
+
+    console.log('🔍 Dashboard API Response:', {
+      totalEvents: dashboard.totalEvents,
+      productViewsCount: dashboard.mostViewedProducts?.length,
+      mostViewedProducts: dashboard.mostViewedProducts,
+      dateRange: dashboard.dateRange,
+      timeFilter: dashboard.timeFilter
+    });
 
     setDashboardData(dashboard);
     setRevenueData(revenue);

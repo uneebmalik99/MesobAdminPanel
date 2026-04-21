@@ -61,19 +61,11 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "=== Testing Apache config ==="
-            sudo apachectl configtest
+            # Kill any zombie Apache processes holding port 80
+            sudo pkill apache2 || true
+            sudo rm -f /var/run/apache2/apache2.pid
+            sleep 2
 
-            echo "=== Fixing permissions ==="
-            sudo chown -R www-data:www-data /var/www/html
-            sudo chmod -R 755 /var/www/html
-
-            echo "=== Restarting Apache ==="
-            sudo systemctl restart apache2 || {
-              sudo systemctl status apache2.service --no-pager
-              sudo journalctl -u apache2 --no-pager -n 30
-              exit 1
-            }
-
-            echo "=== Apache is running ==="
+            # Restart cleanly
+            sudo systemctl restart apache2
             sudo systemctl status apache2 --no-pager

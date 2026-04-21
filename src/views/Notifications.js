@@ -58,15 +58,19 @@ function Notifications() {
     const Body = body;
     const Description = description;
 
-    // console.log("title: ", title, "\n");
-    // console.log("body: ", body, "\n");
-    // console.log("description : ", description, "\n");
+    // Validation
+    if (!Title || !Body) {
+      notify("tr", "Title and Body are required fields", "danger");
+      return;
+    }
 
     const payload = {
       Title: Title,
       Body: Body,
       Description: Description,
     };
+
+    console.log("Sending payload:", payload);
 
     try {
       setSendNotificationBtnLoading(true);
@@ -81,16 +85,25 @@ function Notifications() {
       );
       console.log("API Response:", response.data);
 
-      if (response.status === 200) {
-        setTitle("");
-        setBody("");
-        setDescription("");
-        setSendNotificationBtnLoading(false);
+      setTitle("");
+      setBody("");
+      setDescription("");
+      setSendNotificationBtnLoading(false);
 
-        notify("tr", "Notification sent successfully!", "success");
-      }
+      notify("tr", "Notification sent successfully!", "success");
     } catch (error) {
       console.error("Error sending notification:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
+      
+      setSendNotificationBtnLoading(false);
+      
+      const errorMessage = error.response?.data?.message || 
+                           error.response?.data || 
+                           error.message || 
+                           "Failed to send notification";
+      
+      notify("tr", `Error: ${errorMessage}`, "danger");
     }
   };
 

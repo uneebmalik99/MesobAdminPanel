@@ -65,39 +65,46 @@ const Orders = () => {
   //     setLoading(false);
   //   }
   // };
-// 1. Updated fetchOrders
-const fetchOrders = async (page = 1, limit = 10, status = "Succeeded", environment = "production") => {
-  setLoading(true);
-  try {
-    const response = await axios.get(
-      "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items",
-      {
-        params: {
-          page,
-          limit,
-          status,
-          ...(environment === "test" && { environment: "test" }),
-        },
+  // 1. Updated fetchOrders
+  const fetchOrders = async (page = 1, limit = 10, status = "Succeeded", environment = "production") => {
+    setLoading(true);
+    try {
+      const response = await axios.get(
+        "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items",
+        {
+          params: {
+            page,
+            limit,
+            status,
+            ...(environment === "test" && { environment: "test" }),
+          },
+        }
+      );
+
+      if (response.data) {
+        let fetchedItems = response.data.items || [];
+
+        if (environment === "test") {
+          fetchedItems = fetchedItems.filter(
+            (item) => String(item.environment || "").toLowerCase() === "test"
+          );
+        } else if (status === "Succeeded") {
+          // In Succeeded tab, hide test orders but keep undefined/empty/production.
+          fetchedItems = fetchedItems.filter(
+            (item) => String(item.environment || "").trim().toLowerCase() !== "test"
+          );
+        }
+
+        setItems(fetchedItems);
+        // Keep pagination count aligned for filtered lists.
+        setTotalRows(environment === "test" ? fetchedItems.length : response.data.total || 0);
       }
-    );
-
-    if (response.data) {
-      let fetchedItems = response.data.items || [];
-
-      if (environment === "test") {
-        fetchedItems = fetchedItems.filter((item) => item.environment === "test");
-      }
-
-      setItems(fetchedItems);
-      // For test tab: use filtered count for accurate pagination
-      setTotalRows(environment === "test" ? fetchedItems.length : (response.data.total || 0));
+    } catch (error) {
+      console.error("There was an error fetching the items!", error);
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("There was an error fetching the items!", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
   // Fetch data when component mounts or when tab/page changes
   // useEffect(() => {
   //   const statusMap = {
@@ -109,7 +116,7 @@ const fetchOrders = async (page = 1, limit = 10, status = "Succeeded", environme
   // }, [currentPage, perPage, activeTab]);
 
 
- useEffect(() => {
+  useEffect(() => {
     const statusMap = {
       "1": "Succeeded",
       "2": "Attempts",
@@ -121,7 +128,7 @@ const fetchOrders = async (page = 1, limit = 10, status = "Succeeded", environme
       fetchOrders(currentPage, perPage, statusMap[activeTab], "production");
     }
   }, [currentPage, perPage, activeTab]);
-   // Apply search filtering
+  // Apply search filtering
   const filteredOrders = items.filter((item) =>
     item.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -159,7 +166,7 @@ const fetchOrders = async (page = 1, limit = 10, status = "Succeeded", environme
   //     alert("Failed to delete order.");
   //   }
   // };
-const handleDelete = async (id) => {
+  const handleDelete = async (id) => {
     if (
       !window.confirm(
         "Are you sure you want to delete this order and related finance record(s)?"
@@ -366,7 +373,7 @@ const handleDelete = async (id) => {
                       Closed Orders
                     </NavLink>
                   </NavItem>
-                   
+
                   <NavItem>
                     <NavLink
                       className={classnames({ active: activeTab === "4" })}
@@ -387,14 +394,14 @@ const handleDelete = async (id) => {
                         justifyContent: "space-between",
                       }}
                     >
-                     <CardTitle tag="h4">
+                      <CardTitle tag="h4">
                         {activeTab === "1"
                           ? "Succeeded Orders"
                           : activeTab === "2"
-                          ? "Attempts Orders"
-                          : activeTab === "3"
-                          ? "Closed Orders"
-                          : "Test Orders"}
+                            ? "Attempts Orders"
+                            : activeTab === "3"
+                              ? "Closed Orders"
+                              : "Test Orders"}
                       </CardTitle>
                       <Input
                         type="text"

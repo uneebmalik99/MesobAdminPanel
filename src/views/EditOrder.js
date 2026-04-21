@@ -208,18 +208,38 @@ const EditOrder = () => {
   };
 
   const handleUpdate = async () => {
-    console.log("selected admin user: ", selectedAdminUser);
-    console.log("Notes:", notes);
+    const safeNotes = notes ?? "";
+    console.log("id: ", id);
+    console.log("orderStatus: ", orderStatus);
+    console.log("markStatus: ", markStatus);
+    console.log("safeNotes: ", safeNotes);
+    console.log("assignedName: ", selectedAdminUser);
+    console.log("finance: ", false);
 
     try {
       setUpdateBtnLoading(true);
       const updatedBy = localStorage.getItem("user_email");
+      const queryParams = new URLSearchParams();
+      // Only send Status when changed; avoids backend status side-effects on no-op updates.
+      if (orderStatus && orderStatus !== orderDetails?.Status) {
+        queryParams.set("Status", orderStatus);
+      }
+      queryParams.set("adminStatus", markStatus ?? "");
+      queryParams.set("notes", safeNotes);
+      queryParams.set("updatedBy", updatedBy ?? "");
+      queryParams.set("assignedName", selectedAdminUser ?? "");
+      queryParams.set("finance", "false");
 
-      const response = await axios.patch(
-        `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items/${id}?Status=${orderStatus}&adminStatus=${markStatus}&notes=${encodeURIComponent(notes)}&updatedBy=${updatedBy}&assignedName=${selectedAdminUser}&finance=false`
+      const response = await fetch(
+        `https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/items/${id}?${queryParams.toString()}`,
+        {
+          method: "PATCH",
+        }
       );
+      console.log("response: ", response);
 
-      if (response.status === 200) {
+
+      if (response.ok) {
         notify("tr", "Order updated successfully!", "success");
         setUpdateBtnLoading(false);
         if (orderDetails?.Status !== orderStatus) {
@@ -244,6 +264,11 @@ const EditOrder = () => {
         window.location.reload();
 
         // navigate('/admin/orders')
+      } else {
+        const errorText = await response.text();
+        throw new Error(
+          `Failed to update order (${response.status}): ${errorText || "Unknown error"}`
+        );
       }
     } catch (error) {
       console.error("Error updating order:", error);

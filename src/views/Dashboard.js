@@ -300,7 +300,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
     try {
       // Fetch platform-specific view breakdown with user details for this product
       const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-      const url = `${API_URL}/analytics/product/${product.productId}/views${timeParam}`;
+      const url = `${API_URL}/analytics/product/${encodeURIComponent(product.productId)}/views${timeParam}`;
       
       console.log('=== DEBUG: Fetching Product Views ===');
       console.log('Product ID:', product.productId);
@@ -369,7 +369,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
 
     try {
       const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-      const response = await fetch(`${API_URL}/analytics/product/${product.productId}/cart${timeParam}`);
+      const response = await fetch(`${API_URL}/analytics/product/${encodeURIComponent(product.productId)}/cart${timeParam}`);
       const data = await response.json();
 
       if (data && (data.web || data.ios || data.android)) {
@@ -451,7 +451,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
 
     try {
       const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-      const response = await fetch(`${API_URL}/analytics/category/${category.categoryId}/views${timeParam}`);
+      const response = await fetch(`${API_URL}/analytics/category/${encodeURIComponent(category.categoryId)}/views${timeParam}`);
       const data = await response.json();
 
       if (data && (data.web || data.ios || data.android)) {

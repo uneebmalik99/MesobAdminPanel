@@ -47,20 +47,21 @@ function Notifications() {
     setDescription(content);
   };
 
-  const handleNotificationSend = async (e) => {
-    e.preventDefault();
+const handleNotificationSend = async (e) => {
+  e.preventDefault();
 
+  // ✅ Strip HTML tags to check if body is actually empty
+  const plainText = description.replace(/<[^>]*>/g, "").trim();
 
+  if (!title.trim() || !plainText) {
+    notify("tr", "Please fill in Title and Body!", "danger");
+    return;
+  }
 
-    // console.log("title: ", title, "\n");
-    // console.log("body: ", body, "\n");
-    // console.log("description : ", description, "\n");
-
-    const payload = {
-      Title: title,
-      Body: description,        // ✅ editor content sent as Body
-      Description: description,
-    };
+  const payload = {
+    Title: title,
+    Body: description,
+  };
 
     console.log("Sending payload:", payload);
 
@@ -79,13 +80,18 @@ function Notifications() {
       const responseData = await response.json().catch(() => null);
       console.log("API Response:", responseData);
 
-      if (response.status === 200) {
-        setTitle("");
-        setDescription("");
-        setSendNotificationBtnLoading(false);
-
-        notify("tr", "Notification sent successfully!", "success");
-      }
+    if (response.status === 200) {
+  setTitle("");
+  setDescription("");
+  
+  // ✅ Actually clear the TinyMCE editor content
+  if (editorRef.current) {
+    editorRef.current.setContent("");
+  }
+  
+  setSendNotificationBtnLoading(false);
+  notify("tr", "Notification sent successfully!", "success");
+}
     } catch (error) {
       console.error("Error sending notification:", error);
     }

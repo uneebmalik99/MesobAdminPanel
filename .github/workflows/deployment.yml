@@ -45,6 +45,15 @@ jobs:
           EXCLUDE: ".git .github node_modules"
 
       # Step 6: Restart Apache to reflect changes
+      # - name: Restart Apache to reflect changes
+      #   uses: appleboy/ssh-action@master
+      #   with:
+      #     host: ${{ secrets.HOST_DNS }}
+      #     username: ${{ secrets.USERNAME }}
+      #     key: ${{ secrets.EC2_SSH_KEY }}
+      #     script: |
+      #       sudo systemctl restart apache2
+      # Step 6: Restart Apache to reflect changes
       - name: Restart Apache to reflect changes
         uses: appleboy/ssh-action@master
         with:
@@ -52,4 +61,7 @@ jobs:
           username: ${{ secrets.USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
+            sudo chown -R www-data:www-data /var/www/html
+            sudo chmod -R 755 /var/www/html
             sudo systemctl restart apache2
+            sudo systemctl status apache2 --no-pager

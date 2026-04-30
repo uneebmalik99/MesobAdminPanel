@@ -50,11 +50,21 @@ function Notifications() {
   const handleNotificationSend = async (e) => {
     e.preventDefault();
 
+    const Title = title;
+    const Body = body;
+    const Description = description;
+
+    // console.log("title: ", title, "\n");
+    // console.log("body: ", body, "\n");
+    // console.log("description : ", description, "\n");
+
     const payload = {
       Title: title,
       Body: description,        // ✅ editor content sent as Body
       Description: description,
     };
+
+    console.log("Sending payload:", payload);
 
     try {
       setSendNotificationBtnLoading(true);
@@ -71,20 +81,16 @@ function Notifications() {
       const responseData = await response.json().catch(() => null);
       console.log("API Response:", responseData);
 
-      if (response.ok) {
+      if (response.status === 200) {
         setTitle("");
+        setBody("");
         setDescription("");
-        if (editorRef.current) {
-          editorRef.current.setContent(""); // ✅ Clear editor content
-        }
         setSendNotificationBtnLoading(false);
+
         notify("tr", "Notification sent successfully!", "success");
-      } else {
-        throw new Error(`Failed to send notification (${response.status})`);
       }
     } catch (error) {
       console.error("Error sending notification:", error);
-      setSendNotificationBtnLoading(false);
     }
   };
 

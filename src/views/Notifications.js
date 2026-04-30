@@ -50,9 +50,7 @@ function Notifications() {
   const handleNotificationSend = async (e) => {
     e.preventDefault();
 
-    const Title = title;
-    const Body = body;
-    const Description = description;
+
 
     // console.log("title: ", title, "\n");
     // console.log("body: ", body, "\n");
@@ -83,7 +81,6 @@ function Notifications() {
 
       if (response.status === 200) {
         setTitle("");
-        setBody("");
         setDescription("");
         setSendNotificationBtnLoading(false);
 

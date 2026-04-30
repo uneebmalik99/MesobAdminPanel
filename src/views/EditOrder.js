@@ -346,19 +346,9 @@ const EditOrder = () => {
         <p style="color:black;">Dear customer,<br />
           We are excited to let you know that your order has been shipped!
           <br />
-          We hope you are delighted with your purchase! If you have any questions or need any assistance, please do not hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521
+           If you have any questions or need further assistance, please don't hesitate to contact our customer service team at mesob@mesobstore.com or 614-580-7521
           <br />
-          Your feedback is important to us. If you have a moment, please let us know about your shopping experience by leaving a review.
-          <br/>
-          Google play link
-          <br/>
-          https://play.google.com/store/apps/details?id=com.mesob.store.app&pcampaignid=web_share
-          <br/>
-          Apple store link
-          <br/>
-          https://apps.apple.com/us/app/mesob-store/id1617565954
-          <br/>
-          Thank you for choosing mesobstore.com. We look forward to serving you again soon!
+          Thank you for shopping with Mesob Store! We hope you enjoy your purchase and look forward to serving you again.
           <br/><br/>
           Best regards,
         </p>

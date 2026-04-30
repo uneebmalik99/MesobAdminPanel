@@ -14,8 +14,6 @@ import {
   Spinner,
 } from "reactstrap";
 
-import axios from "axios";
-
 // core components
 import PanelHeader from "components/PanelHeader/PanelHeader.js";
 import Helmet from "react-helmet";
@@ -25,10 +23,8 @@ import "react-notification-alert/dist/animate.css";
 
 function Notifications() {
   const [title, setTitle] = useState("");
-  const [body, setBody] = useState("");
   const [description, setDescription] = useState("");
-  const [sendNotificationBtnLoading, setSendNotificationBtnLoading] =
-    useState(false);
+  const [sendNotificationBtnLoading, setSendNotificationBtnLoading] = useState(false);
   const editorRef = useRef(null);
 
   const notificationAlertRef = useRef(null);
@@ -54,43 +50,41 @@ function Notifications() {
   const handleNotificationSend = async (e) => {
     e.preventDefault();
 
-    const Title = title;
-    const Body = body;
-    const Description = description;
-
-    // console.log("title: ", title, "\n");
-    // console.log("body: ", body, "\n");
-    // console.log("description : ", description, "\n");
-
     const payload = {
-      Title: Title,
-      Body: Body,
-      Description: Description,
+      Title: title,
+      Body: description,        // ✅ editor content sent as Body
+      Description: description,
     };
 
     try {
       setSendNotificationBtnLoading(true);
-      const response = await axios.post(
+      const response = await fetch(
         "https://2uys9kc217.execute-api.us-east-1.amazonaws.com/dev/notification_topic?arn=arn:aws:sns:us-east-1:807954077262:EnpointTopic",
-        payload,
         {
+          method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
+          body: JSON.stringify(payload),
         }
       );
-      console.log("API Response:", response.data);
+      const responseData = await response.json().catch(() => null);
+      console.log("API Response:", responseData);
 
-      if (response.status === 200) {
+      if (response.ok) {
         setTitle("");
-        setBody("");
         setDescription("");
+        if (editorRef.current) {
+          editorRef.current.setContent(""); // ✅ Clear editor content
+        }
         setSendNotificationBtnLoading(false);
-
         notify("tr", "Notification sent successfully!", "success");
+      } else {
+        throw new Error(`Failed to send notification (${response.status})`);
       }
     } catch (error) {
       console.error("Error sending notification:", error);
+      setSendNotificationBtnLoading(false);
     }
   };
 
@@ -114,7 +108,7 @@ function Notifications() {
           <Col md="12">
             <Card>
               <CardHeader>
-                <h5 className="title">Notifications</h5>
+                {/* <h5 className="title">Notifications</h5> */}
               </CardHeader>
               <CardBody>
                 <Form>
@@ -132,23 +126,9 @@ function Notifications() {
                     </Col>
                   </Row>
                   <Row>
-                    <Col className="pr-1" md="12">
-                      <FormGroup>
-                        <label>Body</label>
-                        <Input
-                          placeholder="Body"
-                          type="text"
-                          value={body}
-                          onChange={(e) => setBody(e.target.value)}
-                        />
-                      </FormGroup>
-                    </Col>
-                  </Row>
-                  <Row>
                     <Col md="12">
                       <FormGroup>
-                        <label>Description</label>
-                        {/* <Input placeholder="Body" type="textarea" /> */}
+                        <label>Body</label>  {/* ✅ renamed from Description */}
                         <Editor
                           apiKey={process.env.REACT_APP_TINYMCE_API_KEY}
                           onInit={(evt, editor) => (editorRef.current = editor)}
@@ -185,11 +165,7 @@ function Notifications() {
                         {sendNotificationBtnLoading ? (
                           <>
                             Sending...
-                            <Spinner
-                              color="primary"
-                              size="sm"
-                              className="ml-1"
-                            />
+                            <Spinner color="primary" size="sm" className="ml-1" />
                           </>
                         ) : (
                           "Send Notification"

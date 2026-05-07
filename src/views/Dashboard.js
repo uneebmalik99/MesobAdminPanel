@@ -107,9 +107,9 @@ function Dashboard() {
   const [loadingMobileSessions, setLoadingMobileSessions] = useState(false);
 
   // NEW: Web sessions state
-const [webSessionsData, setWebSessionsData] = useState(null);
-const [webSessionsModalOpen, setWebSessionsModalOpen] = useState(false);
-const [loadingWebSessions, setLoadingWebSessions] = useState(false);
+  const [webSessionsData, setWebSessionsData] = useState(null);
+  const [webSessionsModalOpen, setWebSessionsModalOpen] = useState(false);
+  const [loadingWebSessions, setLoadingWebSessions] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -165,13 +165,13 @@ const [loadingWebSessions, setLoadingWebSessions] = useState(false);
       setProducts(productsList);
       console.log('Total products loaded:', productsList.length);
       console.log('First 5 product IDs:', productsList.slice(0, 5).map(p => p.id));
-const productWithId2 = productsList.find(product => product.id === '2' || product.productId === '2');
+      const productWithId2 = productsList.find(product => product.id === '2' || product.productId === '2');
 
-if (productWithId2) {
-  console.log('Product with ID 2:', productWithId2);
-} else {
-  console.log('No product found with ID 2');
-}
+      if (productWithId2) {
+        console.log('Product with ID 2:', productWithId2);
+      } else {
+        console.log('No product found with ID 2');
+      }
       // Fetch all categories
       const categoriesResponse = await fetch(`${API_URL}/categories`);
       const categoriesData = await categoriesResponse.json();
@@ -218,7 +218,7 @@ if (productWithId2) {
     const subCategoryId = product.Sub_category_id || product.subCategoryId || product.sub_category_id;
     const subcategory = subcategories.find(sc => sc.id === subCategoryId);
     const subcategoryName = subcategory?.name || "-";
-console.log('product details', { productId, product, categoryName, subcategoryName });
+    console.log('product details', { productId, product, categoryName, subcategoryName });
     return {
       title: product.title || productId,
       category: categoryName,
@@ -247,6 +247,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
     });
   };
 
+
   const getShortUserId = (rawUserId) => {
     let userId = rawUserId;
     if (rawUserId && typeof rawUserId === "object") {
@@ -263,43 +264,43 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
 
 
   const fetchAnalytics = async () => {
-  try {
-    setAnalyticsLoading(true);
+    try {
+      setAnalyticsLoading(true);
 
-    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
+      const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
 
-    console.log(`Fetching analytics with time filter: ${timeFilter}`);
+      console.log(`Fetching analytics with time filter: ${timeFilter}`);
 
-    const [dashboard, revenue, purchases, users, mobileSessions, webSessions] = await Promise.all([
-      fetch(`${API_URL}/analytics/dashboard${timeParam}`).then(r => r.json()),
-      fetch(`${API_URL}/analytics/revenue${timeParam}`).then(r => r.json()),
-      fetch(`${API_URL}/analytics/purchases${timeParam}`).then(r => r.json()),
-      fetch(`${API_URL}/analytics/users${timeParam}`).then(r => r.json()),
-      fetch(`${API_URL}/analytics/mobile-sessions${timeParam}`).then(r => r.json()),
-      fetch(`${API_URL}/analytics/web-sessions${timeParam}`).then(r => r.json()) // NEW
-    ]);
+      const [dashboard, revenue, purchases, users, mobileSessions, webSessions] = await Promise.all([
+        fetch(`${API_URL}/analytics/dashboard${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/revenue${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/purchases${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/users${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/mobile-sessions${timeParam}`).then(r => r.json()),
+        fetch(`${API_URL}/analytics/web-sessions${timeParam}`).then(r => r.json()) // NEW
+      ]);
 
-    console.log('🔍 Dashboard API Response:', {
-      totalEvents: dashboard.totalEvents,
-      productViewsCount: dashboard.mostViewedProducts?.length,
-      mostViewedProducts: dashboard.mostViewedProducts,
-      dateRange: dashboard.dateRange,
-      timeFilter: dashboard.timeFilter
-    });
+      console.log('🔍 Dashboard API Response:', {
+        totalEvents: dashboard.totalEvents,
+        productViewsCount: dashboard.mostViewedProducts?.length,
+        mostViewedProducts: dashboard.mostViewedProducts,
+        dateRange: dashboard.dateRange,
+        timeFilter: dashboard.timeFilter
+      });
 
-    setDashboardData(dashboard);
-    setRevenueData(revenue);
-    setPurchaseData(purchases);
-    setUserData(users);
-    setMobileSessionsData(mobileSessions); // NEW
-    setWebSessionsData(webSessions); // NEW
+      setDashboardData(dashboard);
+      setRevenueData(revenue);
+      setPurchaseData(purchases);
+      setUserData(users);
+      setMobileSessionsData(mobileSessions); // NEW
+      setWebSessionsData(webSessions); // NEW
 
-  } catch (error) {
-    console.error("Error fetching analytics:", error);
-  } finally {
-    setAnalyticsLoading(false);
-  }
-};
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -315,17 +316,17 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
       // Fetch platform-specific view breakdown with user details for this product
       const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
       const url = `${API_URL}/analytics/product/${encodeURIComponent(product.productId)}/views${timeParam}`;
-      
+
       console.log('=== DEBUG: Fetching Product Views ===');
       console.log('Product ID:', product.productId);
       console.log('Product Views (from list):', product.views);
       console.log('Time Filter:', timeFilter);
       console.log('API URL:', url);
-      
+
       const response = await fetch(url);
       console.log('Response Status:', response.status);
       console.log('Response OK:', response.ok);
-      
+
       const data = await response.json();
       console.log('=== API Response Data ===');
       console.log('Raw API Response:', JSON.stringify(data, null, 2));
@@ -333,10 +334,10 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
       console.log('data.ios:', data?.ios);
       console.log('data.android:', data?.android);
       console.log('data.total:', data?.total);
-      
+
       // Check what keys are in the response
       console.log('Response keys:', Object.keys(data || {}));
-      
+
       if (data && (data.web || data.ios || data.android)) {
         console.log('✅ Using API data - platform breakdown found');
         console.log('Web total:', data.web?.total);
@@ -349,7 +350,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
         console.log('Condition check: data.web?', !!data?.web);
         console.log('Condition check: data.ios?', !!data?.ios);
         console.log('Condition check: data.android?', !!data?.android);
-        
+
         // Fallback structure
         setProductViewsBreakdown({
           total: product.views,
@@ -362,7 +363,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
       console.error('❌ Error fetching product views breakdown:', error);
       console.error('Error message:', error.message);
       console.error('Error stack:', error.stack);
-      
+
       setProductViewsBreakdown({
         total: product.views,
         web: { total: 0, users: [] },
@@ -458,7 +459,7 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
   // Handler for Categories
   const handleCategoryClick = async (category) => {
     console.log('Category clicked', { category, timeFilter });
-    
+
     setSelectedCategory(category);
     setCategoryModalOpen(true);
     setLoadingCategoryBreakdown(true);
@@ -530,45 +531,45 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
   //     setLoadingSubcategoryBreakdown(false);
   //   }
   // };
-const handleSubcategoryClick = async (subcategory) => {
-  console.log('Subcategory clicked', { subcategory, timeFilter });
-  setSelectedSubcategory(subcategory);
-  setSubcategoryModalOpen(true);
-  setLoadingSubcategoryBreakdown(true);
+  const handleSubcategoryClick = async (subcategory) => {
+    console.log('Subcategory clicked', { subcategory, timeFilter });
+    setSelectedSubcategory(subcategory);
+    setSubcategoryModalOpen(true);
+    setLoadingSubcategoryBreakdown(true);
 
-  try {
-    const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
-    
-    // FIX: Use multiple possible field names and encode properly
-    const subCatId = subcategory.subCategoryId || subcategory.id || subcategory.subcategoryId;
-    
-    const response = await fetch(
-      `${API_URL}/analytics/subcategory/${encodeURIComponent(subCatId)}/views${timeParam}`
-    );
-    const data = await response.json();
+    try {
+      const timeParam = timeFilter !== "all" ? `?timeFilter=${timeFilter}` : `?timeFilter=all`;
 
-    if (data && (data.web || data.ios || data.android)) {
-      setSubcategoryBreakdown(data);
-    } else {
+      // FIX: Use multiple possible field names and encode properly
+      const subCatId = subcategory.subCategoryId || subcategory.id || subcategory.subcategoryId;
+
+      const response = await fetch(
+        `${API_URL}/analytics/subcategory/${encodeURIComponent(subCatId)}/views${timeParam}`
+      );
+      const data = await response.json();
+
+      if (data && (data.web || data.ios || data.android)) {
+        setSubcategoryBreakdown(data);
+      } else {
+        setSubcategoryBreakdown({
+          total: subcategory.views || 0,
+          web: { total: 0, users: [] },
+          ios: { total: 0, users: [] },
+          android: { total: 0, users: [] }
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching subcategory breakdown:", error);
       setSubcategoryBreakdown({
         total: subcategory.views || 0,
         web: { total: 0, users: [] },
         ios: { total: 0, users: [] },
         android: { total: 0, users: [] }
       });
+    } finally {
+      setLoadingSubcategoryBreakdown(false);
     }
-  } catch (error) {
-    console.error("Error fetching subcategory breakdown:", error);
-    setSubcategoryBreakdown({
-      total: subcategory.views || 0,
-      web: { total: 0, users: [] },
-      ios: { total: 0, users: [] },
-      android: { total: 0, users: [] }
-    });
-  } finally {
-    setLoadingSubcategoryBreakdown(false);
-  }
-};
+  };
   const handleCloseSubcategoryModal = () => {
     setSubcategoryModalOpen(false);
     setSelectedSubcategory(null);
@@ -576,28 +577,28 @@ const handleSubcategoryClick = async (subcategory) => {
   };
 
   // NEW: Handler for Mobile Visits click
-const handleMobileVisitsClick = () => {
-  setMobileSessionsModalOpen(true);
-};
+  const handleMobileVisitsClick = () => {
+    setMobileSessionsModalOpen(true);
+  };
 
-const handleCloseMobileSessionsModal = () => {
-  setMobileSessionsModalOpen(false);
-};
+  const handleCloseMobileSessionsModal = () => {
+    setMobileSessionsModalOpen(false);
+  };
 
-// NEW: Handler for Web Visits click
-const handleWebVisitsClick = () => {
-  setWebSessionsModalOpen(true);
-};
+  // NEW: Handler for Web Visits click
+  const handleWebVisitsClick = () => {
+    setWebSessionsModalOpen(true);
+  };
 
-const handleCloseWebSessionsModal = () => {
-  setWebSessionsModalOpen(false);
-};
+  const handleCloseWebSessionsModal = () => {
+    setWebSessionsModalOpen(false);
+  };
 
-const handleCloseViewsModal = () => {
+  const handleCloseViewsModal = () => {
     setViewsModalOpen(false);
     setSelectedProduct(null);
     setProductViewsBreakdown(null);
-};
+  };
 
   return (
     <>
@@ -849,77 +850,77 @@ const handleCloseViewsModal = () => {
                 </MUIButton>
               </Box>
 
-            {/* Analytics Key Metrics Row 2 - Tracking Events */}
-            <Grid container spacing={2} style={{ marginBottom: 20 }}>
-              <Grid item xs={6} sm={6} md={3}>
-                <MUICard style={{ background: '#f0f7ff', height: '100%' }}>
-                  <CardContent style={{ padding: '12px' }}>
-                    <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
-                      Total Events Tracked
-                    </Typography>
-                    <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
-                      {dashboardData?.totalEvents || 0}
-                    </Typography>
-                  </CardContent>
-                </MUICard>
-              </Grid>
+              {/* Analytics Key Metrics Row 2 - Tracking Events */}
+              <Grid container spacing={2} style={{ marginBottom: 20 }}>
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard style={{ background: '#f0f7ff', height: '100%' }}>
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Total Events Tracked
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.totalEvents || 0}
+                      </Typography>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
 
-              {/* WEB VISITS CARD */}
-              <Grid item xs={6} sm={6} md={3}>
-                <MUICard 
-                  style={{ background: '#fff4e6', height: '100%', cursor: 'pointer' }}
-                  // onClick={handleWebVisitsClick}
-                  hover
-                >
-                  <CardContent style={{ padding: '12px' }}>
-                    <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
-                      Web Visits (Sessions)
-                    </Typography>
-                    <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
-                      {dashboardData?.deviceBreakdown?.web || 0}
-                    </Typography>
-                    {/* <Typography variant="caption" color="primary" style={{ fontSize: '0.65rem', marginTop: '4px', display: 'block' }}>
+                {/* WEB VISITS CARD */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard
+                    style={{ background: '#fff4e6', height: '100%', cursor: 'pointer' }}
+                    // onClick={handleWebVisitsClick}
+                    hover
+                  >
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Web Visits (Sessions)
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.deviceBreakdown?.web || 0}
+                      </Typography>
+                      {/* <Typography variant="caption" color="primary" style={{ fontSize: '0.65rem', marginTop: '4px', display: 'block' }}>
                       Click for details →
                     </Typography> */}
-                  </CardContent>
-                </MUICard>
-              </Grid>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
 
-              {/* MOBILE VISITS CARD */}
-              <Grid item xs={6} sm={6} md={3}>
-                <MUICard 
-                  style={{ background: '#e8f5e9', height: '100%', cursor: 'pointer' }}
-                  // onClick={handleMobileVisitsClick}
-                  hover
-                >
-                  <CardContent style={{ padding: '12px' }}>
-                    <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
-                      Mobile Visits (Sessions)
-                    </Typography>
-                    <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
-                      {dashboardData?.deviceBreakdown?.mobile || 0}
-                    </Typography>
-                    {/* <Typography variant="caption" color="primary" style={{ fontSize: '0.65rem', marginTop: '4px', display: 'block' }}>
+                {/* MOBILE VISITS CARD */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard
+                    style={{ background: '#e8f5e9', height: '100%', cursor: 'pointer' }}
+                    // onClick={handleMobileVisitsClick}
+                    hover
+                  >
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Mobile Visits (Sessions)
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.deviceBreakdown?.mobile || 0}
+                      </Typography>
+                      {/* <Typography variant="caption" color="primary" style={{ fontSize: '0.65rem', marginTop: '4px', display: 'block' }}>
                       Click for details →
                     </Typography> */}
-                  </CardContent>
-                </MUICard>
-              </Grid>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
 
-              {/* PRODUCT VIEWS CARD */}
-              <Grid item xs={6} sm={6} md={3}>
-                <MUICard style={{ background: '#fce4ec', height: '100%' }}>
-                  <CardContent style={{ padding: '12px' }}>
-                    <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
-                      Product Views
-                    </Typography>
-                    <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
-                      {dashboardData?.mostViewedProducts?.reduce((sum, p) => sum + p.views, 0) || 0}
-                    </Typography>
-                  </CardContent>
-                </MUICard>
+                {/* PRODUCT VIEWS CARD */}
+                <Grid item xs={6} sm={6} md={3}>
+                  <MUICard style={{ background: '#fce4ec', height: '100%' }}>
+                    <CardContent style={{ padding: '12px' }}>
+                      <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
+                        Product Views
+                      </Typography>
+                      <Typography variant="h4" style={{ fontSize: '1.5rem' }}>
+                        {dashboardData?.mostViewedProducts?.reduce((sum, p) => sum + p.views, 0) || 0}
+                      </Typography>
+                    </CardContent>
+                  </MUICard>
+                </Grid>
               </Grid>
-            </Grid>
 
               {/* Tabs for Different Analytics Views */}
               <Paper style={{ marginBottom: 15, overflowX: 'auto' }}>
@@ -1002,7 +1003,7 @@ const handleCloseViewsModal = () => {
                                       {filteredProducts.map((product, index) => {
                                         const productDetails = getProductDetails(product.productId);
                                         console.log('filteredProducts', product);
-                                        
+
                                         return (
                                           <TableRow
                                             key={product.productId}
@@ -1137,7 +1138,7 @@ const handleCloseViewsModal = () => {
                                           </TableCell>
                                           <TableCell>
                                             <Typography variant="body1" style={{ fontWeight: 500 }}>
-                                                {typeof product.title === 'string' ? product.title : (productDetails?.title || product.productId)}
+                                              {typeof product.title === 'string' ? product.title : (productDetails?.title || product.productId)}
                                             </Typography>
                                             <Typography variant="caption" color="textSecondary">
                                               ID: {product.productId}
@@ -1551,65 +1552,65 @@ const handleCloseViewsModal = () => {
                   */}
 
                   {activeTab === 5 && (
-  <Grid container spacing={3}>
-    <Grid item xs={12}>
-      <MUICard>
-        <MUICardHeader
-          title="Revenue Over Time"
-          subheader={`Total Revenue: $${parseFloat(revenueData?.totalRevenue || 0).toLocaleString()} | Orders: ${revenueData?.totalOrders || 0}`}
-          style={{ borderBottom: '2px solid #00bcd4' }}
-        />
-        <CardContent>
-          {revenueData?.revenueByDate?.length > 0 ? (
-            <Line
-              data={{
-                labels: revenueData.revenueByDate.map(d => d.date),
-                datasets: [{
-                  label: 'Revenue ($)',
-                  // ✅ parse as float, not left as string
-                  data: revenueData.revenueByDate.map(d => parseFloat(d.revenue)),
-                  borderColor: 'rgb(75, 192, 192)',
-                  backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                  tension: 0.1,
-                  fill: true
-                }]
-              }}
-              options={{
-                responsive: true,
-                plugins: {
-                  legend: { position: 'top' },
-                  tooltip: {
-                    callbacks: {
-                      label: (context) => `$${context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                    }
-                  }
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      callback: (value) => '$' + Number(value).toLocaleString()
-                    }
-                  }
-                }
-              }}
-            />
-          ) : (
-            // ✅ Show empty state instead of empty chart
-            <Box p={8} textAlign="center">
-              <Typography variant="h6" color="textSecondary">
-                📊 No revenue data for this period
-              </Typography>
-              <Typography color="textSecondary" style={{ marginTop: 8 }}>
-                Total Revenue: ${parseFloat(revenueData?.totalRevenue || 0).toFixed(2)} from {revenueData?.totalOrders || 0} orders
-              </Typography>
-            </Box>
-          )}
-        </CardContent>
-      </MUICard>
-    </Grid>
-  </Grid>
-)}
+                    <Grid container spacing={3}>
+                      <Grid item xs={12}>
+                        <MUICard>
+                          <MUICardHeader
+                            title="Revenue Over Time"
+                            subheader={`Total Revenue: $${parseFloat(revenueData?.totalRevenue || 0).toLocaleString()} | Orders: ${revenueData?.totalOrders || 0}`}
+                            style={{ borderBottom: '2px solid #00bcd4' }}
+                          />
+                          <CardContent>
+                            {revenueData?.revenueByDate?.length > 0 ? (
+                              <Line
+                                data={{
+                                  labels: revenueData.revenueByDate.map(d => d.date),
+                                  datasets: [{
+                                    label: 'Revenue ($)',
+                                    // ✅ parse as float, not left as string
+                                    data: revenueData.revenueByDate.map(d => parseFloat(d.revenue)),
+                                    borderColor: 'rgb(75, 192, 192)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    tension: 0.1,
+                                    fill: true
+                                  }]
+                                }}
+                                options={{
+                                  responsive: true,
+                                  plugins: {
+                                    legend: { position: 'top' },
+                                    tooltip: {
+                                      callbacks: {
+                                        label: (context) => `$${context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                                      }
+                                    }
+                                  },
+                                  scales: {
+                                    y: {
+                                      beginAtZero: true,
+                                      ticks: {
+                                        callback: (value) => '$' + Number(value).toLocaleString()
+                                      }
+                                    }
+                                  }
+                                }}
+                              />
+                            ) : (
+                              // ✅ Show empty state instead of empty chart
+                              <Box p={8} textAlign="center">
+                                <Typography variant="h6" color="textSecondary">
+                                  📊 No revenue data for this period
+                                </Typography>
+                                <Typography color="textSecondary" style={{ marginTop: 8 }}>
+                                  Total Revenue: ${parseFloat(revenueData?.totalRevenue || 0).toFixed(2)} from {revenueData?.totalOrders || 0} orders
+                                </Typography>
+                              </Box>
+                            )}
+                          </CardContent>
+                        </MUICard>
+                      </Grid>
+                    </Grid>
+                  )}
                 </>
               )}
             </div>
@@ -3051,10 +3052,10 @@ const handleCloseViewsModal = () => {
                               })()}
                             </TableCell>
                             <TableCell>
-                              <Chip 
-                                label={`${session?.pageViews || 0} pages`} 
-                                size="small" 
-                                style={{ fontSize: '0.65rem', backgroundColor: '#e3f2fd' }} 
+                              <Chip
+                                label={`${session?.pageViews || 0} pages`}
+                                size="small"
+                                style={{ fontSize: '0.65rem', backgroundColor: '#e3f2fd' }}
                               />
                             </TableCell>
                             <TableCell align="right">
@@ -3090,7 +3091,7 @@ const handleCloseViewsModal = () => {
             <MUIButton onClick={handleCloseWebSessionsModal} color="primary">Close</MUIButton>
           </DialogActions>
         </Dialog>
-        
+
       </div>
     </>
   );

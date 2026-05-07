@@ -247,6 +247,20 @@ console.log('product details', { productId, product, categoryName, subcategoryNa
     });
   };
 
+  const getShortUserId = (rawUserId) => {
+    let userId = rawUserId;
+    if (rawUserId && typeof rawUserId === "object") {
+      userId = rawUserId.id ?? rawUserId.userId ?? "";
+    }
+    if (typeof userId === "number") {
+      userId = String(userId);
+    }
+    if (typeof userId !== "string" || !userId) {
+      return "";
+    }
+    return `${userId.substring(0, 8)}...`;
+  };
+
 
   const fetchAnalytics = async () => {
   try {
@@ -1483,7 +1497,7 @@ const handleCloseViewsModal = () => {
                     </Grid>
                   )}
                   {/* Tab 6: Revenue */}
-                  {activeTab === 5 && (
+                  {/* {activeTab === 5 && (
                     <Grid container spacing={3}>
                       <Grid item xs={12}>
                         <MUICard>
@@ -1533,6 +1547,69 @@ const handleCloseViewsModal = () => {
                       </Grid>
                     </Grid>
                   )}
+                  
+                  */}
+
+                  {activeTab === 5 && (
+  <Grid container spacing={3}>
+    <Grid item xs={12}>
+      <MUICard>
+        <MUICardHeader
+          title="Revenue Over Time"
+          subheader={`Total Revenue: $${parseFloat(revenueData?.totalRevenue || 0).toLocaleString()} | Orders: ${revenueData?.totalOrders || 0}`}
+          style={{ borderBottom: '2px solid #00bcd4' }}
+        />
+        <CardContent>
+          {revenueData?.revenueByDate?.length > 0 ? (
+            <Line
+              data={{
+                labels: revenueData.revenueByDate.map(d => d.date),
+                datasets: [{
+                  label: 'Revenue ($)',
+                  // ✅ parse as float, not left as string
+                  data: revenueData.revenueByDate.map(d => parseFloat(d.revenue)),
+                  borderColor: 'rgb(75, 192, 192)',
+                  backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                  tension: 0.1,
+                  fill: true
+                }]
+              }}
+              options={{
+                responsive: true,
+                plugins: {
+                  legend: { position: 'top' },
+                  tooltip: {
+                    callbacks: {
+                      label: (context) => `$${context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
+                    }
+                  }
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      callback: (value) => '$' + Number(value).toLocaleString()
+                    }
+                  }
+                }
+              }}
+            />
+          ) : (
+            // ✅ Show empty state instead of empty chart
+            <Box p={8} textAlign="center">
+              <Typography variant="h6" color="textSecondary">
+                📊 No revenue data for this period
+              </Typography>
+              <Typography color="textSecondary" style={{ marginTop: 8 }}>
+                Total Revenue: ${parseFloat(revenueData?.totalRevenue || 0).toFixed(2)} from {revenueData?.totalOrders || 0} orders
+              </Typography>
+            </Box>
+          )}
+        </CardContent>
+      </MUICard>
+    </Grid>
+  </Grid>
+)}
                 </>
               )}
             </div>
@@ -2800,11 +2877,14 @@ const handleCloseViewsModal = () => {
                             <TableRow key={idx} hover>
                               <TableCell>
                                 <Typography variant="body2" style={{ fontWeight: 500 }}>{session?.username || 'Anonymous'}</Typography>
-                                {session?.userId !== 'anonymous' && (
-                                  <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {session.userId.substring(0, 8)}...
-                                  </Typography>
-                                )}
+                                {(() => {
+                                  const shortUserId = getShortUserId(session?.userId);
+                                  return shortUserId ? (
+                                    <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                                      ID: {shortUserId}
+                                    </Typography>
+                                  ) : null;
+                                })()}
                               </TableCell>
                               <TableCell>
                                 <Typography variant="caption" style={{ fontSize: '0.7rem' }}>
@@ -2858,11 +2938,14 @@ const handleCloseViewsModal = () => {
                             <TableRow key={idx} hover>
                               <TableCell>
                                 <Typography variant="body2" style={{ fontWeight: 500 }}>{session?.username || 'Anonymous'}</Typography>
-                                {session?.userId !== 'anonymous' && (
-                                  <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {session.userId.substring(0, 8)}...
-                                  </Typography>
-                                )}
+                                {(() => {
+                                  const shortUserId = getShortUserId(session?.userId);
+                                  return shortUserId ? (
+                                    <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                                      ID: {shortUserId}
+                                    </Typography>
+                                  ) : null;
+                                })()}
                               </TableCell>
                               <TableCell>
                                 <Typography variant="caption" style={{ fontSize: '0.7rem' }}>
@@ -2958,11 +3041,14 @@ const handleCloseViewsModal = () => {
                           <TableRow key={idx} hover>
                             <TableCell>
                               <Typography variant="body2" style={{ fontWeight: 500 }}>{session?.username || 'Anonymous'}</Typography>
-                              {session?.userId !== 'anonymous' && (
-                                <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                  ID: {session.userId.substring(0, 8)}...
-                                </Typography>
-                              )}
+                              {(() => {
+                                const shortUserId = getShortUserId(session?.userId);
+                                return shortUserId ? (
+                                  <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
+                                    ID: {shortUserId}
+                                  </Typography>
+                                ) : null;
+                              })()}
                             </TableCell>
                             <TableCell>
                               <Chip 

@@ -32,20 +32,20 @@ import { Editor } from "@tinymce/tinymce-react";
 const columns = [
   {
     name: "User ID",
-    selector: (row) => row.id,
+    selector: (row) => row?.id,
     sortable: true,
     width: "120px",
-    cell: (row) => <UserIdCell userId={row.id} />,
+    cell: (row) => <UserIdCell userId={row?.id} />,
   },
   {
     name: "Email",
-    selector: (row) => row.email,
+    selector: (row) => row?.email,
     sortable: true,
     width: "300px",
   },
   {
     name: "Phone",
-    selector: (row) => row.phoneNo ?? "-",
+    selector: (row) => row?.phoneNo ?? "-",
     sortable: true,
     width: "100px",
   },

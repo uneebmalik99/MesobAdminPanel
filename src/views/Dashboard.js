@@ -821,6 +821,7 @@ function Dashboard() {
                   color="primary"
                   onClick={() => setTimeFilter("daily")}
                   size="small"
+                  disabled={analyticsLoading}
                 >
                   Today
                 </MUIButton>
@@ -829,6 +830,7 @@ function Dashboard() {
                   color="primary"
                   onClick={() => setTimeFilter("weekly")}
                   size="small"
+                  disabled={analyticsLoading}
                 >
                   Last 7 Days
                 </MUIButton>
@@ -837,6 +839,7 @@ function Dashboard() {
                   color="primary"
                   onClick={() => setTimeFilter("monthly")}
                   size="small"
+                  disabled={analyticsLoading}
                 >
                   This Month
                 </MUIButton>
@@ -845,6 +848,7 @@ function Dashboard() {
                   color="primary"
                   onClick={() => setTimeFilter("yearly")}
                   size="small"
+                  disabled={analyticsLoading}
                 >
                   This Year
                 </MUIButton>
@@ -1706,24 +1710,24 @@ function Dashboard() {
                             <TableRow key={idx} hover>
                               <TableCell>
                                 <Typography variant="body2" style={{ fontWeight: 500 }}>
-                                  {user.username || 'Anonymous'}
+                                  {user?.username || 'Anonymous'}
                                 </Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
                                 <Chip
-                                  label={user.count}
+                                  label={user?.count}
                                   size="small"
                                   style={{ minWidth: 40, fontSize: '0.7rem' }}
                                 />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -1786,24 +1790,24 @@ function Dashboard() {
                             <TableRow key={idx} hover>
                               <TableCell>
                                 <Typography variant="body2" style={{ fontWeight: 500 }}>
-                                  {user.username || 'Anonymous'}
+                                  {user?.username || 'Anonymous'}
                                 </Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
                                 <Chip
-                                  label={user.count}
+                                  label={user?.count}
                                   size="small"
                                   style={{ minWidth: 40, fontSize: '0.7rem' }}
                                 />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -1866,24 +1870,24 @@ function Dashboard() {
                             <TableRow key={idx} hover>
                               <TableCell>
                                 <Typography variant="body2" style={{ fontWeight: 500 }}>
-                                  {user.username || 'Anonymous'}
+                                  {user?.username || 'Anonymous'}
                                 </Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
                                 <Chip
-                                  label={user.count}
+                                  label={user?.count}
                                   size="small"
                                   style={{ minWidth: 40, fontSize: '0.7rem' }}
                                 />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -1984,19 +1988,19 @@ function Dashboard() {
                           {cartBreakdown.web.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2041,19 +2045,19 @@ function Dashboard() {
                           {cartBreakdown.ios.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2098,19 +2102,19 @@ function Dashboard() {
                           {cartBreakdown.android.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2207,19 +2211,19 @@ function Dashboard() {
                           {pageViewBreakdown.web.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2264,19 +2268,19 @@ function Dashboard() {
                           {pageViewBreakdown.ios.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2321,19 +2325,19 @@ function Dashboard() {
                           {pageViewBreakdown.android.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2430,19 +2434,19 @@ function Dashboard() {
                           {categoryBreakdown.web.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2487,19 +2491,19 @@ function Dashboard() {
                           {categoryBreakdown.ios.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2544,19 +2548,19 @@ function Dashboard() {
                           {categoryBreakdown.android.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2653,19 +2657,19 @@ function Dashboard() {
                           {subcategoryBreakdown.web.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2710,19 +2714,19 @@ function Dashboard() {
                           {subcategoryBreakdown.ios.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>
@@ -2767,19 +2771,19 @@ function Dashboard() {
                           {subcategoryBreakdown.android.users.map((user, idx) => (
                             <TableRow key={idx} hover>
                               <TableCell>
-                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user.username || 'Anonymous'}</Typography>
-                                {user.userId && user.userId !== 'anonymous' && (
+                                <Typography variant="body2" style={{ fontWeight: 500 }}>{user?.username || 'Anonymous'}</Typography>
+                                {(typeof user?.userId === 'string' || typeof user?.userId === 'number') && String(user?.userId) !== 'anonymous' && (
                                   <Typography variant="caption" color="textSecondary" style={{ fontSize: '0.65rem' }}>
-                                    ID: {user.userId.substring(0, 8)}...
+                                    ID: {String(user?.userId).substring(0, 8)}...
                                   </Typography>
                                 )}
                               </TableCell>
                               <TableCell align="right">
-                                <Chip label={user.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
+                                <Chip label={user?.count} size="small" style={{ minWidth: 40, fontSize: '0.7rem' }} />
                               </TableCell>
                               <TableCell align="right">
                                 <Typography variant="caption" color="textSecondary">
-                                  {new Date(user.lastViewTimestamp).toLocaleString()}
+                                  {new Date(user?.lastViewTimestamp).toLocaleString()}
                                 </Typography>
                               </TableCell>
                             </TableRow>

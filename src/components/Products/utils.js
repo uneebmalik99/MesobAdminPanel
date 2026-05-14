@@ -80,7 +80,7 @@ export const parseProductImages = (value) => {
 };
 
 export const stringifyProductImages = (value) => {
-  return parseProductImages(value).join("\n");
+  return parseProductImages(value).join(", ");
 };
 
 export const getProductRequestId = (product) => {

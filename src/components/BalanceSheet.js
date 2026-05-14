@@ -140,7 +140,7 @@ const BalanceSheet = ({ items }) => {
           <tr>
             <td>Retained earnings / Net income</td>
             <td></td>
-            <td style={{ backgroundColor: '#ffa6ff' }} className="amount">{retainedEarnings}$</td>
+            <td className="amount amount-net-income">{retainedEarnings}$</td>
           </tr>
           <tr className="total-row">
             <td>Total</td>

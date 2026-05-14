@@ -678,7 +678,7 @@ function Dashboard() {
       <div className="content dashboard-dark-theme">
         <Row>
           <Col xs="12" sm="6" lg="3" md="6">
-            <Card className="card-stats" style={{ marginBottom: '15px' }}>
+            <Card className="card-stats dashboard-stat-card dashboard-stat-card--warning" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -704,7 +704,7 @@ function Dashboard() {
           </Col>
 
           <Col xs="12" sm="6" lg="3" md="6">
-            <Card className="card-stats" style={{ marginBottom: '15px' }}>
+            <Card className="card-stats dashboard-stat-card dashboard-stat-card--success" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -735,7 +735,7 @@ function Dashboard() {
           </Col>
 
           <Col xs="12" sm="6" lg="3" md="6">
-            <Card className="card-stats" style={{ marginBottom: '15px' }}>
+            <Card className="card-stats dashboard-stat-card dashboard-stat-card--danger" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -766,7 +766,7 @@ function Dashboard() {
           </Col>
 
           <Col xs="12" sm="6" lg="3" md="6">
-            <Card className="card-stats" style={{ marginBottom: '15px' }}>
+            <Card className="card-stats dashboard-stat-card dashboard-stat-card--primary" style={{ marginBottom: '15px' }}>
               <CardBody>
                 <Row>
                   <Col xs="5">
@@ -857,7 +857,7 @@ function Dashboard() {
               {/* Analytics Key Metrics Row 2 - Tracking Events */}
               <Grid container spacing={2} style={{ marginBottom: 20 }}>
                 <Grid item xs={6} sm={6} md={3}>
-                  <MUICard style={{ background: '#f0f7ff', height: '100%' }}>
+                  <MUICard className="dashboard-summary-card dashboard-summary-card--cyan" style={{ height: '100%' }}>
                     <CardContent style={{ padding: '12px' }}>
                       <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
                         Total Events Tracked
@@ -872,7 +872,8 @@ function Dashboard() {
                 {/* WEB VISITS CARD */}
                 <Grid item xs={6} sm={6} md={3}>
                   <MUICard
-                    style={{ background: '#fff4e6', height: '100%', cursor: 'pointer' }}
+                    className="dashboard-summary-card dashboard-summary-card--orange"
+                    style={{ height: '100%', cursor: 'pointer' }}
                     // onClick={handleWebVisitsClick}
                     hover
                   >
@@ -893,7 +894,8 @@ function Dashboard() {
                 {/* MOBILE VISITS CARD */}
                 <Grid item xs={6} sm={6} md={3}>
                   <MUICard
-                    style={{ background: '#e8f5e9', height: '100%', cursor: 'pointer' }}
+                    className="dashboard-summary-card dashboard-summary-card--green"
+                    style={{ height: '100%', cursor: 'pointer' }}
                     // onClick={handleMobileVisitsClick}
                     hover
                   >
@@ -913,7 +915,7 @@ function Dashboard() {
 
                 {/* PRODUCT VIEWS CARD */}
                 <Grid item xs={6} sm={6} md={3}>
-                  <MUICard style={{ background: '#fce4ec', height: '100%' }}>
+                  <MUICard className="dashboard-summary-card dashboard-summary-card--pink" style={{ height: '100%' }}>
                     <CardContent style={{ padding: '12px' }}>
                       <Typography color="textSecondary" gutterBottom style={{ fontSize: '0.75rem' }}>
                         Product Views
@@ -927,7 +929,7 @@ function Dashboard() {
               </Grid>
 
               {/* Tabs for Different Analytics Views */}
-              <Paper style={{ marginBottom: 15, overflowX: 'auto' }}>
+              <Paper className="dashboard-tabs-shell" style={{ marginBottom: 15, overflowX: 'auto' }}>
                 <Tabs
                   value={activeTab}
                   onChange={handleTabChange}
@@ -1582,18 +1584,42 @@ function Dashboard() {
                                 options={{
                                   responsive: true,
                                   plugins: {
-                                    legend: { position: 'top' },
+                                    legend: {
+                                      position: 'top',
+                                      labels: {
+                                        color: '#dbe7ff'
+                                      }
+                                    },
                                     tooltip: {
+                                      backgroundColor: '#0f172a',
+                                      titleColor: '#f8fbff',
+                                      bodyColor: '#dbe7ff',
+                                      borderColor: 'rgba(56, 189, 248, 0.3)',
+                                      borderWidth: 1,
                                       callbacks: {
                                         label: (context) => `$${context.parsed.y.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
                                       }
                                     }
                                   },
                                   scales: {
+                                    x: {
+                                      ticks: {
+                                        color: '#8ea0c0'
+                                      },
+                                      grid: {
+                                        color: 'rgba(148, 163, 184, 0.12)',
+                                        drawBorder: false
+                                      }
+                                    },
                                     y: {
                                       beginAtZero: true,
                                       ticks: {
+                                        color: '#8ea0c0',
                                         callback: (value) => '$' + Number(value).toLocaleString()
+                                      },
+                                      grid: {
+                                        color: 'rgba(148, 163, 184, 0.12)',
+                                        drawBorder: false
                                       }
                                     }
                                   }

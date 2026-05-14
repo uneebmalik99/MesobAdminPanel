@@ -179,9 +179,9 @@ const CategoryFormModal = ({
                   padding: "0.375rem 0.75rem",
                   fontSize: "0.875rem",
                   lineHeight: "1.5",
-                  color: "#495057",
-                  backgroundColor: "#fff",
-                  border: "1px solid #ced4da",
+                  color: "#dbe7ff",
+                  backgroundColor: "#0f172a",
+                  border: "1px solid rgba(125, 145, 180, 0.18)",
                   borderRadius: "0.25rem"
                 }}
               />
@@ -231,7 +231,7 @@ const CategoryFormModal = ({
                     maxWidth: "200px",
                     maxHeight: "200px",
                     borderRadius: "8px",
-                    border: "1px solid #dee2e6",
+                    border: "1px solid rgba(125, 145, 180, 0.18)",
                   }}
                   onError={(e) => {
                     e.target.style.display = "none";

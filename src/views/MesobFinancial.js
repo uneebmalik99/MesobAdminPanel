@@ -424,6 +424,25 @@ function MesobFinancial() {
     });
     const totalTransactions = sortedTransactions.length;
 
+    const getValueColor = (transactionType, fallback = "#fda4af") => {
+      const normalizedType = String(transactionType || "").toLowerCase();
+
+      if (normalizedType === "payable") return "#fda4af";
+      if (normalizedType === "cash - payable to sheep provider") return "#7dd3fc";
+      if (normalizedType === "cash - payable to general") return "#bef264";
+      if (normalizedType === "cash - payable to miscellaneous expenses") {
+        return "#facc15";
+      }
+
+      return fallback;
+    };
+
+    const valueStyle = (color) => ({
+      color,
+      fontWeight: 700,
+      background: "transparent",
+    });
+
 
     return (
       <div className="table-container">
@@ -457,19 +476,14 @@ function MesobFinancial() {
                 )}
                 {transaction.type === 1 ? (
                   <td className="debit">
-                    <div style={{
-                      backgroundColor:
-                        transaction.transactiontype.toLowerCase() === 'payable' ? '#ff998d' :
-                          transaction.transactiontype.toLowerCase() === 'cash - payable to sheep provider' ? '#d4ebff' :
-                            transaction.transactiontype.toLowerCase() === 'cash - payable to general' ? '#bae08c' :
-                              transaction.transactiontype.toLowerCase() === 'cash - payable to miscellaneous expenses' ? '#ffc296' :
-                                '#ffc196'
-                    }}>{transaction.totalCost}$</div>
+                    <div style={valueStyle(getValueColor(transaction.transactiontype))}>
+                      {transaction.totalCost}$
+                    </div>
                     <div>-</div>
                   </td>
                 ) : (
                   <td className="debit">
-                    <div style={{ backgroundColor: '#fffd9d' }}>{transaction.totalCost}$</div>
+                    <div style={valueStyle("#fde68a")}>{transaction.totalCost}$</div>
                     {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <div>-</div>}
                     {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <div>-</div>}
                     <div>-</div>
@@ -479,14 +493,7 @@ function MesobFinancial() {
                   <td  >
                     <td className="credit" style={{ borderWidth: 0, width: '100%', }}>
                       <div>-</div>
-                      <div style={{
-                        backgroundColor:
-                          transaction.transactiontype.toLowerCase() === 'payable' ? '#ff998d' :
-                            transaction.transactiontype.toLowerCase() === 'cash - payable to sheep provider' ? '#fffd9d' :
-                              transaction.transactiontype.toLowerCase() === 'cash - payable to general' ? '#fffd9d' :
-                                transaction.transactiontype.toLowerCase() === 'cash - payable to miscellaneous expenses' ? '#fffd9d' :
-                                  '#ffc196'
-                      }}>
+                      <div style={valueStyle(getValueColor(transaction.transactiontype))}>
                         {transaction.credit}$</div>
                     </td>
                     <td style={{ borderWidth: 0, }}>
@@ -504,9 +511,13 @@ function MesobFinancial() {
                 ) : (
                   <td className="credit">
                     <div>-</div>
-                    {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && <div style={{ backgroundColor: '#d1ebb3' }}>{transaction.generalProductsCost}$</div>}
-                    {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && <div style={{ backgroundColor: '#d3ebff' }}>{transaction.sheepGoatCost}$</div>}
-                    <div style={{ backgroundColor: '#ffa6ff' }}>
+                    {transaction?.generalProductsCost && transaction?.generalProductsCost !== '0.00' && (
+                      <div style={valueStyle("#bef264")}>{transaction.generalProductsCost}$</div>
+                    )}
+                    {transaction?.sheepGoatCost && transaction?.sheepGoatCost !== '0.00' && (
+                      <div style={valueStyle("#7dd3fc")}>{transaction.sheepGoatCost}$</div>
+                    )}
+                    <div style={valueStyle("#f9a8d4")}>
                       {(() => {
                         const sheepGoatCost = parseFloat(transaction?.sheepGoatCost || 0);
                         const generalProductsCost = parseFloat(transaction?.generalProductsCost || 0);
@@ -537,7 +548,7 @@ function MesobFinancial() {
       <PanelHeader
         size="sm"
         content={
-          <div className="header text-center">
+          <div className="header text-center" style={{ paddingTop: 16 }}>
             <h2 className="title">Mesob Financial Report</h2>
           </div>
         }
@@ -576,33 +587,33 @@ function MesobFinancial() {
                     <div style={{ margin: 20 }}>
                       <div style={{ display: 'inline-block', display: 'flex', flexDirection: 'row' }}>
                         <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10 }}>Total Cash on hand =</p>
-                        <p style={{ backgroundColor: '#fffd9d', borderWidth: 5, borderColor: 'grey', padding: 10 }}>
+                        <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10, color: '#fde68a', fontWeight: 700 }}>
                           {calculateTotalCashOnHand(filteredItems)}$
                         </p>
                       </div>
 
                       <div style={{ display: 'inline-block', display: 'flex', flexDirection: 'row' }}>
                         <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10 }}>Total Payable (Unpaid)=</p>
-                        <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10 }}>
+                        <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10, color: '#c4b5fd', fontWeight: 700 }}>
                           {calculateTotalPayable(filteredItems)}$
                         </p>
                       </div>
                       <div style={{ display: 'flex', marginLeft: 20, flexDirection: 'row', gap: '20px' }}>
-                        <p style={{ fontSize: 12 }}>Payable to sheep/goat = <span style={{ backgroundColor: '#3498db', padding: 10, color: 'white', fontWeight: 'bold' }}>{calculateSheepPayable(filteredItems)}$</span></p>
-                        <p style={{ fontSize: 12 }}>Payable to general = <span style={{ backgroundColor: '#9b59b6', padding: 10, color: 'white', fontWeight: 'bold' }}>{calculateGeneralPayable(filteredItems)}$</span></p>
-                        <p style={{ fontSize: 12 }}>Payable to miscellaneous = <span style={{ backgroundColor: '#f1c40f', padding: 10, color: 'white', fontWeight: 'bold' }}>{calculateMiscPayable(filteredItems)}$</span></p>
+                        <p style={{ fontSize: 12 }}>Payable to sheep/goat = <span style={{ padding: 10, color: '#60a5fa', fontWeight: 'bold' }}>{calculateSheepPayable(filteredItems)}$</span></p>
+                        <p style={{ fontSize: 12 }}>Payable to general = <span style={{ padding: 10, color: '#c084fc', fontWeight: 'bold' }}>{calculateGeneralPayable(filteredItems)}$</span></p>
+                        <p style={{ fontSize: 12 }}>Payable to miscellaneous = <span style={{ padding: 10, color: '#facc15', fontWeight: 'bold' }}>{calculateMiscPayable(filteredItems)}$</span></p>
                       </div>
 
                       <div style={{ display: 'inline-block', display: 'flex', flexDirection: 'row' }}>
                         <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10 }}>Commission Revenue =</p>
-                        <p style={{ backgroundColor: '#ffa6ff', borderWidth: 5, borderColor: 'grey', padding: 10 }}>
+                        <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10, color: '#f9a8d4', fontWeight: 700 }}>
                           {calculateCommissionRevenue(filteredItems)}$
                         </p>
                       </div>
 
                       <div style={{ display: 'inline-block', display: 'flex', flexDirection: 'row' }}>
                         <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10 }}>Total Expense  =</p>
-                        <p style={{ backgroundColor: '#ff998d', borderWidth: 5, borderColor: 'grey', padding: 10 }}>
+                        <p style={{ borderWidth: 5, borderColor: 'grey', padding: 10, color: '#fda4af', fontWeight: 700 }}>
                           {calculateTotalExpense(filteredItems)}$
                         </p>
                       </div>

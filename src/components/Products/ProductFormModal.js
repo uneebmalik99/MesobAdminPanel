@@ -650,33 +650,34 @@ const ProductFormModal = ({
     gap: "0.5rem",
     marginBottom: "1rem",
     paddingBottom: "0.75rem",
-    borderBottom: "1px solid #e9ecef",
+    borderBottom: "1px solid rgba(125, 145, 180, 0.16)",
   };
 
   const cardTitleStyle = {
     fontSize: "1rem",
     fontWeight: 600,
     margin: 0,
-    color: "#2d2d6f",
+    color: "#e8f1ff",
   };
 
   const cardSubtitleStyle = {
     fontSize: "0.875rem",
-    color: "#8898aa",
+    color: "#8ea0c0",
     margin: 0,
     marginTop: "0.25rem",
   };
 
   const iconStyle = {
-    color: "#5e72e4",
+    color: "#60a5fa",
     fontSize: "1rem",
   };
 
   const cardStyle = {
     marginBottom: "1.5rem",
-    border: "1px solid #e7eaf0",
+    border: "1px solid rgba(125, 145, 180, 0.16)",
     borderRadius: "18px",
-    boxShadow: "0 12px 24px rgba(50, 50, 93, 0.08)",
+    background: "linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)",
+    boxShadow: "0 18px 40px rgba(2, 6, 23, 0.24)",
   };
 
   const handleFileButtonClick = () => {
@@ -890,7 +891,13 @@ const ProductFormModal = ({
         <ModalHeader toggle={toggle}>
           {isEditMode ? "Edit Product" : "Add Product"}
         </ModalHeader>
-        <ModalBody style={{ padding: "1.5rem", background: "#f5f7fb" }}>
+        <ModalBody
+          style={{
+            padding: "1.5rem",
+            background:
+              "linear-gradient(180deg, rgba(9, 15, 28, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)",
+          }}
+        >
           <Row>
             {/* Product Information Card */}
             <Col md={6} className="d-flex">
@@ -988,8 +995,11 @@ const ProductFormModal = ({
                                 height: "96px",
                                 borderRadius: "10px",
                                 overflow: "hidden",
-                                border: index === 0 ? "2px solid #2d2d6f" : "1px solid #dee2e6",
-                                background: "#fff",
+                                border:
+                                  index === 0
+                                    ? "2px solid #60a5fa"
+                                    : "1px solid rgba(125, 145, 180, 0.18)",
+                                background: "#0f172a",
                               }}
                             >
                               <img
@@ -1037,7 +1047,7 @@ const ProductFormModal = ({
                                     left: 0,
                                     right: 0,
                                     bottom: 0,
-                                    background: "rgba(45,45,111,0.88)",
+                                    background: "rgba(37, 99, 235, 0.85)",
                                     color: "#fff",
                                     fontSize: "10px",
                                     padding: "2px 4px",
@@ -1063,7 +1073,10 @@ const ProductFormModal = ({
                       onChange={handleFormInputChange}
                       placeholder="Enter product description"
                       rows={4}
-                      style={{ border: "1px solid #dfe3e8", borderRadius: "8px" }}
+                      style={{
+                        border: "1px solid rgba(125, 145, 180, 0.18)",
+                        borderRadius: "8px",
+                      }}
                     />
                   </FormGroup>
                 </CardBody>

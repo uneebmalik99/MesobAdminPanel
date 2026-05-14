@@ -795,8 +795,9 @@ function Products() {
               {/* Category Filter Tabs */}
               <div style={{
                 padding: "1rem",
-                borderBottom: "1px solid #dee2e6",
-                backgroundColor: "#f8f9fa"
+                borderBottom: "1px solid rgba(125, 145, 180, 0.12)",
+                background:
+                  "linear-gradient(180deg, rgba(17, 24, 39, 0.98) 0%, rgba(15, 23, 42, 0.98) 100%)"
               }}>
                 <div style={{ marginBottom: filterSubCategories.length > 0 ? "0.75rem" : "0" }}>
                   <div style={{
@@ -825,9 +826,16 @@ function Products() {
                       style={{
                         fontSize: "0.85rem",
                         padding: "0.25rem 0.75rem",
-                        backgroundColor: selectedCategoryFilter === null ? undefined : "#e9ecef",
-                        borderColor: selectedCategoryFilter === null ? undefined : "#dee2e6",
-                        color: selectedCategoryFilter === null ? undefined : "#495057",
+                        backgroundColor:
+                          selectedCategoryFilter === null
+                            ? undefined
+                            : "rgba(148, 163, 184, 0.12)",
+                        borderColor:
+                          selectedCategoryFilter === null
+                            ? undefined
+                            : "rgba(125, 145, 180, 0.18)",
+                        color:
+                          selectedCategoryFilter === null ? undefined : "#dbe7ff",
                         fontWeight: selectedCategoryFilter === null ? "500" : "400",
                       }}
                     >
@@ -843,9 +851,18 @@ function Products() {
                         style={{
                           fontSize: "0.85rem",
                           padding: "0.25rem 0.75rem",
-                          backgroundColor: selectedCategoryFilter === String(category.id) ? undefined : "#e9ecef",
-                          borderColor: selectedCategoryFilter === String(category.id) ? undefined : "#dee2e6",
-                          color: selectedCategoryFilter === String(category.id) ? undefined : "#495057",
+                          backgroundColor:
+                            selectedCategoryFilter === String(category.id)
+                              ? undefined
+                              : "rgba(148, 163, 184, 0.12)",
+                          borderColor:
+                            selectedCategoryFilter === String(category.id)
+                              ? undefined
+                              : "rgba(125, 145, 180, 0.18)",
+                          color:
+                            selectedCategoryFilter === String(category.id)
+                              ? undefined
+                              : "#dbe7ff",
                           fontWeight: selectedCategoryFilter === String(category.id) ? "500" : "400",
                         }}
                       >
@@ -862,7 +879,7 @@ function Products() {
                     gap: "0.5rem",
                     alignItems: "center",
                     paddingTop: "0.75rem",
-                    borderTop: "1px solid #e9ecef",
+                    borderTop: "1px solid rgba(125, 145, 180, 0.12)",
                     marginTop: "0.75rem"
                   }}>
                     <small className="text-muted" style={{ marginRight: "0.5rem", fontWeight: "500" }}>
@@ -881,9 +898,18 @@ function Products() {
                       style={{
                         fontSize: "0.85rem",
                         padding: "0.25rem 0.75rem",
-                        backgroundColor: selectedSubCategoryFilter === null ? undefined : "#e9ecef",
-                        borderColor: selectedSubCategoryFilter === null ? undefined : "#dee2e6",
-                        color: selectedSubCategoryFilter === null ? undefined : "#495057",
+                        backgroundColor:
+                          selectedSubCategoryFilter === null
+                            ? undefined
+                            : "rgba(148, 163, 184, 0.12)",
+                        borderColor:
+                          selectedSubCategoryFilter === null
+                            ? undefined
+                            : "rgba(125, 145, 180, 0.18)",
+                        color:
+                          selectedSubCategoryFilter === null
+                            ? undefined
+                            : "#dbe7ff",
                         fontWeight: selectedSubCategoryFilter === null ? "500" : "400",
                       }}
                     >
@@ -908,9 +934,18 @@ function Products() {
                         style={{
                           fontSize: "0.85rem",
                           padding: "0.25rem 0.75rem",
-                          backgroundColor: selectedSubCategoryFilter === String(subCategory.id) ? undefined : "#e9ecef",
-                          borderColor: selectedSubCategoryFilter === String(subCategory.id) ? undefined : "#dee2e6",
-                          color: selectedSubCategoryFilter === String(subCategory.id) ? undefined : "#495057",
+                          backgroundColor:
+                            selectedSubCategoryFilter === String(subCategory.id)
+                              ? undefined
+                              : "rgba(148, 163, 184, 0.12)",
+                          borderColor:
+                            selectedSubCategoryFilter === String(subCategory.id)
+                              ? undefined
+                              : "rgba(125, 145, 180, 0.18)",
+                          color:
+                            selectedSubCategoryFilter === String(subCategory.id)
+                              ? undefined
+                              : "#dbe7ff",
                           fontWeight: selectedSubCategoryFilter === String(subCategory.id) ? "500" : "400",
                         }}
                       >

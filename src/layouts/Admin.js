@@ -85,6 +85,16 @@ function Admin(props) {
   }, [location]);
 
   useEffect(() => {
+    document.body.classList.add("app-dark-theme");
+    document.documentElement.classList.add("app-dark-theme");
+
+    return () => {
+      document.body.classList.remove("app-dark-theme");
+      document.documentElement.classList.remove("app-dark-theme");
+    };
+  }, []);
+
+  useEffect(() => {
     const handleScroll = () => {
       const scrollTop = mainPanel.current.scrollTop;
       setShowGoToTop(scrollTop > 200);
@@ -110,7 +120,7 @@ function Admin(props) {
   };
 
   return (
-    <div className="wrapper">
+    <div className="wrapper app-dark-theme">
       <Sidebar
         {...props}
         routes={accessibleRoutes}

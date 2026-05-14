@@ -61,8 +61,18 @@ export const AddExpenseButton = ({ onAddExpense }) => {
     <div>
       <NotificationAlert ref={notificationAlertRef} />
 
-      <div style={{ width: '100%', backgroundColor: '#f0f0f0', padding: '10px', borderRadius: '4px', cursor: 'pointer' }} onClick={toggle}>
-        <p style={{ textAlign: 'center', margin: 0 }}>+ Add Transaction</p>
+      <div
+        style={{
+          width: '100%',
+          background: 'rgba(59, 130, 246, 0.12)',
+          border: '1px solid rgba(96, 165, 250, 0.22)',
+          padding: '10px',
+          borderRadius: '10px',
+          cursor: 'pointer'
+        }}
+        onClick={toggle}
+      >
+        <p style={{ textAlign: 'center', margin: 0, color: '#dbe7ff' }}>+ Add Transaction</p>
       </div>
 
       <Modal isOpen={modal} toggle={toggle}>

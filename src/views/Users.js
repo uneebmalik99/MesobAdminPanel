@@ -330,6 +330,9 @@ function Users() {
                 init={{
                   height: 300,
                   menubar: true,
+                  skin: "oxide-dark",
+                  content_css: "dark",
+                  branding: false,
                   plugins: [
                     "advlist autolink lists link image charmap print preview anchor",
                     "searchreplace visualblocks code fullscreen",
@@ -342,6 +345,8 @@ function Users() {
                     "alignright alignjustify | bullist numlist outdent indent | " +
                     "removeformat",
                   placeholder: "Write your message here...",
+                  content_style:
+                    "body { background: #0f172a; color: #e8f1ff; font-family: Helvetica, Arial, sans-serif; }",
                 }}
                 onEditorChange={handleEditorChange}
               />

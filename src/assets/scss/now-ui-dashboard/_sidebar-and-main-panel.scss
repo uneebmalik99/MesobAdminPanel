@@ -246,6 +246,19 @@
     &[data-color="blue"]{
       @include sidebar-color($info-color);
     }
+    &[data-color="dark"]{
+      &:after{
+        @include icon-gradient(#111111, #4a4a4a);
+      }
+
+      .nav li.active > a:not([data-toggle="collapse"]){
+        color: #1f1f1f;
+
+        i{
+          color: #1f1f1f;
+        }
+      }
+    }
     &[data-color="green"]{
       @include sidebar-color($success-color);
     }

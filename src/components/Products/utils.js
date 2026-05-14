@@ -46,6 +46,55 @@ export const sanitizeIdForSelector = (id) => {
     .replace(/^-|-$/g, "");
 };
 
+export const parseProductImages = (value) => {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return [...new Set(value.flatMap((item) => parseProductImages(item)))];
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    if (trimmed.startsWith("[")) {
+      try {
+        const parsed = JSON.parse(trimmed);
+        return Array.isArray(parsed) ? parseProductImages(parsed) : [];
+      } catch (error) {
+        // Fall back to simple delimiter parsing below.
+      }
+    }
+
+    return [
+      ...new Set(
+        trimmed
+          .split(/[\n,]+/)
+          .map((item) => item.trim())
+          .filter(Boolean)
+      ),
+    ];
+  }
+
+  return [];
+};
+
+export const stringifyProductImages = (value) => {
+  return parseProductImages(value).join("\n");
+};
+
+export const getProductRequestId = (product) => {
+  if (!product || typeof product !== "object") return "";
+
+  return (
+    product.productId ||
+    product.product_id ||
+    product.Product_id ||
+    product.id ||
+    ""
+  );
+};
+
 export const mapApiProductToForm = (product) => {
   const rawCategories = Array.isArray(product.categories) ? product.categories : [];
   const derivedMenuId =
@@ -63,9 +112,12 @@ export const mapApiProductToForm = (product) => {
     if (value === undefined || value === null || value === "") return "";
     return String(value);
   };
+  const imageList = parseProductImages(
+    product.content?.images || product.content?.image || product.images || product.image
+  );
 
   return {
-    id: product.id,
+    id: getProductRequestId(product),
     title: product.title || "",
     category: product.category || product.menu_name || "",
     categoriesInput: categoryTags.join(", "),
@@ -73,7 +125,8 @@ export const mapApiProductToForm = (product) => {
     description: product.content?.description || "",
     price: product.content?.price || "",
     cost: product.content?.cost || "",
-    image: product.content?.image || "",
+    image: imageList[0] || "",
+    images: stringifyProductImages(imageList),
     stockQuantity: normalizeToString(
       product.stockQuantity ??
         product.quantity ??
@@ -109,6 +162,8 @@ const parseQuantityValue = (value) => {
 export const buildPayload = (formState) => {
   const tagList = parseCategoryTags(formState.categoriesInput);
   const categories = buildCategoriesArray(formState.menuId, tagList);
+  const imageList = parseProductImages(formState.images || formState.image);
+  const serializedImages = stringifyProductImages(imageList);
   const payload = {
     title: formState.title.trim(),
     category: formState.category.trim(),
@@ -117,8 +172,8 @@ export const buildPayload = (formState) => {
       description: formState.description?.trim() || "",
       price: formatMoneyString(formState.price),
       cost: formatMoneyString(formState.cost),
-      image: formState.image?.trim() || "",
-      images: formState.image?.trim() || "",
+      image: imageList[0] || "",
+      images: serializedImages,
       country: formState.country.trim(),
       title: formState.title.trim(),
     },
@@ -159,6 +214,7 @@ export const initialProductState = {
   price: "",
   cost: "",
   image: "",
+  images: "",
   stockQuantity: "",
   availableQuantity: "",
   off_percentage: "",

@@ -1,8 +1,10 @@
 .footer{
     padding: 24px 0;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.78);
 
     &.footer-default{
-        background-color: #f2f2f2;
+        background-color: transparent;
     }
 
     nav{
@@ -41,6 +43,10 @@
     .copyright{
         font-size: $font-size-small;
         line-height: 1.8;
+
+        a{
+            color: #ffffff;
+        }
     }
 
     &:after{

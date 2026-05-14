@@ -36,6 +36,8 @@ import {
   initialProductState,
   mapApiProductToForm,
   buildPayload,
+  parseProductImages,
+  getProductRequestId,
 } from "components/Products/utils";
 
 const API_BASE =
@@ -426,6 +428,14 @@ function Products() {
   const handleEdit = useCallback(
     (product) => {
       setIsEditMode(true);
+      console.log("[Products] Edit product identifiers", {
+        id: product?.id,
+        productId: product?.productId,
+        product_id: product?.product_id,
+        Product_id: product?.Product_id,
+        requestId: getProductRequestId(product),
+        product,
+      });
       const mapped = mapApiProductToForm(product);
       setFormState(mapped);
       setModalOpen(true);
@@ -446,8 +456,10 @@ function Products() {
     ) {
       return;
     }
+    const requestProductId = getProductRequestId(product);
+    const encodedProductId = encodeURIComponent(String(requestProductId || ""));
     axios
-      .delete(`${API_BASE}/products/${product.id}`)
+      .delete(`${API_BASE}/products/${encodedProductId}`)
       .then(() => {
         setProducts((prev) => prev.filter((item) => item.id !== product.id));
       })
@@ -572,17 +584,45 @@ function Products() {
       return;
     }
 
-    // Validate that image is not a base64 data URL
-    if (formState.image && formState.image.trim().startsWith("data:image")) {
+    const imageUrls = parseProductImages(formState.images || formState.image);
+
+    // Validate that images are not base64 data URLs
+    if (imageUrls.some((imageUrl) => imageUrl.startsWith("data:image"))) {
       alert("Base64 images are not supported. Please use an image URL instead (e.g., https://example.com/image.jpg)");
       return;
     }
 
     const payload = buildPayload(formState);
+    console.log(
+      `[Products] ${isEditMode ? "Update" : "Create"} payload`,
+      payload
+    );
     setSaving(true);
     try {
+      console.log("formState.id", formState.id);
+
       if (isEditMode && formState.id) {
-        await axios.put(`${API_BASE}/products/${formState.id}`, payload);
+        const encodedProductId = encodeURIComponent(String(formState.id || ""));
+        console.log("[Products] Update target id", {
+          rawId: formState.id,
+          encodedProductId,
+        });
+        const response = await fetch(`${API_BASE}/products/${encodedProductId}`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          throw new Error(
+            `Update failed with status ${response.status}${
+              errorText ? `: ${errorText}` : ""
+            }`
+          );
+        }
       } else {
         await axios.post(`${API_BASE}/products`, payload);
       }

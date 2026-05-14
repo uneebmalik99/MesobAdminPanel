@@ -675,7 +675,7 @@ function Dashboard() {
           }
         }
       `}</style>
-      <div className="content">
+      <div className="content dashboard-dark-theme">
         <Row>
           <Col xs="12" sm="6" lg="3" md="6">
             <Card className="card-stats" style={{ marginBottom: '15px' }}>

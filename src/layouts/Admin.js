@@ -22,7 +22,7 @@ var ps;
 function Admin(props) {
   const location = useLocation();
   const navigate = useNavigate();
-  const [backgroundColor, setBackgroundColor] = useState("blue");
+  const [backgroundColor, setBackgroundColor] = useState("dark");
   const [showGoToTop, setShowGoToTop] = useState(false);
   const mainPanel = useRef();
 
@@ -142,7 +142,7 @@ function Admin(props) {
               right: "20px",
               opacity: 1,
               transition: "opacity 0.3s ease-in-out",
-              backgroundColor: "#007bff",
+              backgroundColor: "#2b2b2b",
               color: "white",
               border: "none",
               borderRadius: "50%",

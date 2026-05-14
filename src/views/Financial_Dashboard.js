@@ -202,7 +202,7 @@ function Financial_Dashboard() {
           </div>
         }
       />
-      <div className="content">
+      <div className="content dashboard-dark-theme">
         <Row>
           <Col lg="3" md="6">
             <Card className="card-stats">

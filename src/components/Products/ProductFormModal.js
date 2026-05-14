@@ -588,7 +588,7 @@
 // export default ProductFormModal;
 
 
-import React, { useState, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import {
   Modal,
   ModalBody,
@@ -610,11 +610,14 @@ import {
 import {
   FaDatabase,
   FaDotCircle,
-  FaExternalLinkAlt,
   FaUpload,
-  FaImage,
+  FaTrash,
 } from "react-icons/fa";
 import axios from "axios";
+import {
+  parseProductImages,
+  stringifyProductImages,
+} from "./utils";
 
 const API_BASE =
   process.env.REACT_APP_MESOB_API_BASE ||
@@ -638,7 +641,7 @@ const ProductFormModal = ({
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadError, setUploadError] = useState("");
-  const [uploadedImageUrl, setUploadedImageUrl] = useState("");
+  const [uploadSuccessMessage, setUploadSuccessMessage] = useState("");
   const [offPercentageError, setOffPercentageError] = useState("");
   const fileInputRef = useRef(null);
   const cardHeaderStyle = {
@@ -682,127 +685,148 @@ const ProductFormModal = ({
     }
   };
 
-  const handleFileChange = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const imageUrls = useMemo(
+    () => parseProductImages(formState.images || formState.image),
+    [formState.image, formState.images]
+  );
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setUploadError("Please select an image file (PNG, JPG, JPEG, GIF, or WEBP).");
+  const syncImageFields = (nextImageUrls) => {
+    const normalizedUrls = parseProductImages(nextImageUrls);
+    const firstImage = normalizedUrls[0] || "";
+    const serializedImages = stringifyProductImages(normalizedUrls);
+
+    handleInputChange({
+      target: { name: "image", value: firstImage, type: "text" },
+    });
+    handleInputChange({
+      target: { name: "images", value: serializedImages, type: "textarea" },
+    });
+  };
+
+  const readFileAsBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target?.result || "");
+      reader.onerror = () => reject(new Error("Failed to read image file."));
+      reader.readAsDataURL(file);
+    });
+
+  const uploadSingleFile = async (file, index, totalFiles) => {
+    const base64Data = await readFileAsBase64(file);
+    const startProgress = Math.round((index / totalFiles) * 100);
+    const endProgress = Math.round(((index + 1) / totalFiles) * 100);
+
+    setUploadProgress(Math.max(startProgress, 10));
+
+    const response = await axios.post(`${API_BASE}/upload-image`, {
+      imageData: base64Data,
+      fileName: file.name,
+    });
+
+    let responseData = response.data;
+    if (typeof responseData === "string") {
+      try {
+        responseData = JSON.parse(responseData);
+      } catch (error) {
+        console.error("Failed to parse response as JSON:", error);
+      }
+    }
+
+    if (!responseData?.url) {
+      throw new Error("No URL returned from upload");
+    }
+
+    setUploadProgress(endProgress);
+    return responseData.url;
+  };
+
+  const handleFileChange = async (event) => {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    const invalidTypeFile = files.find((file) => !file.type.startsWith("image/"));
+    if (invalidTypeFile) {
+      setUploadError(
+        `Please select only image files. "${invalidTypeFile.name}" is not supported.`
+      );
       return;
     }
 
-    // Validate file size (max 5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      setUploadError("Image size should be less than 5MB.");
+    const oversizedFile = files.find((file) => file.size > 5 * 1024 * 1024);
+    if (oversizedFile) {
+      setUploadError(`"${oversizedFile.name}" is larger than 5MB.`);
       return;
     }
 
     setUploadError("");
+    setUploadSuccessMessage("");
     setUploading(true);
     setUploadProgress(0);
 
     try {
-      // Convert file to base64
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const base64Data = e.target.result;
-        
-        try {
-          setUploadProgress(50);
-          
-          // Upload to S3 via Lambda
-          console.log('Sending upload request to:', `${API_BASE}/upload-image`);
-          console.log('File name:', file.name);
-          console.log('Base64 data length:', base64Data.length);
-          
-          const response = await axios.post(`${API_BASE}/upload-image`, {
-            imageData: base64Data,
-            fileName: file.name,
-          });
+      const uploadedUrls = [];
 
-          console.log('Upload response:', response);
-          console.log('Response data:', response.data);
+      for (const [index, file] of files.entries()) {
+        const uploadedUrl = await uploadSingleFile(file, index, files.length);
+        uploadedUrls.push(uploadedUrl);
+      }
 
-          setUploadProgress(100);
-          
-          // Handle both direct response and stringified response
-          let responseData = response.data;
-          if (typeof responseData === 'string') {
-            try {
-              responseData = JSON.parse(responseData);
-            } catch (e) {
-              console.error('Failed to parse response as JSON:', e);
-            }
-          }
-          
-          if (responseData?.url) {
-            // Update form state with S3 URL
-            const s3Url = responseData.url;
-            console.log('Upload successful, S3 URL:', s3Url);
-            setUploadedImageUrl(s3Url);
-            handleInputChange({
-              target: { name: "image", value: s3Url, type: "text" },
-            });
-            setTimeout(() => setUploadProgress(0), 1000);
-          } else {
-            console.error('No URL in response:', responseData);
-            throw new Error("No URL returned from upload");
-          }
-        } catch (error) {
-          console.error("Upload error:", error);
-          console.error("Error response:", error.response?.data);
-          console.error("Error status:", error.response?.status);
-          console.error("Error details:", JSON.stringify(error.response?.data, null, 2));
-          
-          let errorMessage = "Failed to upload image. Please try again.";
-          
-          if (error.response?.status === 500) {
-            errorMessage = "Server error. Please check if the upload endpoint is configured correctly in Lambda.";
-          } else if (error.response?.status === 404) {
-            errorMessage = "Upload endpoint not found. Please add the /upload-image endpoint to your Lambda function.";
-          } else if (error.response?.data?.message) {
-            errorMessage = error.response.data.message;
-          } else if (error.message) {
-            errorMessage = error.message;
-          }
-          
-          setUploadError(errorMessage);
-          setUploadProgress(0);
-        } finally {
-          setUploading(false);
-          if (fileInputRef.current) {
-            fileInputRef.current.value = "";
-          }
-        }
-      };
-      
-      reader.onerror = () => {
-        setUploadError("Failed to read image file.");
-        setUploading(false);
-        setUploadProgress(0);
-      };
-      
-      reader.readAsDataURL(file);
+      const nextImageUrls = [...imageUrls, ...uploadedUrls];
+      syncImageFields(nextImageUrls);
+      setUploadSuccessMessage(
+        `${uploadedUrls.length} image${uploadedUrls.length > 1 ? "s" : ""} uploaded successfully`
+      );
+      setTimeout(() => setUploadProgress(0), 800);
     } catch (error) {
-      console.error("File processing error:", error);
-      setUploadError("Failed to process image file.");
-      setUploading(false);
+      console.error("Upload error:", error);
+
+      let errorMessage = "Failed to upload image. Please try again.";
+
+      if (error.response?.status === 500) {
+        errorMessage =
+          "Server error. Please check if the upload endpoint is configured correctly in Lambda.";
+      } else if (error.response?.status === 404) {
+        errorMessage =
+          "Upload endpoint not found. Please add the /upload-image endpoint to your Lambda function.";
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+
+      setUploadError(errorMessage);
       setUploadProgress(0);
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
-  const handleImageChange = (event) => {
-    const value = event.target.value.trim();
-    // Allow manual URL entry
-    handleInputChange(event);
-  };
-
-  const handlePreviewClick = () => {
-    if (!formState.image) return;
-    if (typeof window !== "undefined") {
-      window.open(formState.image, "_blank", "noopener,noreferrer");
+  const handleRemoveImage = (event, indexToRemove) => {
+    if (event) {
+      event.preventDefault();
+      event.stopPropagation();
     }
+
+    const imageToRemove = imageUrls[indexToRemove];
+    if (!imageToRemove) return;
+
+    const shouldRemove = window.confirm("Are you sure you want to delete this image?");
+
+    if (!shouldRemove) {
+      return;
+    }
+
+    const nextImageUrls = imageUrls.filter((_, index) => index !== indexToRemove);
+    syncImageFields(nextImageUrls);
+    setUploadError("");
+    setUploadSuccessMessage(
+      nextImageUrls.length
+        ? "Image removed. Save the product to keep this change."
+        : "All images removed. Save the product to keep this change."
+    );
   };
 
   // Validate Off Percentage when isRecommended changes or Off Percentage changes
@@ -893,24 +917,16 @@ const ProductFormModal = ({
                     />
                   </FormGroup>
                   <FormGroup>
-                    <Label for="image">Product Image</Label>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                    <Label for="image">Product Images</Label>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}>
                       <input
                         ref={fileInputRef}
                         type="file"
                         accept="image/*"
+                        multiple
                         onChange={handleFileChange}
                         disabled={uploading}
-                        style={{ 
-                          flex: 1,
-                          padding: "0.375rem 0.75rem",
-                          fontSize: "0.875rem",
-                          lineHeight: "1.5",
-                          color: "#495057",
-                          backgroundColor: "#fff",
-                          border: "1px solid #ced4da",
-                          borderRadius: "0.25rem"
-                        }}
+                        style={{ display: "none" }}
                       />
                       <Button
                         type="button"
@@ -929,6 +945,9 @@ const ProductFormModal = ({
                         <FaUpload size={12} />
                         {uploading ? "Uploading..." : "Upload"}
                       </Button>
+                      <small className="text-muted">
+                        Use the `Upload` button to add more images.
+                      </small>
                     </div>
                     {uploadProgress > 0 && uploadProgress < 100 && (
                       <div className="mt-2">
@@ -941,29 +960,96 @@ const ProductFormModal = ({
                         <small className="text-danger">{uploadError}</small>
                       </div>
                     )}
-                    {uploadedImageUrl && (
+                    {uploadSuccessMessage && (
                       <div className="mt-2">
-                        <small className="text-success">✓ Image uploaded successfully</small>
+                        <small className="text-success">✓ {uploadSuccessMessage}</small>
                       </div>
                     )}
                     <small className="text-muted">
-                      Upload an image file (PNG, JPG, JPEG, GIF, WEBP - max 5MB)
+                      Upload one or more image files (PNG, JPG, JPEG, GIF, WEBP - max 5MB each)
                     </small>
-                    {(formState.image || uploadedImageUrl) && (
-                      <div className="mt-2" style={{ textAlign: "center" }}>
-                        <img
-                          src={formState.image || uploadedImageUrl}
-                          alt="Preview"
-                          style={{
-                            maxWidth: "200px",
-                            maxHeight: "200px",
-                            borderRadius: "8px",
-                            border: "1px solid #dee2e6",
-                          }}
-                          onError={(e) => {
-                            e.target.style.display = "none";
-                          }}
-                        />
+                    {imageUrls.length > 0 && (
+                      <div className="mt-3">
+                        <div className="d-flex justify-content-between align-items-center mb-2">
+                          <small className="text-muted">
+                            {imageUrls.length} image{imageUrls.length > 1 ? "s" : ""} selected. The first image will be used as the main product image.
+                          </small>
+                        </div>
+                        <div
+                          className="d-flex flex-wrap"
+                          style={{ gap: "0.75rem" }}
+                        >
+                          {imageUrls.map((imageUrl, index) => (
+                            <div
+                              key={`${imageUrl}-${index}`}
+                              style={{
+                                position: "relative",
+                                width: "96px",
+                                height: "96px",
+                                borderRadius: "10px",
+                                overflow: "hidden",
+                                border: index === 0 ? "2px solid #2d2d6f" : "1px solid #dee2e6",
+                                background: "#fff",
+                              }}
+                            >
+                              <img
+                                src={imageUrl}
+                                alt={`Preview ${index + 1}`}
+                                style={{
+                                  width: "100%",
+                                  height: "100%",
+                                  objectFit: "cover",
+                                }}
+                                onError={(e) => {
+                                  e.target.style.display = "none";
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onMouseDown={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                }}
+                                onClick={(event) => handleRemoveImage(event, index)}
+                                aria-label={`Remove image ${index + 1}`}
+                                style={{
+                                  position: "absolute",
+                                  top: 4,
+                                  right: 4,
+                                  width: 24,
+                                  height: 24,
+                                  borderRadius: "50%",
+                                  border: "none",
+                                  background: "rgba(0,0,0,0.7)",
+                                  color: "#fff",
+                                  display: "flex",
+                                  alignItems: "center",
+                                  justifyContent: "center",
+                                  cursor: "pointer",
+                                }}
+                              >
+                                <FaTrash size={10} />
+                              </button>
+                              {index === 0 && (
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    left: 0,
+                                    right: 0,
+                                    bottom: 0,
+                                    background: "rgba(45,45,111,0.88)",
+                                    color: "#fff",
+                                    fontSize: "10px",
+                                    padding: "2px 4px",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  Main
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </FormGroup>
